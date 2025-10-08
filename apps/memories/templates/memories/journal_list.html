@@ -1,0 +1,183 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Journal - {{ trip.name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <div>
+            <h1>📔 Trip Journal</h1>
+            <p class="text-muted">{{ trip.name }} • {{ trip.start_date|date:"M d" }} - {{ trip.end_date|date:"M d, Y" }}</p>
+        </div>
+        <div class="header-actions">
+            <a href="{% url 'memories:journal_create' trip.pk %}" class="btn btn-primary">
+                ✏️ New Entry
+            </a>
+            <a href="{% url 'trips:trip_detail' trip.pk %}" class="btn btn-outline">
+                ← Back to Trip
+            </a>
+        </div>
+    </div>
+
+    {% if journal_entries %}
+        <div class="journal-timeline">
+            {% for journal in journal_entries %}
+                <div class="journal-card">
+                    <div class="journal-date">
+                        <div class="date-day">{{ journal.date|date:"d" }}</div>
+                        <div class="date-month">{{ journal.date|date:"M" }}</div>
+                        <div class="date-year">{{ journal.date|date:"Y" }}</div>
+                    </div>
+
+                    <div class="journal-content-preview">
+                        <div class="journal-header">
+                            <h3>{{ journal.date|date:"l, F d, Y" }}</h3>
+                            <div class="journal-meta">
+                                {% if journal.mood_rating %}
+                                    <span class="mood-badge">{{ journal.get_mood_display_emoji }} {{ journal.get_mood_rating_display }}</span>
+                                {% endif %}
+                                {% if journal.weather %}
+                                    <span class="weather-badge">🌤️ {{ journal.weather }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="journal-excerpt">
+                            {{ journal.content|truncatewords:50 }}
+                        </div>
+
+                        <div class="journal-footer">
+                            <small class="text-muted">
+                                By {{ journal.created_by.get_full_name|default:journal.created_by.email }}
+                                {% if journal.updated_at != journal.created_at %}
+                                    • Updated {{ journal.updated_at|date:"M d, Y" }}
+                                {% endif %}
+                            </small>
+                            <a href="{% url 'memories:journal_detail' journal.pk %}" class="btn btn-sm btn-outline">
+                                Read More →
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <p>No journal entries yet. Start documenting your trip experiences!</p>
+            <a href="{% url 'memories:journal_create' trip.pk %}" class="btn btn-primary">
+                Write Your First Entry
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+.journal-timeline {
+    max-width: 800px;
+    margin: var(--spacing-xl) auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xl);
+}
+
+.journal-card {
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    gap: var(--spacing-lg);
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-lg);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.journal-card:hover {
+    transform: translateX(4px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.journal-date {
+    text-align: center;
+    padding: var(--spacing-sm);
+    background: var(--primary-color);
+    color: white;
+    border-radius: var(--border-radius);
+    align-self: start;
+}
+
+.date-day {
+    font-size: 2rem;
+    font-weight: bold;
+    line-height: 1;
+}
+
+.date-month {
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    margin-top: 4px;
+}
+
+.date-year {
+    font-size: 0.75rem;
+    opacity: 0.9;
+}
+
+.journal-content-preview {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.journal-header h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    color: var(--primary-color);
+}
+
+.journal-meta {
+    display: flex;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+    margin-top: var(--spacing-xs);
+}
+
+.mood-badge, .weather-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    background: var(--bg-primary);
+    border-radius: 12px;
+    font-size: 0.85rem;
+}
+
+.journal-excerpt {
+    color: var(--text-primary);
+    line-height: 1.6;
+}
+
+.journal-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: var(--spacing-md);
+    border-top: 1px solid var(--border-color);
+}
+
+@media (max-width: 576px) {
+    .journal-card {
+        grid-template-columns: 1fr;
+    }
+
+    .journal-date {
+        display: flex;
+        gap: var(--spacing-sm);
+        align-items: center;
+        justify-content: center;
+    }
+
+    .date-day {
+        font-size: 1.5rem;
+    }
+}
+</style>
+{% endblock %}

@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'apps.activities',  # Activity management
     'apps.itinerary',  # Daily itinerary management
     'apps.packing',  # Packing list management
+    'apps.memories',  # Photos and journal entries
 ]
 
 # Custom User Model

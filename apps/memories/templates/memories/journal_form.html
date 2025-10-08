@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container-narrow">
+    <div class="page-header">
+        <h1>{{ page_title }}</h1>
+    </div>
+
+    <form method="post" class="form">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div class="alert alert-error">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+
+        <div class="form-group">
+            <label for="{{ form.date.id_for_label }}">{{ form.date.label }} <span class="required">*</span></label>
+            {{ form.date }}
+            {% if form.date.errors %}
+                <span class="error">{{ form.date.errors.0 }}</span>
+            {% endif %}
+            <small class="form-help">{{ form.date.help_text }}</small>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="{{ form.weather.id_for_label }}">{{ form.weather.label }}</label>
+                {{ form.weather }}
+                {% if form.weather.errors %}
+                    <span class="error">{{ form.weather.errors.0 }}</span>
+                {% endif %}
+                <small class="form-help">{{ form.weather.help_text }}</small>
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.mood_rating.id_for_label }}">{{ form.mood_rating.label }}</label>
+                <div class="mood-rating-options">
+                    {% for value, label in form.mood_rating.field.choices %}
+                        <label class="mood-option">
+                            <input type="radio" name="{{ form.mood_rating.name }}" value="{{ value }}"
+                                {% if form.mood_rating.value == value|stringformat:"s" %}checked{% endif %}>
+                            <span class="mood-label">{{ label }}</span>
+                        </label>
+                    {% endfor %}
+                </div>
+                {% if form.mood_rating.errors %}
+                    <span class="error">{{ form.mood_rating.errors.0 }}</span>
+                {% endif %}
+                <small class="form-help">{{ form.mood_rating.help_text }}</small>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.content.id_for_label }}">{{ form.content.label }} <span class="required">*</span></label>
+            {{ form.content }}
+            {% if form.content.errors %}
+                <span class="error">{{ form.content.errors.0 }}</span>
+            {% endif %}
+            <small class="form-help">{{ form.content.help_text }}</small>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Save Journal Entry</button>
+            <a href="{% url 'memories:journal_list' trip.pk %}" class="btn btn-outline">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<style>
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--spacing-lg);
+}
+
+@media (min-width: 768px) {
+    .form-row {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.mood-rating-options {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-xs);
+}
+
+.mood-option {
+    display: flex;
+    align-items: center;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.mood-option:hover {
+    border-color: var(--primary-color);
+    background: var(--bg-primary);
+}
+
+.mood-option input[type="radio"] {
+    margin-right: var(--spacing-sm);
+}
+
+.mood-option input[type="radio"]:checked + .mood-label {
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.mood-label {
+    font-size: 1rem;
+}
+
+@media (max-width: 576px) {
+    .mood-rating-options {
+        gap: var(--spacing-xs);
+    }
+
+    .mood-option {
+        padding: var(--spacing-xs) var(--spacing-sm);
+    }
+
+    .mood-label {
+        font-size: 0.9rem;
+    }
+}
+</style>
+{% endblock %}

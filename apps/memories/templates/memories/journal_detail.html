@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Journal - {{ journal.date|date:"M d, Y" }}{% endblock %}
+
+{% block content %}
+<div class="container-narrow">
+    <div class="page-header">
+        <h1>📔 Journal Entry</h1>
+        <div class="header-actions">
+            {% if journal.created_by == request.user %}
+                <a href="{% url 'memories:journal_edit' journal.pk %}" class="btn btn-sm btn-outline">✏️ Edit</a>
+                <a href="{% url 'memories:journal_delete' journal.pk %}" class="btn btn-sm btn-outline btn-danger">🗑️ Delete</a>
+            {% endif %}
+            <a href="{% url 'memories:journal_list' journal.trip.pk %}" class="btn btn-sm btn-outline">← Back to Journal</a>
+        </div>
+    </div>
+
+    <article class="journal-detail">
+        <header class="journal-detail-header">
+            <h2>{{ journal.date|date:"l, F d, Y" }}</h2>
+            <p class="text-muted">{{ journal.trip.name }}</p>
+
+            <div class="journal-meta-row">
+                {% if journal.mood_rating %}
+                    <div class="meta-item mood">
+                        <span class="mood-icon">{{ journal.get_mood_display_emoji }}</span>
+                        <span>{{ journal.get_mood_rating_display }}</span>
+                    </div>
+                {% endif %}
+
+                {% if journal.weather %}
+                    <div class="meta-item weather">
+                        <span>🌤️ {{ journal.weather }}</span>
+                    </div>
+                {% endif %}
+
+                <div class="meta-item author">
+                    <span>👤 {{ journal.created_by.get_full_name|default:journal.created_by.email }}</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="journal-body">
+            {{ journal.content|linebreaks }}
+        </div>
+
+        <footer class="journal-detail-footer">
+            <small class="text-muted">
+                Created {{ journal.created_at|date:"F d, Y g:i A" }}
+                {% if journal.updated_at != journal.created_at %}
+                    • Updated {{ journal.updated_at|date:"F d, Y g:i A" }}
+                {% endif %}
+            </small>
+        </footer>
+    </article>
+</div>
+
+<style>
+.journal-detail {
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-xl);
+    margin: var(--spacing-xl) 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.journal-detail-header {
+    border-bottom: 2px solid var(--primary-color);
+    padding-bottom: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.journal-detail-header h2 {
+    margin: 0 0 var(--spacing-xs) 0;
+    color: var(--primary-color);
+}
+
+.journal-meta-row {
+    display: flex;
+    gap: var(--spacing-lg);
+    flex-wrap: wrap;
+    margin-top: var(--spacing-md);
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-xs) var(--spacing-md);
+    background: var(--bg-primary);
+    border-radius: var(--border-radius);
+    font-size: 0.9rem;
+}
+
+.meta-item.mood {
+    background: linear-gradient(135deg, var(--accent-color), var(--primary-color));
+    color: white;
+}
+
+.mood-icon {
+    font-size: 1.5rem;
+}
+
+.journal-body {
+    font-size: 1.05rem;
+    line-height: 1.8;
+    color: var(--text-primary);
+    padding: var(--spacing-lg) 0;
+}
+
+.journal-detail-footer {
+    border-top: 1px solid var(--border-color);
+    padding-top: var(--spacing-md);
+}
+
+@media (max-width: 576px) {
+    .journal-detail {
+        padding: var(--spacing-lg);
+    }
+
+    .journal-meta-row {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+    }
+}
+</style>
+{% endblock %}

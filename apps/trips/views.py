@@ -100,11 +100,8 @@ class TripDetailView(LoginRequiredMixin, DetailView):
                 family=trip.family,
                 user=self.request.user
             )
-            # Admins and trip creator can edit
-            context['can_edit'] = (
-                membership.is_admin() or
-                trip.created_by == self.request.user
-            )
+            # All family members can edit/create content
+            context['can_edit'] = True
             context['can_delete'] = membership.is_admin()
             context['can_create_note'] = True  # All members can create notes
         except FamilyMember.DoesNotExist:
@@ -130,6 +127,19 @@ class TripDetailView(LoginRequiredMixin, DetailView):
         context['note_form'] = NoteForm(trip=trip, created_by=self.request.user)
         context['categories'] = NoteCategory.objects.filter(trip=trip)
 
+        # Add activity form for modal
+        from apps.activities.forms import ActivityForm
+        context['activity_form'] = ActivityForm()
+
+        # Add mapbox token and resort coordinates for activity form
+        from django.conf import settings
+        context['mapbox_token'] = settings.MAPBOX_ACCESS_TOKEN
+        if hasattr(trip, 'resort') and trip.resort:
+            resort = trip.resort
+            if resort.latitude and resort.longitude:
+                context['resort_latitude'] = float(resort.latitude)
+                context['resort_longitude'] = float(resort.longitude)
+
         # Get recent activities for this trip (up to 5, ordered by priority)
         from apps.activities.models import Activity
         context['recent_activities'] = Activity.objects.filter(trip=trip).select_related(
@@ -146,6 +156,26 @@ class TripDetailView(LoginRequiredMixin, DetailView):
             date__gte=today
         ).select_related('activity', 'created_by').order_by('date', 'time_start', 'order')[:5]
         context['itinerary_count'] = DailyItinerary.objects.filter(trip=trip).count()
+
+        # Get recent photos for this trip (up to 6 for gallery preview)
+        from apps.memories.models import TripPhoto, DailyJournal
+        context['recent_photos'] = TripPhoto.objects.filter(trip=trip).select_related(
+            'uploaded_by'
+        ).order_by('-taken_date', '-uploaded_at')[:6]
+        context['photo_count'] = TripPhoto.objects.filter(trip=trip).count()
+
+        # Get recent journal entries for this trip (up to 3)
+        context['recent_journals'] = DailyJournal.objects.filter(trip=trip).select_related(
+            'created_by'
+        ).order_by('-date')[:3]
+        context['journal_count'] = DailyJournal.objects.filter(trip=trip).count()
+
+        # Get packing lists for this trip (up to 5)
+        from apps.packing.models import TripPackingList
+        context['packing_lists'] = TripPackingList.objects.filter(trip=trip).select_related(
+            'assigned_to', 'based_on_template'
+        ).prefetch_related('items')[:5]
+        context['packing_lists_count'] = TripPackingList.objects.filter(trip=trip).count()
 
         return context
 
@@ -284,10 +314,12 @@ def edit_resort(request, trip_pk):
     else:
         form = ResortForm(instance=resort)
 
+    from django.conf import settings
     return render(request, 'trips/resort_form.html', {
         'form': form,
         'trip': trip,
         'resort': resort,
+        'mapbox_token': settings.MAPBOX_ACCESS_TOKEN,
     })
 
 

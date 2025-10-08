@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Photo - {{ photo.trip.name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>📸 Trip Photo</h1>
+        <div class="header-actions">
+            {% if photo.uploaded_by == request.user %}
+                <a href="{% url 'memories:photo_edit' photo.pk %}" class="btn btn-sm btn-outline">✏️ Edit</a>
+                <a href="{% url 'memories:photo_delete' photo.pk %}" class="btn btn-sm btn-outline btn-danger">🗑️ Delete</a>
+            {% endif %}
+            <a href="{% url 'memories:photo_gallery' photo.trip.pk %}" class="btn btn-sm btn-outline">← Back to Gallery</a>
+        </div>
+    </div>
+
+    <div class="photo-detail-container">
+        <div class="photo-main">
+            <img src="{{ photo.image.url }}" alt="{{ photo.caption|default:'Trip photo' }}" class="photo-full">
+        </div>
+
+        <div class="photo-info">
+            <h2>{{ photo.trip.name }}</h2>
+
+            {% if photo.caption %}
+                <div class="info-section">
+                    <h3>Caption</h3>
+                    <p>{{ photo.caption }}</p>
+                </div>
+            {% endif %}
+
+            <div class="info-grid">
+                {% if photo.taken_date %}
+                    <div class="info-item">
+                        <strong>📅 Date Taken:</strong>
+                        <span>{{ photo.taken_date|date:"F d, Y" }}</span>
+                    </div>
+                {% endif %}
+
+                {% if photo.activity %}
+                    <div class="info-item">
+                        <strong>🎯 Activity:</strong>
+                        <a href="{% url 'activities:activity_detail' photo.activity.pk %}">{{ photo.activity.name }}</a>
+                    </div>
+                {% endif %}
+
+                {% if photo.daily_itinerary %}
+                    <div class="info-item">
+                        <strong>📋 Itinerary:</strong>
+                        <span>{{ photo.daily_itinerary.date|date:"M d" }} - {{ photo.daily_itinerary.get_display_title }}</span>
+                    </div>
+                {% endif %}
+
+                <div class="info-item">
+                    <strong>👤 Uploaded by:</strong>
+                    <span>{{ photo.uploaded_by.get_full_name|default:photo.uploaded_by.email }}</span>
+                </div>
+
+                <div class="info-item">
+                    <strong>⏰ Uploaded:</strong>
+                    <span>{{ photo.uploaded_at|date:"F d, Y g:i A" }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.photo-detail-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--spacing-xl);
+    margin: var(--spacing-xl) 0;
+}
+
+@media (min-width: 992px) {
+    .photo-detail-container {
+        grid-template-columns: 2fr 1fr;
+    }
+}
+
+.photo-main {
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.photo-full {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.photo-info {
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-lg);
+}
+
+.photo-info h2 {
+    margin-top: 0;
+    color: var(--primary-color);
+}
+
+.info-section {
+    margin: var(--spacing-lg) 0;
+    padding: var(--spacing-md) 0;
+    border-top: 1px solid var(--border-color);
+}
+
+.info-section h3 {
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: var(--spacing-sm);
+}
+
+.info-grid {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-lg);
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--border-color);
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.info-item strong {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.info-item span, .info-item a {
+    font-size: 0.95rem;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Journal Entry?{% endblock %}
+
+{% block content %}
+<div class="container-narrow">
+    <div class="page-header">
+        <h1>🗑️ Delete Journal Entry?</h1>
+    </div>
+
+    <div class="confirm-delete">
+        <p><strong>Are you sure you want to delete this journal entry?</strong></p>
+
+        <div class="item-preview">
+            <p class="item-detail"><strong>Date:</strong> {{ object.date|date:"F d, Y" }}</p>
+            {% if object.weather %}
+                <p class="item-detail"><strong>Weather:</strong> {{ object.weather }}</p>
+            {% endif %}
+            {% if object.mood_rating %}
+                <p class="item-detail"><strong>Mood:</strong> {{ object.get_mood_display_emoji }} {{ object.get_mood_rating_display }}</p>
+            {% endif %}
+            <div class="content-preview">
+                <strong>Content:</strong>
+                <p>{{ object.content|truncatewords:30 }}</p>
+            </div>
+        </div>
+
+        <p class="warning-text">⚠️ This action cannot be undone.</p>
+
+        <form method="post" class="confirm-form">
+            {% csrf_token %}
+            <div class="form-actions">
+                <button type="submit" class="btn btn-danger">Yes, Delete Entry</button>
+                <a href="{% url 'memories:journal_detail' object.pk %}" class="btn btn-outline">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.item-preview {
+    background: var(--bg-secondary);
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius);
+    margin: var(--spacing-lg) 0;
+}
+
+.content-preview {
+    margin-top: var(--spacing-md);
+    padding-top: var(--spacing-md);
+    border-top: 1px solid var(--border-color);
+}
+
+.content-preview p {
+    margin-top: var(--spacing-xs);
+    color: var(--text-muted);
+    font-style: italic;
+}
+</style>
+{% endblock %}
