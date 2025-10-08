@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Item - HaleWay{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>Edit Item</h1>
+    </div>
+
+    <form method="post" class="form-card">
+        {% csrf_token %}
+
+        <div class="form-group">
+            {{ form.category.label_tag }}
+            {{ form.category }}
+        </div>
+
+        <div class="form-group">
+            {{ form.item_name.label_tag }}
+            {{ form.item_name }}
+        </div>
+
+        <div class="form-group">
+            {{ form.quantity.label_tag }}
+            {{ form.quantity }}
+        </div>
+
+        <div class="form-group">
+            {{ form.notes.label_tag }}
+            {{ form.notes }}
+        </div>
+
+        <div class="form-actions">
+            <a href="{% url 'packing:list_detail' item.packing_list.pk %}" class="btn btn-outline">Cancel</a>
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

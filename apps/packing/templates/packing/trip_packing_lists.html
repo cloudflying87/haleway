@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}Packing Lists - {{ trip.name }} - HaleWay{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <div class="header-content">
+            <div>
+                <nav class="breadcrumb">
+                    <a href="{% url 'trips:trip_detail' trip.pk %}">{{ trip.name }}</a>
+                    <span>/</span>
+                    <span>Packing Lists</span>
+                </nav>
+                <h1>Packing Lists for {{ trip.name }}</h1>
+            </div>
+            {% if can_create %}
+                <a href="{% url 'packing:create_packing_list' trip.pk %}" class="btn btn-primary">
+                    + Create Packing List
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if packing_lists %}
+        <div class="packing-lists-grid">
+            {% for packing_list in packing_lists %}
+                <div class="card">
+                    <div class="card-header">
+                        <h3>{{ packing_list.name }}</h3>
+                        {% if packing_list.assigned_to %}
+                            <span class="badge">{{ packing_list.assigned_to.get_full_name|default:packing_list.assigned_to.username }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="card-body">
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" style="width: {{ packing_list.get_packed_percentage }}%"></div>
+                        </div>
+                        <p class="progress-text">
+                            {{ packing_list.get_packed_count }} / {{ packing_list.get_total_count }} items packed
+                            ({{ packing_list.get_packed_percentage }}%)
+                        </p>
+                        {% if packing_list.based_on_template %}
+                            <p class="template-info">Based on: {{ packing_list.based_on_template.name }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="card-footer">
+                        <a href="{% url 'packing:list_detail' packing_list.pk %}" class="btn btn-sm btn-primary">
+                            View List
+                        </a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <p>No packing lists yet. Create your first one using a template!</p>
+            {% if can_create %}
+                <a href="{% url 'packing:create_packing_list' trip.pk %}" class="btn btn-primary">
+                    + Create Packing List
+                </a>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+<style>
+.packing-lists-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.progress-bar-container {
+    width: 100%;
+    height: 8px;
+    background: #e0e0e0;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.progress-bar {
+    height: 100%;
+    background: #06A77D;
+    transition: width 0.3s ease;
+}
+
+.progress-text {
+    font-size: 0.875rem;
+    color: #666;
+    margin: 0.5rem 0;
+}
+
+.template-info {
+    font-size: 0.875rem;
+    color: #888;
+    margin-top: 0.5rem;
+}
+</style>
+{% endblock %}

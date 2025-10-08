@@ -1,41 +1,191 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Register{% endblock %}
+{% block title %}Register - HaleWay{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="card" style="max-width: 500px; margin: 2rem auto;">
-        <div class="card-header">
-            <h2>Create Account</h2>
-        </div>
-        <div class="card-body">
-            <form method="post">
-                {% csrf_token %}
-
-                {% for field in form %}
-                    <div class="form-group">
-                        <label for="{{ field.id_for_label }}" class="form-label">
-                            {{ field.label }}
-                            {% if field.field.required %}<span class="required">*</span>{% endif %}
-                        </label>
-                        {{ field }}
-                        {% if field.help_text %}
-                            <div class="form-help">{{ field.help_text }}</div>
-                        {% endif %}
-                        {% if field.errors %}
-                            <div class="form-errors">{{ field.errors }}</div>
-                        {% endif %}
-                    </div>
-                {% endfor %}
-
-                <button type="submit" class="btn btn-primary" style="width: 100%;">Register</button>
-
-                <div style="margin-top: 1rem; text-align: center;">
-                    Already have an account? <a href="{% url 'accounts:login' %}">Login</a>
+<div class="auth-page">
+    <div class="register-container">
+        <div class="auth-card">
+            <!-- Header Section -->
+            <div class="auth-header">
+                <div class="auth-logo">
+                    <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M24 4L6 14V22C6 32.5 12.84 42.24 24 44C35.16 42.24 42 32.5 42 22V14L24 4Z" fill="#2E86AB"/>
+                        <path d="M24 12L12 18V22C12 28.48 16.24 34.44 24 36C31.76 34.44 36 28.48 36 22V18L24 12Z" fill="#A23B72"/>
+                    </svg>
                 </div>
-            </form>
+                <h1 class="auth-title">Join HaleWay</h1>
+                <p class="auth-subtitle">Start planning your next adventure</p>
+            </div>
+
+            <!-- Form Section -->
+            <div class="auth-body">
+                <form method="post" class="auth-form">
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+
+                    {% for field in form %}
+                        <div class="form-group">
+                            <label for="{{ field.id_for_label }}" class="form-label">
+                                {{ field.label }}
+                                {% if field.field.required %}<span class="required">*</span>{% endif %}
+                            </label>
+                            {{ field }}
+                            {% if field.help_text %}
+                                <small class="form-help">{{ field.help_text }}</small>
+                            {% endif %}
+                            {% if field.errors %}
+                                <div class="form-error">{{ field.errors }}</div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary btn-lg btn-block">
+                            Create Account
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Footer Section -->
+            <div class="auth-footer">
+                <div class="auth-divider">
+                    <span>Already have an account?</span>
+                </div>
+                <a href="{% url 'accounts:login' %}" class="btn btn-outline btn-block">
+                    Sign in instead
+                </a>
+            </div>
         </div>
     </div>
 </div>
+
+<style>
+.auth-page {
+    min-height: calc(100vh - 200px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-xl) var(--spacing-md);
+    background: linear-gradient(135deg, rgba(46, 134, 171, 0.05) 0%, rgba(162, 59, 114, 0.05) 100%);
+}
+
+.register-container {
+    max-width: 500px;
+    width: 100%;
+}
+
+.auth-card {
+    background: var(--white);
+    border-radius: var(--border-radius-lg);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 10px 25px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+}
+
+.auth-header {
+    padding: var(--spacing-xxl) var(--spacing-xl) var(--spacing-lg);
+    text-align: center;
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.auth-logo {
+    margin: 0 auto var(--spacing-md);
+    width: 48px;
+    height: 48px;
+}
+
+.auth-title {
+    margin: 0 0 var(--spacing-xs);
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--gray-900);
+}
+
+.auth-subtitle {
+    margin: 0;
+    color: var(--gray-600);
+    font-size: 0.9375rem;
+}
+
+.auth-body {
+    padding: var(--spacing-xl);
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+}
+
+.btn-block {
+    width: 100%;
+}
+
+.auth-footer {
+    padding: var(--spacing-lg) var(--spacing-xl) var(--spacing-xl);
+    background: var(--gray-50);
+    text-align: center;
+}
+
+.auth-divider {
+    margin: 0 0 var(--spacing-md);
+    position: relative;
+    text-align: center;
+}
+
+.auth-divider::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 1px;
+    background: var(--gray-300);
+}
+
+.auth-divider span {
+    position: relative;
+    background: var(--gray-50);
+    padding: 0 var(--spacing-md);
+    color: var(--gray-600);
+    font-size: 0.875rem;
+}
+
+.form-error {
+    display: block;
+    margin-top: var(--spacing-xs);
+    font-size: 0.875rem;
+    color: var(--danger-color);
+}
+
+/* Mobile */
+@media (max-width: 576px) {
+    .auth-page {
+        padding: var(--spacing-md);
+    }
+
+    .auth-header {
+        padding: var(--spacing-xl) var(--spacing-md) var(--spacing-md);
+    }
+
+    .auth-body {
+        padding: var(--spacing-md);
+    }
+
+    .auth-footer {
+        padding: var(--spacing-md);
+    }
+
+    .auth-title {
+        font-size: 1.5rem;
+    }
+}
+</style>
 {% endblock %}

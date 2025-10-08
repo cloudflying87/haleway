@@ -45,7 +45,8 @@ apps/
 ├── trips/          # Trip and resort management
 ├── notes/          # Note and category management with search
 ├── activities/     # Activity management with priority ordering
-└── itinerary/      # Daily itinerary and schedule planning
+├── itinerary/      # Daily itinerary and schedule planning
+└── packing/        # Packing list templates and trip packing lists
 ```
 
 ### Key Models
@@ -59,6 +60,10 @@ apps/
 - **Note** (notes): Trip notes with full-text search, pinning, and categorization
 - **Activity** (activities): Trip activities with priority ordering and post-trip ratings
 - **DailyItinerary** (itinerary): Scheduled items on specific days with timeline view
+- **PackingListTemplate** (packing): Reusable packing list templates (system and custom)
+- **PackingListTemplateItem** (packing): Items within packing templates
+- **TripPackingList** (packing): Trip-specific packing lists (can be assigned to people)
+- **TripPackingItem** (packing): Individual packing items with checkbox tracking
 
 ### Important URLs
 - **Admin**: `/admin/` - Django admin interface
@@ -67,22 +72,38 @@ apps/
 - **Notes**: `/notes/` - Note and category management
 - **Activities**: `/activities/` - Activity management and planning
 - **Itinerary**: `/itinerary/` - Daily schedule and itinerary planning
+- **Packing**: `/packing/` - Packing list templates and trip packing lists
 - **Accounts**: `/accounts/` - User authentication and profiles
 
 ## Current Major Projects & Status
 
 ### 🚧 Active Development
-**Phase 6: Packing & Budget** - Status: Pending
-**Priority**: High
-**Description**: Next phase - Packing lists and budget tracking
-**Key Features**: Packing list management, budget tracking, expense management
-**Next Steps**: Create packing and budget apps, implement tracking features
+**Phase 7-10: Advanced Features** - Status: Pending
+**Priority**: Medium
+**Description**: Post-trip features, memories, sharing, and budget tracking
+**Next Steps**: See docs/app_plan.md for full roadmap
 
 ### 📋 Planned Features
-**Phase 6**: Packing & Budget (Week 5) - Packing lists and budget tracking
-**Phase 7-10**: See docs/app_plan.md for full roadmap
+**Phase 7**: Post-Trip Features - Trip photos, daily journals, memory preservation
+**Phase 8-10**: See docs/app_plan.md for full roadmap
+**Budget Tracking**: Not yet implemented (originally part of Phase 6)
 
 ### ✅ Recently Completed
+**Phase 6: Packing Lists** - 2025-10-07 - Packing list management system complete
+- Created packing app with 4 models (PackingListTemplate, PackingListTemplateItem, TripPackingList, TripPackingItem)
+- Implemented reusable template system with 4 default templates (Beach, Mountains, Summer, Winter)
+- Built template management views (list, detail, create, edit, delete)
+- Created trip packing list views with template duplication
+- Developed interactive checkbox UI with AJAX toggle for packed status
+- Implemented "outfit calculator" feature (e.g., "5 outfits" = 5 shirts, 3 pants, 5 underwear, 5 socks)
+- Added "save as template" feature to convert trip lists into reusable templates
+- Created person assignment system for packing lists
+- Built progress tracking with visual progress bars
+- Integrated packing lists into trip detail page
+- Added comprehensive admin interface with inline editing
+- Database indexes for performance (trip, assigned_to, category, is_packed)
+- Structured logging for all packing operations
+
 **Phase 5: Itinerary** - 2025-10-07 - Daily itinerary planning system complete
 - Created itinerary app with DailyItinerary model
 - Implemented calendar view showing all trip dates with scheduled items
@@ -213,6 +234,43 @@ Activity:
   - Indexes: (trip, pre_trip_priority), (trip, post_trip_rating), (trip, is_favorite)
   - Ordering: By pre_trip_priority, then created_at
   - Methods: has_rating(), get_duration_display(), get_full_address()
+
+PackingListTemplate:
+  - UUID primary key
+  - name, description: Template identification
+  - is_system_template: Boolean (prevents deletion of built-in templates)
+  - created_by: Foreign key to User (nullable for system templates)
+  - Ordering: By name
+  - Methods: duplicate_for_trip(trip, assigned_to, list_name) - Creates TripPackingList instance
+
+PackingListTemplateItem:
+  - UUID primary key
+  - template: Foreign key to PackingListTemplate
+  - category: CharField for grouping (e.g., Clothing, Electronics)
+  - item_name, quantity, notes: Item details
+  - order: Integer for custom sorting within category
+  - Indexes: (template, category)
+  - Ordering: By category, order, item_name
+
+TripPackingList:
+  - UUID primary key
+  - trip: Foreign key to Trip
+  - name: List identification (e.g., "David's List", "Beach Gear")
+  - based_on_template: Foreign key to PackingListTemplate (nullable)
+  - assigned_to: Foreign key to User (nullable - can assign to family member)
+  - Indexes: (trip), (assigned_to)
+  - Ordering: By name
+  - Methods: get_packed_percentage(), get_packed_count(), get_total_count(), save_as_template()
+
+TripPackingItem:
+  - UUID primary key
+  - packing_list: Foreign key to TripPackingList
+  - category: CharField for grouping
+  - item_name, quantity, notes: Item details
+  - is_packed: Boolean checkbox state
+  - order: Integer for custom sorting
+  - Indexes: (packing_list, category), (packing_list, is_packed)
+  - Ordering: By category, order, item_name
 ```
 
 ### Important Relationships
@@ -227,6 +285,11 @@ Activity:
 - NoteCategory → Note: One-to-many (a category can have many notes)
 - Trip → Activity: One-to-many (a trip can have many activities)
 - User → Activity: One-to-many via created_by (a user can create many activities)
+- PackingListTemplate → PackingListTemplateItem: One-to-many (a template has many items)
+- Trip → TripPackingList: One-to-many (a trip can have many packing lists)
+- User → TripPackingList: One-to-many via assigned_to (a user can be assigned many lists)
+- PackingListTemplate → TripPackingList: One-to-many via based_on_template (template can spawn many lists)
+- TripPackingList → TripPackingItem: One-to-many (a packing list has many items)
 
 ## Custom CSS System
 

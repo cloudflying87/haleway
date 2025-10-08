@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Add Item - {{ packing_list.name }} - HaleWay{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <nav class="breadcrumb">
+            <a href="{% url 'trips:trip_detail' packing_list.trip.pk %}">{{ packing_list.trip.name }}</a>
+            <span>/</span>
+            <a href="{% url 'packing:list_detail' packing_list.pk %}">{{ packing_list.name }}</a>
+            <span>/</span>
+            <span>Add Item</span>
+        </nav>
+        <h1>Add Item to {{ packing_list.name }}</h1>
+    </div>
+
+    <form method="post" class="form-card">
+        {% csrf_token %}
+
+        <div class="form-group">
+            {{ form.category.label_tag }}
+            {{ form.category }}
+            <p class="help-text">{{ form.category.help_text }}</p>
+            <datalist id="category-suggestions">
+                <option value="Clothing">
+                <option value="Electronics">
+                <option value="Toiletries">
+                <option value="Accessories">
+                <option value="Documents">
+                <option value="Medicine">
+                <option value="Beach Gear">
+                <option value="Hiking Gear">
+                <option value="Winter Gear">
+            </datalist>
+        </div>
+
+        <div class="form-group">
+            {{ form.item_name.label_tag }}
+            {{ form.item_name }}
+        </div>
+
+        <div class="form-group">
+            {{ form.quantity.label_tag }}
+            {{ form.quantity }}
+        </div>
+
+        <div class="form-group">
+            {{ form.notes.label_tag }}
+            {{ form.notes }}
+        </div>
+
+        <div class="form-actions">
+            <a href="{% url 'packing:list_detail' packing_list.pk %}" class="btn btn-outline">Cancel</a>
+            <button type="submit" class="btn btn-primary">Add Item</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

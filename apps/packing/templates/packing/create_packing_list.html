@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Create Packing List - {{ trip.name }} - HaleWay{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <nav class="breadcrumb">
+            <a href="{% url 'trips:trip_detail' trip.pk %}">{{ trip.name }}</a>
+            <span>/</span>
+            <a href="{% url 'packing:trip_packing_lists' trip.pk %}">Packing Lists</a>
+            <span>/</span>
+            <span>Create</span>
+        </nav>
+        <h1>Create Packing List</h1>
+    </div>
+
+    <form method="post" class="form-card">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label for="template_id">Select Template *</label>
+            <select name="template_id" id="template_id" class="form-select" required>
+                <option value="">Choose a template...</option>
+                <optgroup label="System Templates">
+                    {% for template in templates %}
+                        {% if template.is_system_template %}
+                            <option value="{{ template.id }}">{{ template.name }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </optgroup>
+                {% if templates|selectattr:"is_system_template"|selectattr:False %}
+                    <optgroup label="My Custom Templates">
+                        {% for template in templates %}
+                            {% if not template.is_system_template %}
+                                <option value="{{ template.id }}">{{ template.name }}</option>
+                            {% endif %}
+                        {% endfor %}
+                    </optgroup>
+                {% endif %}
+            </select>
+            <p class="help-text">Choose a packing list template to start from</p>
+        </div>
+
+        <div class="form-group">
+            <label for="list_name">List Name *</label>
+            <input type="text" name="list_name" id="list_name" class="form-input" required
+                   placeholder="e.g., David's List, Beach Gear, Kids' Stuff">
+            <p class="help-text">Give this packing list a descriptive name</p>
+        </div>
+
+        <div class="form-group">
+            <label for="assigned_to">Assign To (Optional)</label>
+            <select name="assigned_to" id="assigned_to" class="form-select">
+                <option value="">General list (not assigned)</option>
+                {% for member in family_members %}
+                    <option value="{{ member.user.id }}">
+                        {{ member.user.get_full_name|default:member.user.username }}
+                    </option>
+                {% endfor %}
+            </select>
+            <p class="help-text">Assign this list to a specific person, or leave as general</p>
+        </div>
+
+        <div class="form-actions">
+            <a href="{% url 'packing:trip_packing_lists' trip.pk %}" class="btn btn-outline">Cancel</a>
+            <button type="submit" class="btn btn-primary">Create Packing List</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

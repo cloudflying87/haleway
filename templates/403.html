@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+{% block title %}Access Denied - HaleWay{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="error-container">
+        <div class="error-card">
+            <div class="error-icon">🚫</div>
+            <h1 class="error-code">403</h1>
+            <h2 class="error-title">Access Denied</h2>
+            <p class="error-message">
+                Sorry, you don't have permission to access this page. This area is restricted to authorized users only.
+            </p>
+
+            <div class="error-actions">
+                <a href="javascript:history.back()" class="btn btn-primary">
+                    ← Go Back
+                </a>
+                <a href="{% url 'core:home' %}" class="btn btn-outline">
+                    🏠 Return Home
+                </a>
+            </div>
+
+            <div class="error-help">
+                <p><strong>Why am I seeing this?</strong></p>
+                <ul>
+                    <li>You may not have the necessary permissions</li>
+                    <li>You might need to be logged in to access this content</li>
+                    <li>This page might be restricted to family members or admins</li>
+                    <li>The content may have been removed or made private</li>
+                </ul>
+            </div>
+
+            {% if not user.is_authenticated %}
+            <div class="error-login">
+                <p style="margin-top: var(--spacing-lg); padding-top: var(--spacing-lg); border-top: 1px solid var(--border-color);">
+                    <strong>Not logged in?</strong> You may need to <a href="{% url 'accounts:login' %}?next={{ request.path }}">log in</a> to access this page.
+                </p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.error-container {
+    min-height: 70vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-xl) 0;
+}
+
+.error-card {
+    max-width: 600px;
+    text-align: center;
+    padding: var(--spacing-xxl);
+    background: var(--bg-primary);
+    border-radius: var(--border-radius-lg);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 10px 25px rgba(0, 0, 0, 0.08);
+}
+
+.error-icon {
+    font-size: 4rem;
+    margin-bottom: var(--spacing-md);
+    animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-10px); }
+    75% { transform: translateX(10px); }
+}
+
+.error-code {
+    font-size: 3rem;
+    font-weight: 700;
+    color: #FF6B6B;
+    margin: var(--spacing-md) 0;
+}
+
+.error-title {
+    font-size: 1.75rem;
+    margin: var(--spacing-md) 0;
+    color: var(--text-primary);
+}
+
+.error-message {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    margin: var(--spacing-lg) 0;
+    line-height: 1.6;
+}
+
+.error-actions {
+    display: flex;
+    gap: var(--spacing-md);
+    justify-content: center;
+    margin: var(--spacing-xl) 0;
+    flex-wrap: wrap;
+}
+
+.error-help {
+    margin-top: var(--spacing-xl);
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--border-color);
+    text-align: left;
+}
+
+.error-help p {
+    font-weight: 600;
+    margin-bottom: var(--spacing-sm);
+    color: var(--text-primary);
+}
+
+.error-help ul {
+    list-style: none;
+    padding-left: 0;
+}
+
+.error-help li {
+    padding: var(--spacing-xs) 0;
+    color: var(--text-secondary);
+}
+
+.error-help li:before {
+    content: "• ";
+    color: var(--primary-color);
+    font-weight: bold;
+    margin-right: var(--spacing-xs);
+}
+
+.error-login a {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.error-login a:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 576px) {
+    .error-card {
+        padding: var(--spacing-lg);
+    }
+
+    .error-code {
+        font-size: 2rem;
+    }
+
+    .error-title {
+        font-size: 1.5rem;
+    }
+
+    .error-actions {
+        flex-direction: column;
+    }
+
+    .error-actions .btn {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}

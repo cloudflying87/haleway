@@ -51,7 +51,9 @@
                         "Liberation Mono", "Courier New", monospace;
     
     /* Borders */
-    --border-radius: 8px;
+    --border-radius: 12px;
+    --border-radius-lg: 16px;
+    --border-radius-sm: 8px;
     --border-width: 1px;
     
     /* Shadows */

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Delete Packing List - HaleWay{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>Delete Packing List</h1>
+    </div>
+
+    <div class="confirm-delete-card">
+        <p>Are you sure you want to delete <strong>"{{ object.name }}"</strong>?</p>
+        <p class="warning-text">This will delete all {{ object.get_total_count }} items in this list. This action cannot be undone.</p>
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-actions">
+                <a href="{% url 'packing:list_detail' object.pk %}" class="btn btn-outline">Cancel</a>
+                <button type="submit" class="btn btn-danger">Delete Packing List</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

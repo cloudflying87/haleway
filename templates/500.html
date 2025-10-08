@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block title %}Server Error - HaleWay{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="error-container">
+        <div class="error-card">
+            <div class="error-icon">🔧</div>
+            <h1 class="error-code">500</h1>
+            <h2 class="error-title">Server Error</h2>
+            <p class="error-message">
+                We're sorry! Something went wrong on our end. Our team has been notified and we're working on fixing it.
+            </p>
+
+            <div class="error-actions">
+                <a href="javascript:history.back()" class="btn btn-primary">
+                    ← Go Back
+                </a>
+                <a href="{% url 'core:home' %}" class="btn btn-outline">
+                    🏠 Return Home
+                </a>
+            </div>
+
+            <div class="error-help">
+                <p><strong>We're on it!</strong></p>
+                <ul>
+                    <li>Our team has been automatically notified</li>
+                    <li>We're working to resolve the issue quickly</li>
+                    <li>Try again in a few moments</li>
+                    <li>Your data is safe and secure</li>
+                </ul>
+            </div>
+
+            <div class="error-footer">
+                <p style="font-size: 0.875rem; color: var(--text-muted); margin-top: var(--spacing-xl);">
+                    If this problem persists, please contact our support team and reference error code: <code style="background: var(--bg-secondary); padding: 2px 6px; border-radius: 4px;">500</code>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.error-container {
+    min-height: 70vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-xl) 0;
+}
+
+.error-card {
+    max-width: 600px;
+    text-align: center;
+    padding: var(--spacing-xxl);
+    background: var(--bg-primary);
+    border-radius: var(--border-radius-lg);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 10px 25px rgba(0, 0, 0, 0.08);
+}
+
+.error-icon {
+    font-size: 4rem;
+    margin-bottom: var(--spacing-md);
+    animation: rotate 3s linear infinite;
+}
+
+@keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.error-code {
+    font-size: 3rem;
+    font-weight: 700;
+    color: #FF6B6B;
+    margin: var(--spacing-md) 0;
+}
+
+.error-title {
+    font-size: 1.75rem;
+    margin: var(--spacing-md) 0;
+    color: var(--text-primary);
+}
+
+.error-message {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    margin: var(--spacing-lg) 0;
+    line-height: 1.6;
+}
+
+.error-actions {
+    display: flex;
+    gap: var(--spacing-md);
+    justify-content: center;
+    margin: var(--spacing-xl) 0;
+    flex-wrap: wrap;
+}
+
+.error-help {
+    margin-top: var(--spacing-xl);
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--border-color);
+    text-align: left;
+}
+
+.error-help p {
+    font-weight: 600;
+    margin-bottom: var(--spacing-sm);
+    color: var(--text-primary);
+}
+
+.error-help ul {
+    list-style: none;
+    padding-left: 0;
+}
+
+.error-help li {
+    padding: var(--spacing-xs) 0;
+    color: var(--text-secondary);
+}
+
+.error-help li:before {
+    content: "✓ ";
+    color: #06A77D;
+    font-weight: bold;
+    margin-right: var(--spacing-xs);
+}
+
+.error-footer {
+    margin-top: var(--spacing-lg);
+}
+
+@media (max-width: 576px) {
+    .error-card {
+        padding: var(--spacing-lg);
+    }
+
+    .error-code {
+        font-size: 2rem;
+    }
+
+    .error-title {
+        font-size: 1.5rem;
+    }
+
+    .error-actions {
+        flex-direction: column;
+    }
+
+    .error-actions .btn {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}

@@ -91,6 +91,22 @@
             <div class="form-section">
                 <h2>Address</h2>
 
+                <!-- Address Search Box -->
+                {% if mapbox_token %}
+                <div class="form-group">
+                    <label for="address-search">Search for Address</label>
+                    <input
+                        type="text"
+                        id="address-search"
+                        class="form-control"
+                        placeholder="Start typing the resort address..."
+                        autocomplete="off"
+                    >
+                    <div id="address-results" class="address-autocomplete-results"></div>
+                    <small class="form-help">Search for the resort location to auto-fill address and coordinates</small>
+                </div>
+                {% endif %}
+
                 <div class="form-group">
                     <label for="{{ form.address_line1.id_for_label }}" class="form-label">
                         Street Address
@@ -249,5 +265,76 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* Address Autocomplete Styles */
+.address-autocomplete-results {
+    display: none;
+    position: absolute;
+    z-index: 1000;
+    background: white;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--border-radius);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    max-height: 300px;
+    overflow-y: auto;
+    margin-top: 4px;
+    width: 100%;
+    max-width: 500px;
+}
+
+.address-result-item {
+    padding: var(--spacing-sm) var(--spacing-md);
+    cursor: pointer;
+    border-bottom: 1px solid var(--gray-100);
+}
+
+.address-result-item:last-child {
+    border-bottom: none;
+}
+
+.address-result-item:hover {
+    background-color: var(--gray-50);
+}
+
+.address-result-item.no-results,
+.address-result-item.error {
+    cursor: default;
+    color: var(--text-secondary);
+}
+
+.address-result-item.error {
+    color: #c33;
+}
+
+#address-search {
+    position: relative;
+}
 </style>
+
+{% load static %}
+{% if mapbox_token %}
+<script src="{% static 'js/address-autocomplete.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize address autocomplete
+    const autocomplete = new AddressAutocomplete({
+        accessToken: '{{ mapbox_token }}',
+        searchInputId: 'address-search',
+        resultsContainerId: 'address-results',
+        fieldMapping: {
+            address_line1: '{{ form.address_line1.id_for_label }}',
+            city: '{{ form.city.id_for_label }}',
+            state: '{{ form.state.id_for_label }}',
+            zip_code: '{{ form.zip_code.id_for_label }}',
+            latitude: '{{ form.latitude.id_for_label }}',
+            longitude: '{{ form.longitude.id_for_label }}'
+        },
+        onSelect: function(addressData) {
+            console.log('Address selected:', addressData);
+            console.log('Coordinates:', addressData.latitude, addressData.longitude);
+        }
+    });
+});
+</script>
+{% endif %}
 {% endblock %}

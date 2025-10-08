@@ -57,7 +57,17 @@
                     {% if activity.get_full_address %}
                         <div class="detail-item">
                             <label>Address:</label>
-                            <p>{{ activity.get_full_address }}</p>
+                            <p>
+                                {% if activity.latitude and activity.longitude %}
+                                    <a href="https://maps.google.com/maps?q={{ activity.latitude }},{{ activity.longitude }}" target="_blank" rel="noopener noreferrer" class="map-link">
+                                        {{ activity.get_full_address }} 📍
+                                    </a>
+                                {% else %}
+                                    <a href="https://maps.google.com/maps?q={{ activity.get_full_address|urlencode }}" target="_blank" rel="noopener noreferrer" class="map-link">
+                                        {{ activity.get_full_address }} 📍
+                                    </a>
+                                {% endif %}
+                            </p>
                         </div>
                     {% endif %}
 
@@ -231,6 +241,18 @@
 
 .detail-item p {
     margin: 0;
+}
+
+.map-link {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color var(--transition-fast);
+}
+
+.map-link:hover {
+    color: var(--secondary-color);
+    text-decoration: underline;
 }
 
 .rating-display {

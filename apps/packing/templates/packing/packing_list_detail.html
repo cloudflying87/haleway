@@ -1,0 +1,315 @@
+{% extends "base.html" %}
+
+{% block title %}{{ packing_list.name }} - HaleWay{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <div class="header-content">
+            <div>
+                <nav class="breadcrumb">
+                    <a href="{% url 'trips:trip_detail' packing_list.trip.pk %}">{{ packing_list.trip.name }}</a>
+                    <span>/</span>
+                    <a href="{% url 'packing:trip_packing_lists' packing_list.trip.pk %}">Packing Lists</a>
+                    <span>/</span>
+                    <span>{{ packing_list.name }}</span>
+                </nav>
+                <h1>{{ packing_list.name }}</h1>
+                {% if packing_list.assigned_to %}
+                    <p class="subtitle">Assigned to: {{ packing_list.assigned_to.get_full_name|default:packing_list.assigned_to.username }}</p>
+                {% endif %}
+            </div>
+            {% if can_edit %}
+                <div class="header-actions">
+                    <a href="{% url 'packing:add_item' packing_list.pk %}" class="btn btn-outline">
+                        + Add Item
+                    </a>
+                    <a href="{% url 'packing:add_outfit' packing_list.pk %}" class="btn btn-outline">
+                        👕 Add Outfits
+                    </a>
+                    <a href="{% url 'packing:save_as_template' packing_list.pk %}" class="btn btn-outline">
+                        💾 Save as Template
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="progress-section">
+        <div class="progress-bar-container">
+            <div class="progress-bar" id="progress-bar" style="width: {{ packed_percentage }}%"></div>
+        </div>
+        <p class="progress-text" id="progress-text">
+            <span id="packed-count">{{ packed_count }}</span> / <span id="total-count">{{ total_count }}</span> items packed
+            (<span id="percentage">{{ packed_percentage }}</span>%)
+        </p>
+    </div>
+
+    <!-- Packing Items by Category -->
+    {% if items_by_category %}
+        {% for category, items in items_by_category.items %}
+            <div class="category-section">
+                <h2 class="category-header">{{ category }}</h2>
+                <div class="items-list">
+                    {% for item in items %}
+                        <div class="packing-item {% if item.is_packed %}packed{% endif %}" id="item-{{ item.id }}">
+                            <label class="checkbox-container">
+                                <input type="checkbox"
+                                       class="item-checkbox"
+                                       data-item-id="{{ item.id }}"
+                                       {% if item.is_packed %}checked{% endif %}
+                                       {% if not can_edit %}disabled{% endif %}>
+                                <span class="checkmark"></span>
+                                <span class="item-details">
+                                    <span class="item-name">{{ item.item_name }}</span>
+                                    {% if item.quantity > 1 %}
+                                        <span class="item-quantity">× {{ item.quantity }}</span>
+                                    {% endif %}
+                                    {% if item.notes %}
+                                        <span class="item-notes">{{ item.notes }}</span>
+                                    {% endif %}
+                                </span>
+                            </label>
+                            {% if can_edit %}
+                                <div class="item-actions">
+                                    <a href="{% url 'packing:edit_item' item.pk %}" class="btn-icon" title="Edit">✏️</a>
+                                    <a href="{% url 'packing:delete_item' item.pk %}" class="btn-icon" title="Delete">🗑️</a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-state">
+            <p>No items in this packing list yet.</p>
+            {% if can_edit %}
+                <a href="{% url 'packing:add_item' packing_list.pk %}" class="btn btn-primary">
+                    + Add Your First Item
+                </a>
+            {% endif %}
+        </div>
+    {% endif %}
+
+    <!-- Delete Button -->
+    {% if can_delete %}
+        <div class="danger-zone">
+            <a href="{% url 'packing:list_delete' packing_list.pk %}" class="btn btn-danger">
+                Delete Packing List
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+.progress-section {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin: 2rem 0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.progress-bar-container {
+    width: 100%;
+    height: 12px;
+    background: #e0e0e0;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 0.75rem;
+}
+
+.progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #06A77D, #2E86AB);
+    transition: width 0.3s ease;
+}
+
+.progress-text {
+    text-align: center;
+    font-size: 1rem;
+    color: #666;
+    margin: 0;
+}
+
+.category-section {
+    background: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.category-header {
+    font-size: 1.25rem;
+    color: #2E86AB;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.items-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.packing-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem;
+    border-radius: 6px;
+    transition: background 0.2s ease;
+}
+
+.packing-item:hover {
+    background: #f8f9fa;
+}
+
+.packing-item.packed {
+    opacity: 0.6;
+}
+
+.packing-item.packed .item-name {
+    text-decoration: line-through;
+    color: #888;
+}
+
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    flex: 1;
+}
+
+.checkbox-container input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.checkmark {
+    width: 24px;
+    height: 24px;
+    border: 2px solid #ccc;
+    border-radius: 4px;
+    margin-right: 1rem;
+    display: inline-block;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.checkbox-container input:checked ~ .checkmark {
+    background: #06A77D;
+    border-color: #06A77D;
+}
+
+.checkbox-container input:checked ~ .checkmark:after {
+    content: '✓';
+    position: absolute;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.item-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.item-name {
+    font-weight: 500;
+    color: #2c3e50;
+}
+
+.item-quantity {
+    color: #06A77D;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.item-notes {
+    color: #888;
+    font-size: 0.875rem;
+}
+
+.item-actions {
+    display: flex;
+    gap: 0.5rem;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.packing-item:hover .item-actions {
+    opacity: 1;
+}
+
+.btn-icon {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.25rem;
+    padding: 0.25rem;
+    text-decoration: none;
+}
+
+.btn-icon:hover {
+    transform: scale(1.1);
+}
+
+.danger-zone {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid #e0e0e0;
+    text-align: center;
+}
+</style>
+
+<script>
+// Toggle packed status via AJAX
+document.querySelectorAll('.item-checkbox').forEach(checkbox => {
+    checkbox.addEventListener('change', function() {
+        const itemId = this.dataset.itemId;
+        const isChecked = this.checked;
+
+        fetch(`/packing/item/${itemId}/toggle/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update progress bar
+                document.getElementById('packed-count').textContent = data.packed_count;
+                document.getElementById('total-count').textContent = data.total_count;
+                document.getElementById('percentage').textContent = data.percentage;
+                document.getElementById('progress-bar').style.width = data.percentage + '%';
+
+                // Toggle packed class
+                const itemElement = document.getElementById(`item-${itemId}`);
+                if (data.is_packed) {
+                    itemElement.classList.add('packed');
+                } else {
+                    itemElement.classList.remove('packed');
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            // Revert checkbox if error
+            this.checked = !isChecked;
+        });
+    });
+});
+</script>
+{% endblock %}

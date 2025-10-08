@@ -1,10 +1,11 @@
 """
 Authentication views for web interface.
 """
-from django.contrib.auth import login
+from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 from django.contrib import messages
+from django.views.decorators.http import require_http_methods
 import structlog
 
 from .forms import UserRegistrationForm, UserLoginForm, UserProfileForm
@@ -50,3 +51,21 @@ def profile_view(request):
     return render(request, 'accounts/profile.html', {
         'form': form,
     })
+
+
+@require_http_methods(["GET", "POST"])
+def logout_view(request):
+    """Custom logout view that handles both GET and POST."""
+    if request.method == 'POST':
+        # Log the logout
+        logger.info(
+            "user_logout",
+            user_id=request.user.id if request.user.is_authenticated else None,
+            username=request.user.username if request.user.is_authenticated else None
+        )
+        logout(request)
+        messages.success(request, 'You have been logged out successfully.')
+        return redirect('core:home')
+
+    # GET request - show logout confirmation page
+    return render(request, 'accounts/logout.html')

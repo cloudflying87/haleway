@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block title %}Page Not Found - HaleWay{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="error-container">
+        <div class="error-card">
+            <div class="error-icon">🗺️</div>
+            <h1 class="error-code">404</h1>
+            <h2 class="error-title">Page Not Found</h2>
+            <p class="error-message">
+                Looks like you've wandered off the beaten path! The page you're looking for doesn't exist or has been moved.
+            </p>
+
+            <div class="error-actions">
+                <a href="javascript:history.back()" class="btn btn-primary">
+                    ← Go Back
+                </a>
+                <a href="{% url 'core:home' %}" class="btn btn-outline">
+                    🏠 Return Home
+                </a>
+                {% if user.is_authenticated %}
+                <a href="{% url 'families:family_list' %}" class="btn btn-outline">
+                    View My Families
+                </a>
+                {% endif %}
+            </div>
+
+            <div class="error-help">
+                <p><strong>Lost? Here are some helpful links:</strong></p>
+                <ul>
+                    {% if user.is_authenticated %}
+                    <li><a href="{% url 'families:family_list' %}">My Families</a></li>
+                    <li><a href="{% url 'trips:trip_list' %}">My Trips</a></li>
+                    <li><a href="{% url 'accounts:profile' %}">My Profile</a></li>
+                    {% else %}
+                    <li><a href="{% url 'accounts:login' %}">Login</a></li>
+                    <li><a href="{% url 'accounts:register' %}">Register</a></li>
+                    {% endif %}
+                    <li><a href="{% url 'core:home' %}">Homepage</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.error-container {
+    min-height: 70vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-xl) 0;
+}
+
+.error-card {
+    max-width: 600px;
+    text-align: center;
+    padding: var(--spacing-xxl);
+    background: var(--bg-primary);
+    border-radius: var(--border-radius-lg);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 10px 25px rgba(0, 0, 0, 0.08);
+}
+
+.error-icon {
+    font-size: 4rem;
+    margin-bottom: var(--spacing-md);
+    animation: sway 2s ease-in-out infinite;
+}
+
+@keyframes sway {
+    0%, 100% { transform: rotate(-5deg); }
+    50% { transform: rotate(5deg); }
+}
+
+.error-code {
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin: var(--spacing-md) 0;
+}
+
+.error-title {
+    font-size: 1.75rem;
+    margin: var(--spacing-md) 0;
+    color: var(--text-primary);
+}
+
+.error-message {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    margin: var(--spacing-lg) 0;
+    line-height: 1.6;
+}
+
+.error-actions {
+    display: flex;
+    gap: var(--spacing-md);
+    justify-content: center;
+    margin: var(--spacing-xl) 0;
+    flex-wrap: wrap;
+}
+
+.error-help {
+    margin-top: var(--spacing-xl);
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--border-color);
+    text-align: left;
+}
+
+.error-help p {
+    font-weight: 600;
+    margin-bottom: var(--spacing-sm);
+    color: var(--text-primary);
+}
+
+.error-help ul {
+    list-style: none;
+    padding-left: 0;
+}
+
+.error-help li {
+    padding: var(--spacing-xs) 0;
+}
+
+.error-help li a {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.error-help li a:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 576px) {
+    .error-card {
+        padding: var(--spacing-lg);
+    }
+
+    .error-code {
+        font-size: 2rem;
+    }
+
+    .error-title {
+        font-size: 1.5rem;
+    }
+
+    .error-actions {
+        flex-direction: column;
+    }
+
+    .error-actions .btn {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}

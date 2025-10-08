@@ -100,11 +100,8 @@ class ActivityDetailView(LoginRequiredMixin, DetailView):
                 family=activity.trip.family,
                 user=self.request.user
             )
-            # Admins and activity creator can edit
-            context['can_edit'] = (
-                membership.is_admin() or
-                activity.created_by == self.request.user
-            )
+            # All family members can edit activities
+            context['can_edit'] = True
             context['can_delete'] = membership.is_admin()
             context['can_rate'] = True  # All members can rate
         except FamilyMember.DoesNotExist:
