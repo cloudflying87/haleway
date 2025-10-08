@@ -40,10 +40,16 @@ def dashboard(request):
     ).select_related('family').prefetch_related('resort').first()
 
     # Get upcoming trips (future trips)
-    upcoming_trips = Trip.objects.filter(
+    upcoming_trips_qs = Trip.objects.filter(
         family__in=user_families,
         start_date__gt=today
     ).select_related('family').prefetch_related('resort').order_by('start_date')[:5]
+
+    # Add days_until to each trip
+    upcoming_trips = []
+    for trip in upcoming_trips_qs:
+        trip.days_until = (trip.start_date - today).days
+        upcoming_trips.append(trip)
 
     # Get recent/past trips
     past_trips = Trip.objects.filter(

@@ -54,14 +54,20 @@ class Activity(models.Model):
         help_text=_('For future automatic distance calculations')
     )
 
-    # Manual distance entry (until automatic calculation is implemented)
+    # Distance and travel time from resort
     distance_from_resort = models.DecimalField(
         _('distance from resort (miles)'),
         max_digits=6,
         decimal_places=2,
         null=True,
         blank=True,
-        help_text=_('Approximate distance from resort in miles')
+        help_text=_('Distance from resort in miles (auto-calculated if address provided)')
+    )
+    travel_time_from_resort = models.PositiveIntegerField(
+        _('travel time from resort (minutes)'),
+        null=True,
+        blank=True,
+        help_text=_('Estimated driving time from resort (auto-calculated from distance)')
     )
 
     # Cost and time estimates
@@ -155,6 +161,21 @@ class Activity(models.Model):
 
         hours = self.estimated_duration // 60
         minutes = self.estimated_duration % 60
+
+        if hours > 0 and minutes > 0:
+            return f"{hours}h {minutes}m"
+        elif hours > 0:
+            return f"{hours}h"
+        else:
+            return f"{minutes}m"
+
+    def get_travel_time_display(self):
+        """Return human-readable travel time from resort."""
+        if not self.travel_time_from_resort:
+            return "Unknown"
+
+        hours = self.travel_time_from_resort // 60
+        minutes = self.travel_time_from_resort % 60
 
         if hours > 0 and minutes > 0:
             return f"{hours}h {minutes}m"

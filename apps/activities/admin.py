@@ -44,7 +44,7 @@ class ActivityAdmin(admin.ModelAdmin):
                 'state',
                 'zip_code',
                 ('latitude', 'longitude'),
-                'distance_from_resort'
+                ('distance_from_resort', 'travel_time_from_resort')
             )
         }),
         ('Planning Details', {

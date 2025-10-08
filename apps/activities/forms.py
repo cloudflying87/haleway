@@ -16,7 +16,7 @@ class ActivityForm(forms.ModelForm):
             'address_line1', 'address_line2',
             'city', 'state', 'zip_code',
             'latitude', 'longitude',
-            'distance_from_resort',
+            'distance_from_resort', 'travel_time_from_resort',
             'estimated_cost', 'estimated_duration',
             'pre_trip_priority'
         ]
@@ -68,6 +68,11 @@ class ActivityForm(forms.ModelForm):
                 'class': 'form-control',
                 'placeholder': 'Distance in miles (optional)',
                 'step': '0.1',
+            }),
+            'travel_time_from_resort': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Auto-calculated from distance',
+                'readonly': 'readonly',
             }),
             'estimated_cost': forms.NumberInput(attrs={
                 'class': 'form-control',

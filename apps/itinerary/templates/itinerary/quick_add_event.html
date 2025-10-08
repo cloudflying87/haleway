@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Quick Add Event - HaleWay{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>Quick Add Event</h1>
+        <p>Add a custom event like "Breakfast", "Check-in", or "Free time"</p>
+    </div>
+
+    <div class="form-container">
+        <form method="post">
+            {% csrf_token %}
+            {% if form.errors %}
+                <div class="alert alert-error">{{ form.errors }}</div>
+            {% endif %}
+
+            <div class="form-section">
+                {% for field in form %}
+                    <div class="form-group">
+                        <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} *{% endif %}</label>
+                        {{ field }}
+                        {% if field.help_text %}
+                            <small class="form-text">{{ field.help_text }}</small>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Add Event</button>
+                <a href="{% url 'itinerary:calendar' trip.pk %}" class="btn btn-outline">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.form-container { max-width: 600px; }
+.form-section { background: white; border: 1px solid var(--gray-200); border-radius: var(--border-radius); padding: var(--spacing-lg); margin-bottom: var(--spacing-lg); }
+.form-actions { display: flex; gap: var(--spacing-md); }
+.alert-error { background: #fee; border: 1px solid #fcc; padding: var(--spacing-md); margin-bottom: var(--spacing-lg); border-radius: var(--border-radius); }
+</style>
+{% endblock %}

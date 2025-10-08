@@ -1,0 +1,295 @@
+{% extends "base.html" %}
+
+{% block title %}Itinerary - {{ trip.name }} - HaleWay{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <nav class="breadcrumb">
+            <a href="{% url 'trips:trip_detail' trip.pk %}">{{ trip.name }}</a>
+            <span>/</span>
+            <span>Itinerary</span>
+        </nav>
+        <div class="header-content">
+            <h1>📅 {{trip.name}} Itinerary</h1>
+            {% if can_edit %}
+                <a href="{% url 'itinerary:item_create' trip.pk %}" class="btn btn-primary">
+                    + Add to Itinerary
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="trip-summary">
+        <p><strong>{{ trip.destination_name }}</strong> • {{ trip.start_date|date:"M d" }} - {{ trip.end_date|date:"M d, Y" }} • {{ total_days }} days</p>
+    </div>
+
+    <!-- Unscheduled Activities -->
+    {% if unscheduled_activities %}
+        <div class="unscheduled-section">
+            <h3>🎯 Unscheduled Activities</h3>
+            <p class="text-muted">Drag these to your itinerary or click to assign to a day</p>
+            <div class="activity-chips">
+                {% for activity in unscheduled_activities %}
+                    <a href="{% url 'itinerary:assign_activity' trip.pk activity.pk %}" class="activity-chip">
+                        {{ activity.name }}
+                        {% if activity.pre_trip_priority > 0 %}
+                            <span class="priority-badge">#{activity.pre_trip_priority}}</span>
+                        {% endif %}
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Calendar Grid -->
+    <div class="calendar-grid">
+        {% for day in trip_days %}
+            <div class="day-card {% if day.is_today %}today{% endif %}">
+                <div class="day-header">
+                    <div class="day-info">
+                        <span class="day-name">{{ day.date|date:"l" }}</span>
+                        <span class="day-date">{{ day.date|date:"M d, Y" }}</span>
+                    </div>
+                    <span class="item-count">{{ day.item_count }} item{{ day.item_count|pluralize }}</span>
+                </div>
+
+                {% if day.items %}
+                    <div class="day-items">
+                        {% for item in day.items %}
+                            <div class="itinerary-item">
+                                <div class="item-time">{{ item.get_time_display }}</div>
+                                <div class="item-content">
+                                    <div class="item-title">
+                                        {% if item.activity %}
+                                            <a href="{% url 'activities:activity_detail' item.activity.pk %}">
+                                                {{ item.get_display_title }}
+                                            </a>
+                                        {% else %}
+                                            {{ item.get_display_title }}
+                                        {% endif %}
+                                    </div>
+                                    {% if item.notes %}
+                                        <div class="item-notes">{{ item.notes|truncatewords:10 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="empty-day">
+                        <p class="text-muted">No plans yet</p>
+                    </div>
+                {% endif %}
+
+                <div class="day-actions">
+                    <a href="{% url 'itinerary:day_detail' trip.pk day.date|date:'Y-m-d' %}" class="btn btn-sm btn-outline">
+                        View Day
+                    </a>
+                    {% if can_edit %}
+                        <a href="{% url 'itinerary:quick_add_event_date' trip.pk day.date|date:'Y-m-d' %}" class="btn btn-sm btn-outline">
+                            + Quick Add
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+.page-header {
+    margin-bottom: var(--spacing-xl);
+}
+
+.breadcrumb {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.breadcrumb a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.trip-summary {
+    background: var(--gray-50);
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius);
+    margin-bottom: var(--spacing-xl);
+    text-align: center;
+}
+
+.unscheduled-section {
+    background: white;
+    border: 2px dashed var(--gray-300);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-xl);
+}
+
+.unscheduled-section h3 {
+    margin-top: 0;
+}
+
+.activity-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-md);
+}
+
+.activity-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-xs) var(--spacing-md);
+    background: var(--primary-color);
+    color: white;
+    border-radius: 20px;
+    text-decoration: none;
+    font-size: 0.875rem;
+    transition: transform var(--transition-fast);
+}
+
+.activity-chip:hover {
+    transform: translateY(-2px);
+    background: var(--secondary-color);
+}
+
+.priority-badge {
+    background: rgba(255,255,255,0.3);
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-size: 0.75rem;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--spacing-lg);
+}
+
+.day-card {
+    background: white;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    transition: box-shadow var(--transition-fast);
+}
+
+.day-card.today {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(46, 134, 171, 0.1);
+}
+
+.day-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.day-header {
+    background: var(--gray-50);
+    padding: var(--spacing-md);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.day-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.day-name {
+    font-weight: 600;
+    font-size: 1.125rem;
+}
+
+.day-date {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.item-count {
+    background: var(--primary-color);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.day-items {
+    padding: var(--spacing-md);
+}
+
+.itinerary-item {
+    display: flex;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) 0;
+    border-bottom: 1px solid var(--gray-100);
+}
+
+.itinerary-item:last-child {
+    border-bottom: none;
+}
+
+.item-time {
+    flex-shrink: 0;
+    width: 80px;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.item-content {
+    flex: 1;
+}
+
+.item-title {
+    font-weight: 500;
+    margin-bottom: var(--spacing-xs);
+}
+
+.item-title a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.item-notes {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.empty-day {
+    padding: var(--spacing-lg);
+    text-align: center;
+}
+
+.day-actions {
+    padding: var(--spacing-md);
+    background: var(--gray-50);
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+@media (max-width: 768px) {
+    .header-content {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .calendar-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}

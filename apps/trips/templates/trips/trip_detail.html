@@ -93,22 +93,128 @@
             {% endif %}
         </div>
 
+        <!-- Itinerary Section -->
+        <div class="section">
+            <div class="section-header">
+                <h2>📅 Itinerary{% if itinerary_count %} ({{ itinerary_count }}){% endif %}</h2>
+                <div class="header-actions">
+                    <a href="{% url 'itinerary:calendar' trip.pk %}" class="btn btn-sm btn-primary">
+                        View Calendar
+                    </a>
+                </div>
+            </div>
+
+            {% if upcoming_itinerary %}
+                <div class="itinerary-list">
+                    {% for item in upcoming_itinerary %}
+                        <div class="itinerary-card">
+                            <div class="itinerary-header">
+                                <div class="itinerary-date">
+                                    <span class="date-badge">{{ item.date|date:"M d" }}</span>
+                                    <span class="time-badge">{{ item.get_time_display }}</span>
+                                </div>
+                                <h4 class="itinerary-title">{{ item.get_display_title }}</h4>
+                            </div>
+
+                            {% if item.notes %}
+                                <p class="itinerary-notes">{{ item.notes|truncatewords:15 }}</p>
+                            {% endif %}
+
+                            {% if item.activity %}
+                                <div class="itinerary-activity-info">
+                                    {% if item.activity.city %}
+                                        <span class="info-item">📍 {{ item.activity.city }}</span>
+                                    {% endif %}
+                                    {% if item.activity.distance_from_resort %}
+                                        <span class="info-item">🚗 {{ item.activity.distance_from_resort }} mi</span>
+                                    {% endif %}
+                                    {% if item.activity.estimated_duration %}
+                                        <span class="info-item">⏱️ {{ item.activity.get_duration_display }}</span>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+
+                            <div class="itinerary-meta">
+                                <small class="text-muted">
+                                    Scheduled by {{ item.created_by.get_full_name|default:item.created_by.email }}
+                                </small>
+                                <a href="{% url 'itinerary:day_detail' trip.pk item.date|date:'Y-m-d' %}" class="btn-link">View Day →</a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-muted">No scheduled items yet. Visit the calendar to start planning your daily schedule!</p>
+            {% endif %}
+        </div>
+
         <!-- Activities Section -->
         <div class="section">
             <div class="section-header">
-                <h2>🎯 Activities</h2>
+                <h2>🎯 Activities{% if activity_count %} ({{ activity_count }}){% endif %}</h2>
                 <div class="header-actions">
-                    <a href="{% url 'activities:activity_list' trip.pk %}" class="btn btn-sm btn-outline">
-                        View All Activities
-                    </a>
                     {% if can_edit %}
                         <a href="{% url 'activities:activity_create' trip.pk %}" class="btn btn-sm btn-primary">
                             ➕ Add Activity
                         </a>
                     {% endif %}
+                    {% if activity_count > 0 %}
+                        <a href="{% url 'activities:activity_list' trip.pk %}" class="btn btn-sm btn-outline">
+                            View All ({{ activity_count }})
+                        </a>
+                    {% endif %}
                 </div>
             </div>
-            <p class="text-muted">Plan and track activities for your trip.</p>
+
+            {% if recent_activities %}
+                <div class="activities-list">
+                    {% for activity in recent_activities %}
+                        <div class="activity-card">
+                            <div class="activity-header">
+                                <h4 class="activity-title">
+                                    {% if activity.is_favorite %}⭐ {% endif %}{{ activity.name }}
+                                </h4>
+                                {% if activity.pre_trip_priority > 0 %}
+                                    <span class="priority-badge">
+                                        Priority #{{ activity.pre_trip_priority }}
+                                    </span>
+                                {% endif %}
+                            </div>
+
+                            {% if activity.description %}
+                                <p class="activity-description">{{ activity.description|truncatewords:20 }}</p>
+                            {% endif %}
+
+                            <div class="activity-info">
+                                {% if activity.city %}
+                                    <span class="info-item">📍 {{ activity.city }}{% if activity.state %}, {{ activity.state }}{% endif %}</span>
+                                {% endif %}
+                                {% if activity.distance_from_resort %}
+                                    <span class="info-item">🚗 {{ activity.distance_from_resort }} mi{% if activity.travel_time_from_resort %} ({{ activity.get_travel_time_display }}){% endif %}</span>
+                                {% endif %}
+                                {% if activity.estimated_cost %}
+                                    <span class="info-item">💰 ${{ activity.estimated_cost|floatformat:2 }}</span>
+                                {% endif %}
+                                {% if activity.estimated_duration %}
+                                    <span class="info-item">⏱️ {{ activity.get_duration_display }}</span>
+                                {% endif %}
+                                {% if activity.post_trip_rating %}
+                                    <span class="info-item">⭐ {{ activity.post_trip_rating }}/5</span>
+                                {% endif %}
+                            </div>
+
+                            <div class="activity-meta">
+                                <small class="text-muted">
+                                    Added by {{ activity.created_by.get_full_name|default:activity.created_by.email }} • {{ activity.created_at|date:"M d, Y" }}
+                                </small>
+                                <a href="{% url 'activities:activity_detail' activity.pk %}" class="btn-link">View →</a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-muted">No activities yet. Add your first activity to start planning your trip!</p>
+            {% endif %}
         </div>
 
         <!-- Notes Section -->
@@ -493,6 +599,163 @@ const notesData = {
 
 .btn-link:hover {
     text-decoration: underline;
+}
+
+/* Activities Section */
+.activities-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.activity-card {
+    padding: var(--spacing-md);
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius);
+    border-left: 3px solid #06A77D; /* Palm Green accent */
+}
+
+.activity-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+}
+
+.activity-title {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    flex: 1;
+}
+
+.priority-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    white-space: nowrap;
+    background-color: #2E86AB20;
+    color: #2E86AB;
+}
+
+.activity-description {
+    margin: var(--spacing-sm) 0;
+    color: var(--text-secondary);
+}
+
+.activity-info {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+    margin: var(--spacing-sm) 0;
+}
+
+.info-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    padding: 0.25rem 0.5rem;
+    background: var(--white);
+    border-radius: 0.5rem;
+}
+
+.activity-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: var(--spacing-sm);
+    padding-top: var(--spacing-sm);
+    border-top: 1px solid var(--border-color);
+}
+
+/* Itinerary Section */
+.itinerary-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.itinerary-card {
+    padding: var(--spacing-md);
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius);
+    border-left: 3px solid #FF6B6B; /* Sunset Coral accent */
+}
+
+.itinerary-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-sm);
+}
+
+.itinerary-date {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    min-width: 80px;
+}
+
+.date-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    background-color: #FF6B6B;
+    color: white;
+}
+
+.time-badge {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.itinerary-title {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    flex: 1;
+}
+
+.itinerary-notes {
+    margin: var(--spacing-sm) 0;
+    color: var(--text-secondary);
+    padding-left: 96px; /* Align with title */
+}
+
+.itinerary-activity-info {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+    margin: var(--spacing-sm) 0;
+    padding-left: 96px; /* Align with title */
+}
+
+.itinerary-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: var(--spacing-sm);
+    padding-top: var(--spacing-sm);
+    border-top: 1px solid var(--border-color);
+}
+
+@media (max-width: 576px) {
+    .itinerary-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .itinerary-notes,
+    .itinerary-activity-info {
+        padding-left: 0;
+    }
 }
 
 /* Modal Styles */

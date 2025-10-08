@@ -224,6 +224,19 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
     return Math.round(distance * 100) / 100; // Round to 2 decimal places
 }
 
+/**
+ * Calculate estimated travel time based on distance
+ * @param {number} distance - Distance in miles
+ * @param {number} avgSpeed - Average speed in mph (default: 40)
+ * @returns {number} - Travel time in minutes
+ */
+function calculateTravelTime(distance, avgSpeed = 40) {
+    // Calculate travel time in minutes
+    // Formula: (distance / speed) * 60 = minutes
+    const travelTimeMinutes = (distance / avgSpeed) * 60;
+    return Math.round(travelTimeMinutes);
+}
+
 function toRadians(degrees) {
     return degrees * (Math.PI / 180);
 }

@@ -130,6 +130,23 @@ class TripDetailView(LoginRequiredMixin, DetailView):
         context['note_form'] = NoteForm(trip=trip, created_by=self.request.user)
         context['categories'] = NoteCategory.objects.filter(trip=trip)
 
+        # Get recent activities for this trip (up to 5, ordered by priority)
+        from apps.activities.models import Activity
+        context['recent_activities'] = Activity.objects.filter(trip=trip).select_related(
+            'created_by'
+        ).order_by('pre_trip_priority', '-created_at')[:5]
+        context['activity_count'] = Activity.objects.filter(trip=trip).count()
+
+        # Get upcoming itinerary items for this trip (up to 5, ordered by date)
+        from django.utils import timezone
+        from apps.itinerary.models import DailyItinerary
+        today = timezone.now().date()
+        context['upcoming_itinerary'] = DailyItinerary.objects.filter(
+            trip=trip,
+            date__gte=today
+        ).select_related('activity', 'created_by').order_by('date', 'time_start', 'order')[:5]
+        context['itinerary_count'] = DailyItinerary.objects.filter(trip=trip).count()
+
         return context
 
 

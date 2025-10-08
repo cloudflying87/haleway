@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Schedule {{ activity.name }} - HaleWay{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>Schedule Activity</h1>
+        <p>Add "{{ activity.name }}" to your itinerary</p>
+    </div>
+
+    <div class="activity-preview">
+        <h3>{{ activity.name }}</h3>
+        {% if activity.description %}
+            <p>{{ activity.description }}</p>
+        {% endif %}
+        <div class="activity-meta">
+            {% if activity.estimated_duration %}<span>⏱️ {{ activity.get_duration_display }}</span>{% endif %}
+            {% if activity.estimated_cost %}<span>💰 ${{ activity.estimated_cost }}</span>{% endif %}
+            {% if activity.distance_from_resort %}<span>🚗 {{ activity.distance_from_resort }} mi</span>{% endif %}
+        </div>
+    </div>
+
+    <div class="form-container">
+        <form method="post">
+            {% csrf_token %}
+            {% if form.errors %}<div class="alert alert-error">{{ form.errors }}</div>{% endif %}
+
+            <div class="form-section">
+                {% for field in form %}
+                    <div class="form-group">
+                        <label>{{ field.label }}{% if field.field.required %} *{% endif %}</label>
+                        {{ field }}
+                    </div>
+                {% endfor %}
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Add to Itinerary</button>
+                <a href="{% url 'itinerary:calendar' trip.pk %}" class="btn btn-outline">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.activity-preview { background: var(--gray-50); padding: var(--spacing-lg); border-radius: var(--border-radius); margin-bottom: var(--spacing-xl); }
+.activity-meta { display: flex; gap: var(--spacing-md); margin-top: var(--spacing-md); color: var(--text-secondary); }
+.form-container { max-width: 600px; }
+.form-section { background: white; border: 1px solid var(--gray-200); border-radius: var(--border-radius); padding: var(--spacing-lg); margin-bottom: var(--spacing-lg); }
+.form-actions { display: flex; gap: var(--spacing-md); }
+</style>
+{% endblock %}

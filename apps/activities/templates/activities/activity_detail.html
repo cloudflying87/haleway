@@ -68,6 +68,13 @@
                         </div>
                     {% endif %}
 
+                    {% if activity.travel_time_from_resort %}
+                        <div class="detail-item">
+                            <label>Travel Time from Resort:</label>
+                            <p>{{ activity.get_travel_time_display }}</p>
+                        </div>
+                    {% endif %}
+
                     {% if activity.estimated_cost %}
                         <div class="detail-item">
                             <label>Estimated Cost:</label>

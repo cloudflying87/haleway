@@ -1,0 +1,314 @@
+{% extends "base.html" %}
+
+{% block title %}Day {{ day_number }} - {{ trip.name }} - HaleWay{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <nav class="breadcrumb">
+            <a href="{% url 'trips:trip_detail' trip.pk %}">{{ trip.name }}</a>
+            <span>/</span>
+            <a href="{% url 'itinerary:calendar' trip.pk %}">Itinerary</a>
+            <span>/</span>
+            <span>Day {{ day_number }}</span>
+        </nav>
+        <div class="header-content">
+            <div>
+                <h1>Day {{ day_number}} - {{ date|date:"l, F d" }}</h1>
+                <p class="subtitle">{{ trip.name}}</p>
+            </div>
+            {% if can_edit %}
+                <div class="header-actions">
+                    <a href="{% url 'itinerary:quick_add_event_date' trip.pk date|date:'Y-m-d' %}" class="btn btn-primary">
+                        + Add Event
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Day Navigation -->
+    <div class="day-nav">
+        {% if prev_date %}
+            <a href="{% url 'itinerary:day_detail' trip.pk prev_date|date:'Y-m-d' %}" class="btn btn-outline">
+                ← Previous Day
+            </a>
+        {% else %}
+            <span class="btn btn-outline" style="opacity: 0.3; pointer-events: none;">← Previous Day</span>
+        {% endif %}
+
+        <a href="{% url 'itinerary:calendar' trip.pk %}" class="btn btn-outline">
+            📅 Calendar View
+        </a>
+
+        {% if next_date %}
+            <a href="{% url 'itinerary:day_detail' trip.pk next_date|date:'Y-m-d' %}" class="btn btn-outline">
+                Next Day →
+            </a>
+        {% else %}
+            <span class="btn btn-outline" style="opacity: 0.3; pointer-events: none;">Next Day →</span>
+        {% endif %}
+    </div>
+
+    <!-- Unscheduled Activities Sidebar -->
+    {% if unscheduled_activities and can_edit %}
+        <div class="unscheduled-activities">
+            <h3>Available Activities</h3>
+            <div class="activity-list">
+                {% for activity in unscheduled_activities %}
+                    <a href="{% url 'itinerary:assign_activity' trip.pk activity.pk %}" class="activity-item">
+                        <span class="activity-name">{{ activity.name }}</span>
+                        <span class="btn-icon">+</span>
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Timeline -->
+    <div class="timeline-container">
+        {% if items %}
+            <div class="timeline">
+                {% for item in items %}
+                    <div class="timeline-item">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <div class="item-header">
+                                <h3 class="item-title">
+                                    {% if item.activity %}
+                                        <a href="{% url 'activities:activity_detail' item.activity.pk %}">
+                                            {{ item.get_display_title }}
+                                        </a>
+                                    {% else %}
+                                        {{ item.get_display_title }}
+                                    {% endif %}
+                                </h3>
+                                <span class="item-time">{{ item.get_time_display }}</span>
+                            </div>
+
+                            {% if item.activity %}
+                                <div class="activity-details">
+                                    {% if item.activity.estimated_duration %}
+                                        <span class="detail-item">⏱️ {{ item.activity.get_duration_display }}</span>
+                                    {% endif %}
+                                    {% if item.activity.distance_from_resort %}
+                                        <span class="detail-item">🚗 {{ item.activity.distance_from_resort }} mi</span>
+                                    {% endif %}
+                                    {% if item.activity.estimated_cost %}
+                                        <span class="detail-item">💰 ${{ item.activity.estimated_cost }}</span>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+
+                            {% if item.notes %}
+                                <p class="item-notes">{{ item.notes }}</p>
+                            {% endif %}
+
+                            {% if can_edit %}
+                                <div class="item-actions">
+                                    <a href="{% url 'itinerary:item_edit' item.pk %}" class="btn-link">Edit</a>
+                                    <a href="{% url 'itinerary:item_delete' item.pk %}" class="btn-link text-danger">Remove</a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <h2>No plans for this day yet</h2>
+                <p>Add activities or custom events to build your itinerary</p>
+                {% if can_edit %}
+                    <a href="{% url 'itinerary:quick_add_event_date' trip.pk date|date:'Y-m-d' %}" class="btn btn-primary btn-lg">
+                        + Add First Event
+                    </a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.subtitle {
+    color: var(--text-secondary);
+    margin-top: var(--spacing-xs);
+}
+
+.day-nav {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-xl);
+}
+
+.unscheduled-activities {
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-xl);
+}
+
+.unscheduled-activities h3 {
+    margin-top: 0;
+}
+
+.activity-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-md);
+}
+
+.activity-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: white;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--border-radius);
+    text-decoration: none;
+    color: var(--text-primary);
+    transition: all var(--transition-fast);
+}
+
+.activity-item:hover {
+    border-color: var(--primary-color);
+    transform: translateX(4px);
+}
+
+.btn-icon {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--primary-color);
+    color: white;
+    border-radius: 50%;
+    font-size: 1.25rem;
+    line-height: 1;
+}
+
+.timeline-container {
+    background: white;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-xl);
+}
+
+.timeline {
+    position: relative;
+    padding-left: 40px;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 12px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--gray-200);
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: var(--spacing-xl);
+}
+
+.timeline-item:last-child {
+    margin-bottom: 0;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -34px;
+    top: 4px;
+    width: 16px;
+    height: 16px;
+    background: var(--primary-color);
+    border: 3px solid white;
+    border-radius: 50%;
+    box-shadow: 0 0 0 2px var(--primary-color);
+}
+
+.timeline-content {
+    background: var(--gray-50);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-lg);
+}
+
+.item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: var(--spacing-md);
+}
+
+.item-title {
+    margin: 0;
+    font-size: 1.25rem;
+}
+
+.item-title a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.item-time {
+    color: var(--text-secondary);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.activity-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+}
+
+.detail-item {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.item-notes {
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-md);
+}
+
+.item-actions {
+    display: flex;
+    gap: var(--spacing-md);
+    padding-top: var(--spacing-md);
+    border-top: 1px solid var(--gray-200);
+}
+
+.empty-state {
+    text-align: center;
+    padding: var(--spacing-xxl);
+}
+
+@media (max-width: 768px) {
+    .day-nav {
+        flex-direction: column;
+    }
+
+    .header-content {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .timeline {
+        padding-left: 30px;
+    }
+
+    .timeline-marker {
+        left: -24px;
+    }
+}
+</style>
+{% endblock %}

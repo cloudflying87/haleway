@@ -44,7 +44,8 @@ apps/
 ├── families/       # Family management, invitations, and member roles
 ├── trips/          # Trip and resort management
 ├── notes/          # Note and category management with search
-└── activities/     # Activity management with priority ordering
+├── activities/     # Activity management with priority ordering
+└── itinerary/      # Daily itinerary and schedule planning
 ```
 
 ### Key Models
@@ -57,6 +58,7 @@ apps/
 - **NoteCategory** (notes): Category for organizing notes with color coding
 - **Note** (notes): Trip notes with full-text search, pinning, and categorization
 - **Activity** (activities): Trip activities with priority ordering and post-trip ratings
+- **DailyItinerary** (itinerary): Scheduled items on specific days with timeline view
 
 ### Important URLs
 - **Admin**: `/admin/` - Django admin interface
@@ -64,23 +66,39 @@ apps/
 - **Trips**: `/trips/` - Trip and resort management
 - **Notes**: `/notes/` - Note and category management
 - **Activities**: `/activities/` - Activity management and planning
+- **Itinerary**: `/itinerary/` - Daily schedule and itinerary planning
 - **Accounts**: `/accounts/` - User authentication and profiles
 
 ## Current Major Projects & Status
 
 ### 🚧 Active Development
-**Phase 5: Itinerary** - Status: Pending
+**Phase 6: Packing & Budget** - Status: Pending
 **Priority**: High
-**Description**: Next phase - Daily itinerary planning with calendar view
-**Key Features**: Daily schedule planning, activity assignment to days/times
-**Next Steps**: Create itinerary app, DailyItinerary model, calendar view UI
+**Description**: Next phase - Packing lists and budget tracking
+**Key Features**: Packing list management, budget tracking, expense management
+**Next Steps**: Create packing and budget apps, implement tracking features
 
 ### 📋 Planned Features
-**Phase 5**: Itinerary (Week 4) - Daily schedule planning with calendar view
 **Phase 6**: Packing & Budget (Week 5) - Packing lists and budget tracking
 **Phase 7-10**: See docs/app_plan.md for full roadmap
 
 ### ✅ Recently Completed
+**Phase 5: Itinerary** - 2025-10-07 - Daily itinerary planning system complete
+- Created itinerary app with DailyItinerary model
+- Implemented calendar view showing all trip dates with scheduled items
+- Built day detail view with timeline visualization
+- Created activity assignment functionality (assign existing activities to days/times)
+- Developed quick-add feature for standalone events (breakfast, check-in, free time)
+- Implemented itinerary item CRUD operations with proper permissions
+- Created responsive calendar grid and timeline templates
+- Added prev/next day navigation in day detail view
+- Integrated with trip detail page
+- Shows unscheduled activities for easy planning
+- Supports all-day events and timed events
+- Automatic ordering by time and custom order field
+- Database indexes for performance (trip + date, trip + date + order)
+- Structured logging for all itinerary operations
+
 **Phase 4: Activities** - 2025-10-07 - Activity management system complete
 - Created activities app with Activity model
 - Implemented activity CRUD views with proper permissions

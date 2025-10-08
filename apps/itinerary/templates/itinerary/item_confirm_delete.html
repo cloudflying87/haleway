@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}Remove from Itinerary - HaleWay{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>Remove from Itinerary</h1>
+    </div>
+
+    <div class="delete-confirmation">
+        <div class="alert alert-warning">
+            <h2>⚠️ Are you sure?</h2>
+            <p>You are about to remove this from your itinerary:</p>
+            <p class="item-name"><strong>{{ object.get_display_title }}</strong></p>
+            <p>Scheduled for: {{ object.date|date:"l, F d, Y" }} at {{ object.get_time_display }}</p>
+            <p>This will not delete the activity itself, just remove it from this day's schedule.</p>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-actions">
+                <button type="submit" class="btn btn-danger">Yes, Remove from Itinerary</button>
+                <a href="{% url 'itinerary:day_detail' object.trip.pk object.date|date:'Y-m-d' %}" class="btn btn-outline">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.delete-confirmation { max-width: 600px; margin: 0 auto; }
+.alert-warning { background: #fff3cd; border: 1px solid #ffc107; padding: var(--spacing-lg); border-radius: var(--border-radius); margin-bottom: var(--spacing-lg); }
+.alert-warning h2 { margin-top: 0; color: #856404; }
+.item-name { font-size: 1.25rem; margin: var(--spacing-md) 0; }
+.form-actions { display: flex; gap: var(--spacing-md); }
+</style>
+{% endblock %}

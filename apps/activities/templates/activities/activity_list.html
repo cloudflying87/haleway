@@ -82,6 +82,7 @@
                             {% if activity.distance_from_resort %}
                                 <div class="info-item">
                                     <strong>🚗</strong> {{ activity.distance_from_resort }} mi from resort
+                                    {% if activity.travel_time_from_resort %} ({{ activity.get_travel_time_display }}){% endif %}
                                 </div>
                             {% endif %}
 

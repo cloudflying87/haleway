@@ -121,12 +121,22 @@
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="{{ form.distance_from_resort.id_for_label }}">{{ form.distance_from_resort.label }}</label>
-                    {{ form.distance_from_resort }}
-                    {% if form.distance_from_resort.help_text %}
-                        <small class="form-text">{{ form.distance_from_resort.help_text }}</small>
-                    {% endif %}
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="{{ form.distance_from_resort.id_for_label }}">{{ form.distance_from_resort.label }}</label>
+                        {{ form.distance_from_resort }}
+                        {% if form.distance_from_resort.help_text %}
+                            <small class="form-text">{{ form.distance_from_resort.help_text }}</small>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.travel_time_from_resort.id_for_label }}">{{ form.travel_time_from_resort.label }}</label>
+                        {{ form.travel_time_from_resort }}
+                        {% if form.travel_time_from_resort.help_text %}
+                            <small class="form-text">{{ form.travel_time_from_resort.help_text }}</small>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
 
@@ -322,6 +332,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (distanceField) {
                     distanceField.value = distance;
                     console.log('Distance calculated:', distance, 'miles');
+                }
+
+                // Calculate and update travel time
+                const travelTime = calculateTravelTime(distance);
+                const travelTimeField = document.getElementById('{{ form.travel_time_from_resort.id_for_label }}');
+                if (travelTimeField) {
+                    travelTimeField.value = travelTime;
+                    console.log('Travel time calculated:', travelTime, 'minutes');
                 }
             }
             {% endif %}
