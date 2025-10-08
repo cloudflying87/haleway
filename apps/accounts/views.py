@@ -5,7 +5,6 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from django.views.decorators.http import require_http_methods
 import structlog
 
 from .forms import UserRegistrationForm, UserLoginForm, UserProfileForm
@@ -24,7 +23,7 @@ def register_view(request):
             user = form.save()
             login(request, user)
             messages.success(request, 'Registration successful! Welcome to HaleWay!')
-            return redirect('families:family_list')
+            return redirect('core:dashboard')
     else:
         form = UserRegistrationForm()
 
@@ -53,19 +52,14 @@ def profile_view(request):
     })
 
 
-@require_http_methods(["GET", "POST"])
 def logout_view(request):
-    """Custom logout view that handles both GET and POST."""
-    if request.method == 'POST':
-        # Log the logout
-        logger.info(
-            "user_logout",
-            user_id=request.user.id if request.user.is_authenticated else None,
-            username=request.user.username if request.user.is_authenticated else None
-        )
-        logout(request)
-        messages.success(request, 'You have been logged out successfully.')
-        return redirect('core:home')
-
-    # GET request - show logout confirmation page
-    return render(request, 'accounts/logout.html')
+    """Custom logout view that immediately logs out the user."""
+    # Log the logout
+    logger.info(
+        "user_logout",
+        user_id=request.user.id if request.user.is_authenticated else None,
+        username=request.user.username if request.user.is_authenticated else None
+    )
+    logout(request)
+    messages.success(request, 'You have been logged out successfully.')
+    return redirect('core:home')

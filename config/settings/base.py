@@ -228,7 +228,7 @@ DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@haleway.flyho
 
 # Authentication URLs
 LOGIN_URL = '/accounts/login/'
-LOGIN_REDIRECT_URL = '/families/'  # After login, go to families list
+LOGIN_REDIRECT_URL = '/dashboard/'  # After login, go to dashboard
 LOGOUT_REDIRECT_URL = '/'  # After logout, go to homepage
 
 # Django REST Framework

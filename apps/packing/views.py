@@ -309,11 +309,15 @@ def create_packing_list(request, trip_pk):
         Q(is_system_template=True) | Q(created_by=request.user)
     ).order_by('-is_system_template', 'name')
 
+    # Separate system and custom templates for template display
+    custom_templates = templates.filter(is_system_template=False)
+
     family_members = trip.family.get_all_members()
 
     return render(request, 'packing/create_packing_list.html', {
         'trip': trip,
         'templates': templates,
+        'custom_templates': custom_templates,
         'family_members': family_members
     })
 

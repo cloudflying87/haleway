@@ -29,12 +29,10 @@
                         {% endif %}
                     {% endfor %}
                 </optgroup>
-                {% if templates|selectattr:"is_system_template"|selectattr:False %}
+                {% if custom_templates %}
                     <optgroup label="My Custom Templates">
-                        {% for template in templates %}
-                            {% if not template.is_system_template %}
-                                <option value="{{ template.id }}">{{ template.name }}</option>
-                            {% endif %}
+                        {% for template in custom_templates %}
+                            <option value="{{ template.id }}">{{ template.name }}</option>
                         {% endfor %}
                     </optgroup>
                 {% endif %}
