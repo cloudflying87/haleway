@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }} - HaleWay{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <nav class="breadcrumb">
+            <a href="{% url 'trips:trip_detail' trip.pk %}">{{ trip.name }}</a>
+            <span>/</span>
+            <a href="{% url 'budget:budget_overview' trip.pk %}">Budget</a>
+            <span>/</span>
+            <span>{{ page_title }}</span>
+        </nav>
+        <h1>{{ page_title }}</h1>
+    </div>
+
+    <div class="form-container">
+        <form method="post" class="budget-form">
+            {% csrf_token %}
+
+            {% if form.errors %}
+                <div class="alert alert-error">
+                    Please correct the errors below.
+                </div>
+            {% endif %}
+
+            <div class="form-group">
+                <label for="{{ form.description.id_for_label }}">{{ form.description.label }}</label>
+                {{ form.description }}
+                {% if form.description.errors %}
+                    <div class="error">{{ form.description.errors.0 }}</div>
+                {% endif %}
+                {% if form.description.help_text %}
+                    <small class="help-text">{{ form.description.help_text }}</small>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.category.id_for_label }}">{{ form.category.label }}</label>
+                {{ form.category }}
+                {% if form.category.errors %}
+                    <div class="error">{{ form.category.errors.0 }}</div>
+                {% endif %}
+                {% if form.category.help_text %}
+                    <small class="help-text">{{ form.category.help_text }}</small>
+                {% endif %}
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="{{ form.estimated_amount.id_for_label }}">{{ form.estimated_amount.label }}</label>
+                    {{ form.estimated_amount }}
+                    {% if form.estimated_amount.errors %}
+                        <div class="error">{{ form.estimated_amount.errors.0 }}</div>
+                    {% endif %}
+                    {% if form.estimated_amount.help_text %}
+                        <small class="help-text">{{ form.estimated_amount.help_text }}</small>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.actual_amount.id_for_label }}">{{ form.actual_amount.label }}</label>
+                    {{ form.actual_amount }}
+                    {% if form.actual_amount.errors %}
+                        <div class="error">{{ form.actual_amount.errors.0 }}</div>
+                    {% endif %}
+                    {% if form.actual_amount.help_text %}
+                        <small class="help-text">{{ form.actual_amount.help_text }}</small>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="{{ form.paid_by.id_for_label }}">{{ form.paid_by.label }}</label>
+                    {{ form.paid_by }}
+                    {% if form.paid_by.errors %}
+                        <div class="error">{{ form.paid_by.errors.0 }}</div>
+                    {% endif %}
+                    {% if form.paid_by.help_text %}
+                        <small class="help-text">{{ form.paid_by.help_text }}</small>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.payment_date.id_for_label }}">{{ form.payment_date.label }}</label>
+                    {{ form.payment_date }}
+                    {% if form.payment_date.errors %}
+                        <div class="error">{{ form.payment_date.errors.0 }}</div>
+                    {% endif %}
+                    {% if form.payment_date.help_text %}
+                        <small class="help-text">{{ form.payment_date.help_text }}</small>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.notes.id_for_label }}">{{ form.notes.label }}</label>
+                {{ form.notes }}
+                {% if form.notes.errors %}
+                    <div class="error">{{ form.notes.errors.0 }}</div>
+                {% endif %}
+                {% if form.notes.help_text %}
+                    <small class="help-text">{{ form.notes.help_text }}</small>
+                {% endif %}
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Save Budget Item</button>
+                <a href="{% url 'budget:budget_overview' trip.pk %}" class="btn btn-outline">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.page-header {
+    margin-bottom: var(--spacing-xl);
+}
+
+.breadcrumb {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.breadcrumb a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.breadcrumb a:hover {
+    text-decoration: underline;
+}
+
+.form-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.budget-form {
+    background: var(--white);
+    padding: var(--spacing-xl);
+    border-radius: var(--border-radius);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-md);
+}
+
+@media (max-width: 768px) {
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+.form-group {
+    margin-bottom: var(--spacing-lg);
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: var(--spacing-xs);
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+}
+
+.help-text {
+    display: block;
+    margin-top: var(--spacing-xs);
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.error {
+    color: var(--danger-color);
+    font-size: 0.875rem;
+    margin-top: var(--spacing-xs);
+}
+
+.form-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-xl);
+}
+
+.alert-error {
+    background-color: #fee;
+    border: 1px solid var(--danger-color);
+    color: var(--danger-color);
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius);
+    margin-bottom: var(--spacing-lg);
+}
+</style>
+{% endblock %}

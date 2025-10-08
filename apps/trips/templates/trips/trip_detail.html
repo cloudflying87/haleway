@@ -144,6 +144,50 @@
         </div>
         {% endif %}
 
+        <!-- Packing Lists Section -->
+        <div class="section">
+            <div class="section-header">
+                <h2>🎒 Packing Lists{% if packing_lists_count %} ({{ packing_lists_count }}){% endif %}</h2>
+                <div class="header-actions">
+                    {% if can_edit %}
+                        <a href="{% url 'packing:create_packing_list' trip.pk %}" class="btn btn-sm btn-primary">
+                            + Create Packing List
+                        </a>
+                    {% endif %}
+                    {% if packing_lists_count > 0 %}
+                        <a href="{% url 'packing:trip_packing_lists' trip.pk %}" class="btn btn-sm btn-outline">
+                            View All ({{ packing_lists_count }})
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if packing_lists %}
+                <div class="packing-lists-grid">
+                    {% for packing_list in packing_lists %}
+                        <div class="packing-list-card">
+                            <div class="packing-list-header">
+                                <h4>{{ packing_list.name }}</h4>
+                                {% if packing_list.assigned_to %}
+                                    <span class="assigned-badge">{{ packing_list.assigned_to.get_full_name|default:packing_list.assigned_to.username }}</span>
+                                {% endif %}
+                            </div>
+                            <div class="packing-progress">
+                                <div class="progress-bar-mini" style="width: {{ packing_list.get_packed_percentage }}%"></div>
+                            </div>
+                            <p class="packing-status">
+                                {{ packing_list.get_packed_count }}/{{ packing_list.get_total_count }} packed
+                                ({{ packing_list.get_packed_percentage }}%)
+                            </p>
+                            <a href="{% url 'packing:list_detail' packing_list.pk %}" class="btn-link">View List →</a>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-muted">No packing lists yet. Create your first packing list to start organizing!</p>
+            {% endif %}
+        </div>
+
         <!-- Itinerary Section -->
         <div class="section">
             <div class="section-header">
@@ -459,50 +503,6 @@
                 </div>
             {% else %}
                 <p class="text-muted">No journal entries yet. Start documenting your trip experiences!</p>
-            {% endif %}
-        </div>
-
-        <!-- Packing Lists Section -->
-        <div class="section">
-            <div class="section-header">
-                <h2>🎒 Packing Lists{% if packing_lists_count %} ({{ packing_lists_count }}){% endif %}</h2>
-                <div class="header-actions">
-                    {% if can_edit %}
-                        <a href="{% url 'packing:create_packing_list' trip.pk %}" class="btn btn-sm btn-primary">
-                            + Create Packing List
-                        </a>
-                    {% endif %}
-                    {% if packing_lists_count > 0 %}
-                        <a href="{% url 'packing:trip_packing_lists' trip.pk %}" class="btn btn-sm btn-outline">
-                            View All ({{ packing_lists_count }})
-                        </a>
-                    {% endif %}
-                </div>
-            </div>
-
-            {% if packing_lists %}
-                <div class="packing-lists-grid">
-                    {% for packing_list in packing_lists %}
-                        <div class="packing-list-card">
-                            <div class="packing-list-header">
-                                <h4>{{ packing_list.name }}</h4>
-                                {% if packing_list.assigned_to %}
-                                    <span class="assigned-badge">{{ packing_list.assigned_to.get_full_name|default:packing_list.assigned_to.username }}</span>
-                                {% endif %}
-                            </div>
-                            <div class="packing-progress">
-                                <div class="progress-bar-mini" style="width: {{ packing_list.get_packed_percentage }}%"></div>
-                            </div>
-                            <p class="packing-status">
-                                {{ packing_list.get_packed_count }}/{{ packing_list.get_total_count }} packed
-                                ({{ packing_list.get_packed_percentage }}%)
-                            </p>
-                            <a href="{% url 'packing:list_detail' packing_list.pk %}" class="btn-link">View List →</a>
-                        </div>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <p class="text-muted">No packing lists yet. Create your first packing list to start organizing!</p>
             {% endif %}
         </div>
 
