@@ -262,7 +262,7 @@ const notesData = {
         isPinned: {{ note.is_pinned|yesno:"true,false" }},
         createdBy: '{{ note.created_by.get_full_name|escapejs }}',
         updatedAt: '{{ note.updated_at|date:"M d, Y" }}',
-        updateUrl: '{% url "notes:note_update" note.pk %}',
+        updateUrl: '{% url "notes:note_edit" note.pk %}',
         deleteUrl: '{% url "notes:note_delete" note.pk %}',
         canEdit: {% if can_edit or note.created_by == user %}true{% else %}false{% endif %}
     }{% if not forloop.last %},{% endif %}
@@ -646,7 +646,8 @@ function toggleEditMode() {
     document.getElementById('editNotePinned').checked = note.isPinned;
 
     // Update form action
-    document.getElementById('editNoteForm').action = note.updateUrl + '?next={% url "trips:trip_detail" trip.pk %}';
+    const tripDetailUrl = '{% url "trips:trip_detail" trip.pk %}';
+    document.getElementById('editNoteForm').action = note.updateUrl + '?next=' + encodeURIComponent(tripDetailUrl);
 
     // Toggle views
     document.getElementById('viewNoteContent').style.display = 'none';
