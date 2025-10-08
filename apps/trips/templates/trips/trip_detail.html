@@ -111,6 +111,39 @@
             {% endif %}
         </div>
 
+        <!-- Weather Forecast Section -->
+        {% if weather_forecast %}
+        <div class="section weather-section">
+            <div class="section-header">
+                <h2>🌤️ Weather Forecast</h2>
+                <button class="btn btn-sm btn-outline" onclick="openWeatherModal()">
+                    View Details
+                </button>
+            </div>
+
+            {% if temp_range %}
+                <div class="weather-summary-inline">
+                    <p class="temp-range-text">
+                        <strong>{{ temp_range.low }}°F - {{ temp_range.high }}°F</strong>
+                    </p>
+                </div>
+            {% endif %}
+
+            <div class="weather-mini-forecast">
+                {% for day in weather_forecast|slice:":5" %}
+                    <div class="weather-mini-day">
+                        <div class="mini-date">{{ day.date|date:"M j" }}</div>
+                        <div class="mini-icon">{{ day.weather_icon }}</div>
+                        <div class="mini-temps">
+                            <span class="mini-high">{{ day.high }}°</span>
+                            <span class="mini-low">{{ day.low }}°</span>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
         <!-- Itinerary Section -->
         <div class="section">
             <div class="section-header">

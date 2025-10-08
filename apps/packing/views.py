@@ -24,8 +24,10 @@ from .forms import (
     PackingListTemplateForm,
     TripPackingListForm,
     PackingItemForm,
-    OutfitCalculatorForm
+    OutfitCalculatorForm,
+    BulkPackingItemForm
 )
+from .weather import WeatherService
 
 logger = structlog.get_logger(__name__)
 
@@ -250,6 +252,28 @@ class PackingListDetailView(LoginRequiredMixin, DetailView):
         context['packed_count'] = packing_list.get_packed_count()
         context['total_count'] = packing_list.get_total_count()
 
+        # Get weather forecast if resort has coordinates
+        trip = packing_list.trip
+        if hasattr(trip, 'resort') and trip.resort:
+            resort = trip.resort
+            if resort.latitude and resort.longitude:
+                weather_forecast = WeatherService.get_forecast(
+                    latitude=float(resort.latitude),
+                    longitude=float(resort.longitude),
+                    start_date=trip.start_date,
+                    end_date=trip.end_date
+                )
+                context['weather_forecast'] = weather_forecast
+                if weather_forecast:
+                    # Calculate temperature range for the trip
+                    highs = [day['high'] for day in weather_forecast if day['high'] is not None]
+                    lows = [day['low'] for day in weather_forecast if day['low'] is not None]
+                    if highs and lows:
+                        context['temp_range'] = {
+                            'high': max(highs),
+                            'low': min(lows)
+                        }
+
         # Check permissions
         try:
             membership = FamilyMember.objects.get(
@@ -279,29 +303,51 @@ def create_packing_list(request, trip_pk):
         list_name = request.POST.get('list_name')
         assigned_to_id = request.POST.get('assigned_to')
 
-        # Get the template
-        template = get_object_or_404(
-            PackingListTemplate,
-            pk=template_id
-        )
-
         # Get assigned user if specified
         assigned_to = None
         if assigned_to_id:
             from apps.accounts.models import User
             assigned_to = get_object_or_404(User, pk=assigned_to_id)
 
-        # Create the packing list from template
-        packing_list = template.duplicate_for_trip(
-            trip=trip,
-            assigned_to=assigned_to,
-            list_name=list_name
-        )
+        # Check if starting from template or blank
+        if template_id:
+            # Get the template
+            template = get_object_or_404(
+                PackingListTemplate,
+                pk=template_id
+            )
 
-        messages.success(
-            request,
-            f'Packing list "{packing_list.name}" created successfully!'
-        )
+            # Create the packing list from template
+            packing_list = template.duplicate_for_trip(
+                trip=trip,
+                assigned_to=assigned_to,
+                list_name=list_name
+            )
+
+            messages.success(
+                request,
+                f'Packing list "{packing_list.name}" created successfully from template!'
+            )
+        else:
+            # Create blank packing list
+            packing_list = TripPackingList.objects.create(
+                trip=trip,
+                name=list_name,
+                assigned_to=assigned_to
+            )
+
+            logger.info(
+                "blank_packing_list_created",
+                packing_list_id=str(packing_list.id),
+                trip_id=str(trip.id),
+                user_id=request.user.id
+            )
+
+            messages.success(
+                request,
+                f'Blank packing list "{packing_list.name}" created successfully! Add items using Quick Add.'
+            )
+
         return redirect('packing:list_detail', pk=packing_list.pk)
 
     # GET request - show template selection form
@@ -581,4 +627,65 @@ def add_outfit(request, list_pk):
     return render(request, 'packing/add_outfit.html', {
         'packing_list': packing_list,
         'form': form
+    })
+
+
+@login_required
+def bulk_add_items(request, list_pk):
+    """Add multiple items at once via comma-separated input."""
+    packing_list = get_object_or_404(
+        TripPackingList,
+        pk=list_pk,
+        trip__family__members__user=request.user
+    )
+
+    if request.method == 'POST':
+        form = BulkPackingItemForm(request.POST)
+        if form.is_valid():
+            category = form.cleaned_data['category']
+            parsed_items = form.cleaned_data['items']  # Already parsed by clean_items()
+
+            # Get current max order for this category
+            max_order = TripPackingItem.objects.filter(
+                packing_list=packing_list,
+                category=category
+            ).count()
+
+            # Create all items
+            items_created = []
+            for idx, item_data in enumerate(parsed_items, start=max_order + 1):
+                item = TripPackingItem.objects.create(
+                    packing_list=packing_list,
+                    category=category,
+                    item_name=item_data['name'],
+                    quantity=item_data['quantity'],
+                    order=idx
+                )
+                items_created.append(item)
+
+            logger.info(
+                "bulk_items_added",
+                packing_list_id=str(packing_list.id),
+                category=category,
+                items_count=len(items_created),
+                user_id=request.user.id
+            )
+
+            messages.success(
+                request,
+                f'Added {len(items_created)} items to {category} successfully!'
+            )
+            return redirect('packing:list_detail', pk=packing_list.pk)
+    else:
+        form = BulkPackingItemForm()
+
+    # Get existing categories for suggestions
+    existing_categories = TripPackingItem.objects.filter(
+        packing_list=packing_list
+    ).values_list('category', flat=True).distinct().order_by('category')
+
+    return render(request, 'packing/bulk_add_items.html', {
+        'packing_list': packing_list,
+        'form': form,
+        'existing_categories': existing_categories
     })

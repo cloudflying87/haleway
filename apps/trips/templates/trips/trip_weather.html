@@ -1,0 +1,303 @@
+{% extends "base.html" %}
+
+{% block title %}Weather Forecast - {{ trip.name }} - HaleWay{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <div class="header-content">
+            <div>
+                <nav class="breadcrumb">
+                    <a href="{% url 'trips:trip_detail' trip.pk %}">{{ trip.name }}</a>
+                    <span>/</span>
+                    <span>Weather Forecast</span>
+                </nav>
+                <h1>🌤️ Weather Forecast</h1>
+                <p class="subtitle">{{ trip.destination_name }}</p>
+                <p class="trip-dates">{{ trip.start_date|date:"F j" }} - {{ trip.end_date|date:"F j, Y" }}</p>
+            </div>
+        </div>
+    </div>
+
+    {% if weather_forecast %}
+        <!-- Temperature Summary -->
+        <div class="weather-summary-card">
+            <h2>Temperature Overview</h2>
+            {% if temp_range %}
+                <div class="temp-stats">
+                    <div class="temp-stat">
+                        <div class="temp-stat-label">Expected High</div>
+                        <div class="temp-stat-value high">{{ temp_range.high }}°F</div>
+                    </div>
+                    <div class="temp-stat">
+                        <div class="temp-stat-label">Expected Low</div>
+                        <div class="temp-stat-value low">{{ temp_range.low }}°F</div>
+                    </div>
+                    <div class="temp-stat">
+                        <div class="temp-stat-label">Avg High</div>
+                        <div class="temp-stat-value">{{ temp_range.avg_high }}°F</div>
+                    </div>
+                    <div class="temp-stat">
+                        <div class="temp-stat-label">Avg Low</div>
+                        <div class="temp-stat-value">{{ temp_range.avg_low }}°F</div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Daily Forecast -->
+        <div class="daily-forecast-section">
+            <h2>Daily Forecast</h2>
+            <div class="daily-forecast-list">
+                {% for day in weather_forecast %}
+                    <div class="forecast-day-card">
+                        <div class="forecast-day-header">
+                            <div class="forecast-date">
+                                <div class="day-name">{{ day.date|date:"l" }}</div>
+                                <div class="date-num">{{ day.date|date:"M j, Y" }}</div>
+                            </div>
+                            <div class="forecast-icon">{{ day.weather_icon }}</div>
+                        </div>
+                        <div class="forecast-temps">
+                            <div class="temp-item">
+                                <span class="temp-label">High:</span>
+                                <span class="temp-value high">{{ day.high }}°F</span>
+                            </div>
+                            <div class="temp-item">
+                                <span class="temp-label">Low:</span>
+                                <span class="temp-value low">{{ day.low }}°F</span>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Packing Suggestions -->
+        <div class="packing-suggestions">
+            <h2>💡 Packing Suggestions Based on Weather</h2>
+            <ul class="suggestions-list">
+                {% if temp_range.high >= 85 %}
+                    <li>🌞 Hot weather expected - pack light, breathable clothing</li>
+                    <li>🧴 Don't forget sunscreen and sun protection</li>
+                    <li>💧 Bring a reusable water bottle to stay hydrated</li>
+                {% elif temp_range.high >= 70 %}
+                    <li>☀️ Warm weather - pack shorts, t-shirts, and light layers</li>
+                    <li>🧢 Consider bringing a hat for sun protection</li>
+                {% else %}
+                    <li>🧥 Cooler temperatures - pack layers and a light jacket</li>
+                {% endif %}
+
+                {% if temp_range.low <= 60 %}
+                    <li>🌙 Cool evenings - bring a sweater or light jacket</li>
+                {% endif %}
+
+                {% if temp_range.has_rain %}
+                    <li>☂️ Rain possible - pack an umbrella or rain jacket</li>
+                {% endif %}
+            </ul>
+        </div>
+
+        <div class="weather-attribution">
+            <p>Weather data provided by <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a></p>
+        </div>
+
+    {% elif resort and resort.latitude and resort.longitude %}
+        <div class="empty-state">
+            <p>Unable to load weather forecast at this time. Please try again later.</p>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <p>No weather forecast available. Add resort coordinates to view weather.</p>
+            <a href="{% url 'trips:resort_edit' trip.pk %}" class="btn btn-primary">
+                Add Resort Location
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+.trip-dates {
+    color: #666;
+    font-size: 1rem;
+    margin-top: 0.5rem;
+}
+
+.weather-summary-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    margin: 2rem 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.weather-summary-card h2 {
+    color: #2E86AB;
+    margin-bottom: 1.5rem;
+    font-size: 1.5rem;
+}
+
+.temp-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1.5rem;
+}
+
+.temp-stat {
+    text-align: center;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.temp-stat-label {
+    font-size: 0.875rem;
+    color: #666;
+    margin-bottom: 0.5rem;
+}
+
+.temp-stat-value {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.temp-stat-value.high {
+    color: #e74c3c;
+}
+
+.temp-stat-value.low {
+    color: #3498db;
+}
+
+.daily-forecast-section {
+    margin: 2rem 0;
+}
+
+.daily-forecast-section h2 {
+    color: #2E86AB;
+    margin-bottom: 1.5rem;
+    font-size: 1.5rem;
+}
+
+.daily-forecast-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.forecast-day-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.forecast-day-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.forecast-date .day-name {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.forecast-date .date-num {
+    font-size: 0.875rem;
+    color: #666;
+    margin-top: 0.25rem;
+}
+
+.forecast-icon {
+    font-size: 3rem;
+}
+
+.forecast-temps {
+    display: flex;
+    gap: 2rem;
+}
+
+.temp-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.temp-label {
+    color: #666;
+    font-size: 0.875rem;
+}
+
+.temp-value {
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.temp-value.high {
+    color: #e74c3c;
+}
+
+.temp-value.low {
+    color: #3498db;
+}
+
+.packing-suggestions {
+    background: #f0f8ff;
+    padding: 2rem;
+    border-radius: 12px;
+    margin: 2rem 0;
+    border-left: 4px solid #2E86AB;
+}
+
+.packing-suggestions h2 {
+    color: #2E86AB;
+    margin-bottom: 1rem;
+    font-size: 1.25rem;
+}
+
+.suggestions-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.suggestions-list li {
+    padding: 0.75rem 0;
+    color: #2c3e50;
+    font-size: 1rem;
+}
+
+.weather-attribution {
+    text-align: center;
+    padding: 1rem;
+    color: #888;
+    font-size: 0.875rem;
+}
+
+.weather-attribution a {
+    color: #2E86AB;
+    text-decoration: none;
+}
+
+.weather-attribution a:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+    .temp-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .forecast-temps {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+}
+</style>
+{% endblock %}

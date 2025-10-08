@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'apps.activities',  # Activity management
     'apps.itinerary',  # Daily itinerary management
     'apps.packing',  # Packing list management
+    'apps.budget',  # Budget tracking
     'apps.memories',  # Photos and journal entries
 ]
 

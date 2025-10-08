@@ -14,6 +14,7 @@ import structlog
 from apps.families.models import Family, FamilyMember
 from .models import Trip, Resort
 from .forms import TripForm, ResortForm, TripResortForm
+from apps.packing.weather import WeatherService
 
 logger = structlog.get_logger(__name__)
 
@@ -114,6 +115,27 @@ class TripDetailView(LoginRequiredMixin, DetailView):
             context['resort'] = trip.resort
         except Resort.DoesNotExist:
             context['resort'] = None
+
+        # Get weather forecast if resort has coordinates
+        if hasattr(trip, 'resort') and trip.resort:
+            resort = trip.resort
+            if resort.latitude and resort.longitude:
+                weather_forecast = WeatherService.get_forecast(
+                    latitude=float(resort.latitude),
+                    longitude=float(resort.longitude),
+                    start_date=trip.start_date,
+                    end_date=trip.end_date
+                )
+                context['weather_forecast'] = weather_forecast
+                if weather_forecast:
+                    # Calculate temperature range
+                    highs = [day['high'] for day in weather_forecast if day['high'] is not None]
+                    lows = [day['low'] for day in weather_forecast if day['low'] is not None]
+                    if highs and lows:
+                        context['temp_range'] = {
+                            'high': max(highs),
+                            'low': min(lows)
+                        }
 
         # Get recent notes for this trip (up to 5)
         from apps.notes.models import Note, NoteCategory
@@ -353,3 +375,52 @@ class TripDeleteView(LoginRequiredMixin, DeleteView):
         )
         messages.success(request, _('Trip deleted successfully.'))
         return super().delete(request, *args, **kwargs)
+
+
+@login_required
+def trip_weather(request, pk):
+    """Display detailed weather forecast for a trip."""
+    # Get the trip and verify permissions
+    user_families = Family.objects.filter(members__user=request.user)
+    trip = get_object_or_404(
+        Trip,
+        pk=pk,
+        family__in=user_families
+    )
+
+    # Get weather forecast if resort has coordinates
+    weather_forecast = None
+    temp_range = None
+
+    if hasattr(trip, 'resort') and trip.resort:
+        resort = trip.resort
+        if resort.latitude and resort.longitude:
+            weather_forecast = WeatherService.get_forecast(
+                latitude=float(resort.latitude),
+                longitude=float(resort.longitude),
+                start_date=trip.start_date,
+                end_date=trip.end_date
+            )
+
+            if weather_forecast:
+                # Calculate temperature range
+                highs = [day['high'] for day in weather_forecast if day['high'] is not None]
+                lows = [day['low'] for day in weather_forecast if day['low'] is not None]
+                # Check for rain in forecast
+                has_rain = any(day.get('weather_code', 0) >= 51 for day in weather_forecast)
+
+                if highs and lows:
+                    temp_range = {
+                        'high': max(highs),
+                        'low': min(lows),
+                        'avg_high': round(sum(highs) / len(highs)),
+                        'avg_low': round(sum(lows) / len(lows)),
+                        'has_rain': has_rain
+                    }
+
+    return render(request, 'trips/trip_weather.html', {
+        'trip': trip,
+        'resort': trip.resort if hasattr(trip, 'resort') else None,
+        'weather_forecast': weather_forecast,
+        'temp_range': temp_range
+    })

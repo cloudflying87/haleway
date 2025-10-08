@@ -19,4 +19,7 @@ urlpatterns = [
 
     # Resort management
     path('<uuid:trip_pk>/resort/edit/', views.edit_resort, name='resort_edit'),
+
+    # Weather forecast
+    path('<uuid:pk>/weather/', views.trip_weather, name='trip_weather'),
 ]

@@ -21,6 +21,9 @@
             </div>
             {% if can_edit %}
                 <div class="header-actions">
+                    <a href="{% url 'packing:bulk_add_items' packing_list.pk %}" class="btn btn-primary">
+                        ⚡ Quick Add
+                    </a>
                     <a href="{% url 'packing:add_item' packing_list.pk %}" class="btn btn-outline">
                         + Add Item
                     </a>
@@ -45,6 +48,30 @@
             (<span id="percentage">{{ packed_percentage }}</span>%)
         </p>
     </div>
+
+    <!-- Weather Forecast -->
+    {% if weather_forecast %}
+        <div class="weather-section">
+            <h2 class="weather-header">🌤️ Weather Forecast</h2>
+            {% if temp_range %}
+                <p class="weather-summary">
+                    Trip temperature range: <strong>{{ temp_range.low }}°F - {{ temp_range.high }}°F</strong>
+                </p>
+            {% endif %}
+            <div class="weather-forecast-grid">
+                {% for day in weather_forecast %}
+                    <div class="weather-day">
+                        <div class="weather-date">{{ day.date|date:"M j" }}</div>
+                        <div class="weather-icon">{{ day.weather_icon }}</div>
+                        <div class="weather-temps">
+                            {% if day.high %}<span class="temp-high">{{ day.high }}°</span>{% endif %}
+                            {% if day.low %}<span class="temp-low">{{ day.low }}°</span>{% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
 
     <!-- Packing Items by Category -->
     {% if items_by_category %}
@@ -86,9 +113,14 @@
         <div class="empty-state">
             <p>No items in this packing list yet.</p>
             {% if can_edit %}
-                <a href="{% url 'packing:add_item' packing_list.pk %}" class="btn btn-primary">
-                    + Add Your First Item
-                </a>
+                <div style="display: flex; gap: var(--spacing-md); justify-content: center; flex-wrap: wrap;">
+                    <a href="{% url 'packing:bulk_add_items' packing_list.pk %}" class="btn btn-primary">
+                        ⚡ Quick Add Items
+                    </a>
+                    <a href="{% url 'packing:add_item' packing_list.pk %}" class="btn btn-outline">
+                        + Add Single Item
+                    </a>
+                </div>
             {% endif %}
         </div>
     {% endif %}
@@ -269,6 +301,79 @@
     padding-top: 2rem;
     border-top: 1px solid #e0e0e0;
     text-align: center;
+}
+
+/* Weather Forecast Styles */
+.weather-section {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin: 2rem 0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.weather-header {
+    font-size: 1.25rem;
+    color: #2E86AB;
+    margin-bottom: 1rem;
+}
+
+.weather-summary {
+    color: #666;
+    margin-bottom: 1rem;
+    font-size: 1rem;
+}
+
+.weather-forecast-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.weather-day {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.weather-date {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.weather-icon {
+    font-size: 2rem;
+    margin: 0.5rem 0;
+}
+
+.weather-temps {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    margin-top: 0.5rem;
+}
+
+.temp-high {
+    color: #e74c3c;
+    font-weight: 600;
+}
+
+.temp-low {
+    color: #3498db;
+    font-weight: 600;
+}
+
+@media (max-width: 576px) {
+    .weather-forecast-grid {
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    }
 }
 </style>
 

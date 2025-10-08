@@ -23,6 +23,7 @@ urlpatterns = [
 
     # Packing items
     path('list/<uuid:list_pk>/add-item/', views.add_packing_item, name='add_item'),
+    path('list/<uuid:list_pk>/bulk-add/', views.bulk_add_items, name='bulk_add_items'),
     path('item/<uuid:pk>/toggle/', views.toggle_packed, name='toggle_packed'),
     path('item/<uuid:pk>/edit/', views.edit_packing_item, name='edit_item'),
     path('item/<uuid:pk>/delete/', views.delete_packing_item, name='delete_item'),

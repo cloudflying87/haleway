@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}Quick Add Items - {{ packing_list.name }} - HaleWay{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <nav class="breadcrumb">
+            <a href="{% url 'trips:trip_detail' packing_list.trip.pk %}">{{ packing_list.trip.name }}</a>
+            <span>/</span>
+            <a href="{% url 'packing:trip_packing_lists' packing_list.trip.pk %}">Packing Lists</a>
+            <span>/</span>
+            <a href="{% url 'packing:list_detail' packing_list.pk %}">{{ packing_list.name }}</a>
+            <span>/</span>
+            <span>Quick Add</span>
+        </nav>
+        <h1>Quick Add Items</h1>
+        <p class="subtitle">Add multiple items at once to <strong>{{ packing_list.name }}</strong></p>
+    </div>
+
+    <div class="form-card">
+        <div class="info-box" style="margin-bottom: var(--spacing-lg); padding: var(--spacing-md); background: var(--bg-secondary); border-left: 4px solid var(--primary-color); border-radius: var(--border-radius);">
+            <h3 style="margin-top: 0; color: var(--text-primary);">💡 Quick Tips</h3>
+            <ul style="margin: 0; padding-left: var(--spacing-lg); color: var(--text-secondary);">
+                <li>Separate items with commas: <code>Sunscreen, Hat, Sunglasses</code></li>
+                <li>Add quantity with a dash: <code>Socks-5, T-shirts-3</code></li>
+                <li>Create a new category or use an existing one</li>
+                <li>All items will be added to the same category</li>
+            </ul>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="form-group">
+                {{ form.category.label_tag }}
+                {{ form.category }}
+                {% if form.category.help_text %}
+                    <p class="help-text">{{ form.category.help_text }}</p>
+                {% endif %}
+                {% if form.category.errors %}
+                    <div class="error-message">{{ form.category.errors }}</div>
+                {% endif %}
+
+                <!-- Category suggestions datalist -->
+                <datalist id="category-suggestions">
+                    {% for category in existing_categories %}
+                        <option value="{{ category }}">
+                    {% endfor %}
+                </datalist>
+            </div>
+
+            <div class="form-group">
+                {{ form.items.label_tag }}
+                {{ form.items }}
+                {% if form.items.help_text %}
+                    <p class="help-text">{{ form.items.help_text }}</p>
+                {% endif %}
+                {% if form.items.errors %}
+                    <div class="error-message">{{ form.items.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-actions">
+                <a href="{% url 'packing:list_detail' packing_list.pk %}" class="btn btn-outline">Cancel</a>
+                <button type="submit" class="btn btn-primary">Add All Items</button>
+            </div>
+        </form>
+
+        <!-- Example section -->
+        <div class="example-section" style="margin-top: var(--spacing-xl); padding-top: var(--spacing-lg); border-top: 1px solid var(--border-color);">
+            <h3 style="color: var(--text-secondary); font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: var(--spacing-md);">Example</h3>
+            <div style="background: var(--bg-tertiary); padding: var(--spacing-md); border-radius: var(--border-radius); font-family: 'Monaco', 'Courier New', monospace; font-size: 0.875rem;">
+                <div style="margin-bottom: var(--spacing-sm);"><strong>Category:</strong> Beach Gear</div>
+                <div><strong>Items:</strong> Sunscreen-2, Beach umbrella, Cooler, Beach towels-4, Snorkel mask-2, Flip flops, Water shoes-3</div>
+            </div>
+            <p style="margin-top: var(--spacing-sm); color: var(--text-secondary); font-size: 0.875rem;">
+                This will create 7 items in the "Beach Gear" category with the specified quantities.
+            </p>
+        </div>
+    </div>
+</div>
+
+<style>
+.info-box code {
+    background: var(--bg-primary);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'Monaco', 'Courier New', monospace;
+    font-size: 0.875em;
+    color: var(--primary-color);
+}
+
+.info-box ul li {
+    margin-bottom: var(--spacing-xs);
+}
+
+.example-section {
+    color: var(--text-secondary);
+}
+</style>
+{% endblock %}

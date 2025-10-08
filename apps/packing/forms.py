@@ -91,3 +91,63 @@ class OutfitCalculatorForm(forms.Form):
         }),
         help_text=_('We\'ll calculate shirts, pants, underwear, and socks based on this number.')
     )
+
+
+class BulkPackingItemForm(forms.Form):
+    """Form for adding multiple items at once via comma-separated input."""
+
+    category = forms.CharField(
+        label=_('Category'),
+        max_length=100,
+        required=True,
+        widget=forms.TextInput(attrs={
+            'class': 'form-input',
+            'placeholder': 'e.g., Clothing, Electronics, Toiletries',
+            'list': 'category-suggestions'
+        }),
+        help_text=_('Create a new category or use an existing one')
+    )
+
+    items = forms.CharField(
+        label=_('Items (comma-separated)'),
+        required=True,
+        widget=forms.Textarea(attrs={
+            'class': 'form-textarea',
+            'rows': 6,
+            'placeholder': 'Sunscreen, Hat-2, Beach towel, Sunglasses-3, Water bottle'
+        }),
+        help_text=_('Add items separated by commas. Use "item-3" to set quantity to 3.')
+    )
+
+    def clean_items(self):
+        """Parse and validate the comma-separated items."""
+        items_text = self.cleaned_data['items']
+
+        if not items_text.strip():
+            raise forms.ValidationError(_('Please enter at least one item.'))
+
+        # Split by comma and clean up
+        raw_items = [item.strip() for item in items_text.split(',')]
+        raw_items = [item for item in raw_items if item]  # Remove empty strings
+
+        if not raw_items:
+            raise forms.ValidationError(_('Please enter at least one item.'))
+
+        # Parse items with quantities
+        parsed_items = []
+        for item in raw_items:
+            # Check if item has quantity syntax (e.g., "Sunscreen-3")
+            if '-' in item:
+                parts = item.rsplit('-', 1)  # Split from the right to handle items with hyphens
+                if len(parts) == 2 and parts[1].isdigit():
+                    item_name = parts[0].strip()
+                    quantity = int(parts[1])
+                    if quantity < 1:
+                        raise forms.ValidationError(_(f'Quantity must be at least 1 for "{item}"'))
+                    parsed_items.append({'name': item_name, 'quantity': quantity})
+                    continue
+
+            # No quantity specified, default to 1
+            parsed_items.append({'name': item, 'quantity': 1})
+
+        return parsed_items
