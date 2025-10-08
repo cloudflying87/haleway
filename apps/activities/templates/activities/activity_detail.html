@@ -58,15 +58,9 @@
                         <div class="detail-item">
                             <label>Address:</label>
                             <p>
-                                {% if activity.latitude and activity.longitude %}
-                                    <a href="https://maps.google.com/maps?q={{ activity.latitude }},{{ activity.longitude }}" target="_blank" rel="noopener noreferrer" class="map-link">
-                                        {{ activity.get_full_address }} 📍
-                                    </a>
-                                {% else %}
-                                    <a href="https://maps.google.com/maps?q={{ activity.get_full_address|urlencode }}" target="_blank" rel="noopener noreferrer" class="map-link">
-                                        {{ activity.get_full_address }} 📍
-                                    </a>
-                                {% endif %}
+                                <a href="https://maps.google.com/maps?q={{ activity.get_full_address|urlencode }}" target="_blank" rel="noopener noreferrer" class="map-link">
+                                    {{ activity.get_full_address }} 📍
+                                </a>
                             </p>
                         </div>
                     {% endif %}
@@ -88,7 +82,14 @@
                     {% if activity.estimated_cost %}
                         <div class="detail-item">
                             <label>Estimated Cost:</label>
-                            <p>${{ activity.estimated_cost|floatformat:2 }} per person</p>
+                            <p>
+                                ${{ activity.estimated_cost|floatformat:2 }} per person
+                                {% if can_edit %}
+                                    <a href="{% url 'budget:add_from_activity' activity.pk %}" class="btn btn-sm btn-primary" style="margin-left: var(--spacing-md);">
+                                        Add to Budget
+                                    </a>
+                                {% endif %}
+                            </p>
                         </div>
                     {% endif %}
 

@@ -3,6 +3,7 @@ Views for budget management.
 """
 from decimal import Decimal
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth import get_user_model
 from django.db.models import Sum, Q
@@ -341,3 +342,85 @@ class BudgetItemDeleteView(LoginRequiredMixin, DeleteView):
         )
         messages.success(request, _('Budget item deleted successfully.'))
         return super().delete(request, *args, **kwargs)
+
+
+@login_required
+def add_activity_to_budget(request, activity_pk):
+    """
+    Create a budget item from an activity's estimated cost.
+    """
+    from apps.activities.models import Activity
+
+    # Get the activity and verify user has access
+    activity = get_object_or_404(
+        Activity,
+        pk=activity_pk,
+        trip__family__members__user=request.user
+    )
+
+    trip = activity.trip
+
+    # Check if user can edit
+    try:
+        FamilyMember.objects.get(
+            family=trip.family,
+            user=request.user
+        )
+    except FamilyMember.DoesNotExist:
+        messages.error(request, _('You do not have permission to add budget items.'))
+        return redirect('activities:activity_detail', pk=activity_pk)
+
+    # Check if activity has a cost
+    if not activity.estimated_cost:
+        messages.warning(request, _('This activity does not have an estimated cost.'))
+        return redirect('activities:activity_detail', pk=activity_pk)
+
+    # Get or create "Activities" category
+    category, created = BudgetCategory.objects.get_or_create(
+        trip=trip,
+        name='Activities',
+        defaults={
+            'color_code': '#06A77D',  # Palm Green
+            'order': 2  # After lodging (0) and food (1)
+        }
+    )
+
+    # Check if this activity already has a budget item
+    existing_item = BudgetItem.objects.filter(
+        trip=trip,
+        description=activity.name,
+        estimated_amount=activity.estimated_cost
+    ).first()
+
+    if existing_item:
+        messages.info(
+            request,
+            _('This activity is already in the budget as "{}".').format(existing_item.description)
+        )
+        return redirect('activities:activity_detail', pk=activity_pk)
+
+    # Create the budget item
+    budget_item = BudgetItem.objects.create(
+        trip=trip,
+        category=category,
+        description=activity.name,
+        estimated_amount=activity.estimated_cost,
+        notes=f'Added from activity: {activity.name}',
+        created_by=request.user
+    )
+
+    logger.info(
+        "budget_item_created_from_activity",
+        item_id=str(budget_item.id),
+        activity_id=str(activity.id),
+        trip_id=str(trip.id),
+        user_id=request.user.id,
+        amount=float(activity.estimated_cost)
+    )
+
+    messages.success(
+        request,
+        _('Added "{}" to budget (${})').format(activity.name, activity.estimated_cost)
+    )
+
+    return redirect('activities:activity_detail', pk=activity_pk)

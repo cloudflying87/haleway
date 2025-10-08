@@ -19,4 +19,7 @@ urlpatterns = [
     path('<uuid:trip_pk>/item/create/', views.BudgetItemCreateView.as_view(), name='item_create'),
     path('item/<uuid:pk>/edit/', views.BudgetItemUpdateView.as_view(), name='item_update'),
     path('item/<uuid:pk>/delete/', views.BudgetItemDeleteView.as_view(), name='item_delete'),
+
+    # Add from Activity
+    path('add-from-activity/<uuid:activity_pk>/', views.add_activity_to_budget, name='add_from_activity'),
 ]
