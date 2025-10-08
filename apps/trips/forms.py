@@ -59,6 +59,7 @@ class ResortForm(forms.ModelForm):
             'name', 'website_url',
             'address_line1', 'address_line2',
             'city', 'state', 'zip_code', 'country',
+            'latitude', 'longitude',
             'general_notes'
         ]
         widgets = {
@@ -93,6 +94,16 @@ class ResortForm(forms.ModelForm):
             'country': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Country',
+            }),
+            'latitude': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'e.g., 21.3099',
+                'step': 'any',
+            }),
+            'longitude': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'e.g., -157.8581',
+                'step': 'any',
             }),
             'general_notes': forms.Textarea(attrs={
                 'class': 'form-control',

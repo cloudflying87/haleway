@@ -33,10 +33,20 @@
             </div>
             {% if resort %}
                 <div class="resort-info">
-                    <h3>{{ resort.name }}</h3>
-                    {% if resort.website_url %}
-                        <p><a href="{{ resort.website_url }}" target="_blank">{{ resort.website_url }}</a></p>
-                    {% endif %}
+                    <h3>
+                        {% if resort.website_url %}
+                            <a href="{{ resort.website_url }}" target="_blank" rel="noopener noreferrer" class="resort-link">
+                                {{ resort.name }}
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" class="external-link-icon">
+                                    <path d="M12 8.66667V12.6667C12 13.0203 11.8595 13.3594 11.6095 13.6095C11.3594 13.8595 11.0203 14 10.6667 14H3.33333C2.97971 14 2.64057 13.8595 2.39052 13.6095C2.14048 13.3594 2 13.0203 2 12.6667V5.33333C2 4.97971 2.14048 4.64057 2.39052 4.39052C2.64057 4.14048 2.97971 4 3.33333 4H7.33333" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M10 2H14V6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M6.66667 9.33333L14 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </a>
+                        {% else %}
+                            {{ resort.name }}
+                        {% endif %}
+                    </h3>
                     {% if resort.get_full_address %}
                         <p class="address">{{ resort.get_full_address }}</p>
                     {% endif %}
@@ -55,12 +65,48 @@
         <!-- Notes Section -->
         <div class="section">
             <div class="section-header">
-                <h2>📝 Trip Notes</h2>
-                <a href="{% url 'notes:note_list' trip.pk %}" class="btn btn-sm btn-primary">
-                    View All Notes
-                </a>
+                <h2>📝 Trip Notes{% if note_count %} ({{ note_count }}){% endif %}</h2>
+                <div class="header-actions">
+                    {% if can_create_note %}
+                        <button type="button" class="btn btn-sm btn-primary" onclick="openNoteModal()">
+                            ➕ Add Note
+                        </button>
+                    {% endif %}
+                    {% if note_count > 0 %}
+                        <a href="{% url 'notes:note_list' trip.pk %}" class="btn btn-sm btn-outline">
+                            View All ({{ note_count }})
+                        </a>
+                    {% endif %}
+                </div>
             </div>
-            <p class="text-muted">Keep important trip information organized with searchable, categorized notes.</p>
+
+            {% if recent_notes %}
+                <div class="notes-list">
+                    {% for note in recent_notes %}
+                        <div class="note-card">
+                            <div class="note-header">
+                                <h4 class="note-title">
+                                    {% if note.is_pinned %}📌 {% endif %}{{ note.title }}
+                                </h4>
+                                {% if note.category %}
+                                    <span class="category-badge" style="background-color: {{ note.category.color_code }}20; color: {{ note.category.color_code }};">
+                                        {{ note.category.name }}
+                                    </span>
+                                {% endif %}
+                            </div>
+                            <p class="note-content">{{ note.content|truncatewords:30 }}</p>
+                            <div class="note-meta">
+                                <small class="text-muted">
+                                    By {{ note.created_by.get_full_name }} • {{ note.updated_at|date:"M d, Y" }}
+                                </small>
+                                <a href="#" onclick="openViewNoteModal('{{ note.pk }}'); return false;" class="btn-link">View →</a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-muted">No notes yet. Add your first note to keep track of important trip information!</p>
+            {% endif %}
         </div>
 
         <!-- Trip Info -->
@@ -72,6 +118,157 @@
         </div>
     </div>
 </div>
+
+<!-- Add Note Modal -->
+{% if can_create_note %}
+<div id="noteModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Add Note to {{ trip.name }}</h3>
+            <button type="button" class="modal-close" onclick="closeNoteModal()">&times;</button>
+        </div>
+        <form method="post" action="{% url 'notes:note_create' trip.pk %}?next={% url 'trips:trip_detail' trip.pk %}" class="modal-body">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label for="{{ note_form.category.id_for_label }}" class="form-label">
+                    {{ note_form.category.label }}
+                </label>
+                {{ note_form.category }}
+                {% if note_form.category.help_text %}
+                    <small class="form-help">{{ note_form.category.help_text }}</small>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ note_form.title.id_for_label }}" class="form-label">
+                    {{ note_form.title.label }} <span class="required">*</span>
+                </label>
+                {{ note_form.title }}
+                {% if note_form.title.help_text %}
+                    <small class="form-help">{{ note_form.title.help_text }}</small>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ note_form.content.id_for_label }}" class="form-label">
+                    {{ note_form.content.label }} <span class="required">*</span>
+                </label>
+                {{ note_form.content }}
+                {% if note_form.content.help_text %}
+                    <small class="form-help">{{ note_form.content.help_text }}</small>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label class="form-check-label">
+                    {{ note_form.is_pinned }}
+                    {{ note_form.is_pinned.label }}
+                </label>
+                {% if note_form.is_pinned.help_text %}
+                    <small class="form-help">{{ note_form.is_pinned.help_text }}</small>
+                {% endif %}
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" onclick="closeNoteModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Note</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+<!-- View/Edit Note Modal -->
+<div id="viewNoteModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="viewNoteTitle"></h3>
+            <button type="button" class="modal-close" onclick="closeViewNoteModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <!-- View Mode -->
+            <div id="viewNoteContent">
+                <div id="viewNoteCategory" class="form-group" style="display: none;">
+                    <span class="category-badge-large"></span>
+                </div>
+                <div id="viewNotePinned" style="display: none; margin-bottom: 1rem;">
+                    <span class="pinned-badge">📌 Pinned</span>
+                </div>
+                <div class="note-content-full" id="viewNoteText"></div>
+                <div class="note-meta" style="margin-top: 1rem;">
+                    <small class="text-muted" id="viewNoteMetaText"></small>
+                </div>
+            </div>
+
+            <!-- Edit Mode (hidden by default) -->
+            <form id="editNoteForm" method="post" style="display: none;">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{% url 'trips:trip_detail' trip.pk %}">
+
+                <div class="form-group">
+                    <label for="editNoteCategory" class="form-label">Category</label>
+                    <select id="editNoteCategory" name="category" class="form-control">
+                        <option value="">-- No Category --</option>
+                        {% for category in categories %}
+                            <option value="{{ category.pk }}">{{ category.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="editNoteTitle" class="form-label">Title <span class="required">*</span></label>
+                    <input type="text" id="editNoteTitle" name="title" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="editNoteContentText" class="form-label">Content <span class="required">*</span></label>
+                    <textarea id="editNoteContentText" name="content" class="form-control" rows="6" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-check-label">
+                        <input type="checkbox" id="editNotePinned" name="is_pinned" class="form-check-input">
+                        Pin this note
+                    </label>
+                </div>
+            </form>
+
+            <div class="modal-footer">
+                <div id="viewModeButtons">
+                    <button type="button" class="btn btn-outline" onclick="closeViewNoteModal()">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="toggleEditMode()" id="editButton">Edit</button>
+                    <button type="button" class="btn btn-danger" onclick="deleteNote()" id="deleteButton">Delete</button>
+                </div>
+                <div id="editModeButtons" style="display: none;">
+                    <button type="button" class="btn btn-outline" onclick="cancelEdit()">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveNote()">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Store note data for JavaScript -->
+<script>
+const notesData = {
+    {% for note in recent_notes %}
+    '{{ note.pk }}': {
+        title: '{{ note.title|escapejs }}',
+        content: '{{ note.content|escapejs }}',
+        category: '{{ note.category.pk|default:"" }}',
+        categoryName: '{{ note.category.name|default:""|escapejs }}',
+        categoryColor: '{{ note.category.color_code|default:"" }}',
+        isPinned: {{ note.is_pinned|yesno:"true,false" }},
+        createdBy: '{{ note.created_by.get_full_name|escapejs }}',
+        updatedAt: '{{ note.updated_at|date:"M d, Y" }}',
+        updateUrl: '{% url "notes:note_update" note.pk %}',
+        deleteUrl: '{% url "notes:note_delete" note.pk %}',
+        canEdit: {% if can_edit or note.created_by == user %}true{% else %}false{% endif %}
+    }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+};
+</script>
 
 <style>
 .page-header {
@@ -117,6 +314,30 @@
     margin-bottom: var(--spacing-sm);
 }
 
+.resort-link {
+    color: var(--primary-color);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: color var(--transition-fast);
+}
+
+.resort-link:hover {
+    color: var(--secondary-color);
+    text-decoration: underline;
+}
+
+.external-link-icon {
+    flex-shrink: 0;
+    opacity: 0.6;
+    transition: opacity var(--transition-fast);
+}
+
+.resort-link:hover .external-link-icon {
+    opacity: 1;
+}
+
 .address {
     color: var(--text-secondary);
 }
@@ -127,5 +348,377 @@
     background: var(--bg-secondary);
     border-radius: var(--border-radius);
 }
+
+/* Notes Section */
+.header-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+.notes-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.note-card {
+    padding: var(--spacing-md);
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius);
+    border-left: 3px solid var(--primary-color);
+}
+
+.note-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+}
+
+.note-title {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    flex: 1;
+}
+
+.category-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.note-content {
+    margin: var(--spacing-sm) 0;
+    color: var(--text-secondary);
+}
+
+.note-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: var(--spacing-sm);
+    padding-top: var(--spacing-sm);
+    border-top: 1px solid var(--border-color);
+}
+
+.btn-link {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.btn-link:hover {
+    text-decoration: underline;
+}
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+}
+
+.modal.show {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.2s;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.modal-content {
+    background-color: var(--white);
+    border-radius: 12px;
+    max-width: 600px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    animation: slideUp 0.3s;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-lg);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-header h3 {
+    margin: 0;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 2rem;
+    line-height: 1;
+    cursor: pointer;
+    color: var(--text-secondary);
+    transition: color var(--transition-fast);
+}
+
+.modal-close:hover {
+    color: var(--text-primary);
+}
+
+.modal-body {
+    padding: var(--spacing-lg);
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-lg);
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--border-color);
+}
+
+.form-check-label {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    cursor: pointer;
+}
+
+.required {
+    color: var(--danger-color);
+}
+
+.category-badge-large {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    border-radius: 1.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.pinned-badge {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    background-color: var(--gray-200);
+    border-radius: var(--border-radius);
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.note-content-full {
+    white-space: pre-wrap;
+    line-height: 1.6;
+    margin: var(--spacing-md) 0;
+}
+
+@media (max-width: 768px) {
+    .note-header {
+        flex-direction: column;
+    }
+
+    .header-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .header-actions .btn {
+        width: 100%;
+    }
+
+    .note-meta {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-xs);
+    }
+}
 </style>
+
+<script>
+let currentNoteId = null;
+let isEditMode = false;
+
+// Add Note Modal
+function openNoteModal() {
+    document.getElementById('noteModal').classList.add('show');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeNoteModal() {
+    document.getElementById('noteModal').classList.remove('show');
+    document.body.style.overflow = '';
+}
+
+// View/Edit Note Modal
+function openViewNoteModal(noteId) {
+    currentNoteId = noteId;
+    const note = notesData[noteId];
+
+    if (!note) {
+        console.error('Note not found:', noteId);
+        return;
+    }
+
+    // Populate view mode
+    document.getElementById('viewNoteTitle').textContent = note.title;
+    document.getElementById('viewNoteText').textContent = note.content;
+    document.getElementById('viewNoteMetaText').textContent = `By ${note.createdBy} • ${note.updatedAt}`;
+
+    // Show/hide category
+    if (note.categoryName) {
+        const categoryBadge = document.querySelector('#viewNoteCategory .category-badge-large');
+        categoryBadge.textContent = note.categoryName;
+        categoryBadge.style.backgroundColor = note.categoryColor + '20';
+        categoryBadge.style.color = note.categoryColor;
+        document.getElementById('viewNoteCategory').style.display = 'block';
+    } else {
+        document.getElementById('viewNoteCategory').style.display = 'none';
+    }
+
+    // Show/hide pinned badge
+    if (note.isPinned) {
+        document.getElementById('viewNotePinned').style.display = 'block';
+    } else {
+        document.getElementById('viewNotePinned').style.display = 'none';
+    }
+
+    // Show/hide edit and delete buttons based on permissions
+    if (note.canEdit) {
+        document.getElementById('editButton').style.display = 'inline-block';
+        document.getElementById('deleteButton').style.display = 'inline-block';
+    } else {
+        document.getElementById('editButton').style.display = 'none';
+        document.getElementById('deleteButton').style.display = 'none';
+    }
+
+    // Reset to view mode
+    isEditMode = false;
+    document.getElementById('viewNoteContent').style.display = 'block';
+    document.getElementById('editNoteForm').style.display = 'none';
+    document.getElementById('viewModeButtons').style.display = 'flex';
+    document.getElementById('editModeButtons').style.display = 'none';
+
+    // Show modal
+    document.getElementById('viewNoteModal').classList.add('show');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeViewNoteModal() {
+    document.getElementById('viewNoteModal').classList.remove('show');
+    document.body.style.overflow = '';
+    currentNoteId = null;
+    isEditMode = false;
+}
+
+function toggleEditMode() {
+    if (!currentNoteId) return;
+
+    const note = notesData[currentNoteId];
+    isEditMode = true;
+
+    // Populate edit form
+    document.getElementById('editNoteCategory').value = note.category;
+    document.getElementById('editNoteTitle').value = note.title;
+    document.getElementById('editNoteContentText').value = note.content;
+    document.getElementById('editNotePinned').checked = note.isPinned;
+
+    // Update form action
+    document.getElementById('editNoteForm').action = note.updateUrl + '?next={% url "trips:trip_detail" trip.pk %}';
+
+    // Toggle views
+    document.getElementById('viewNoteContent').style.display = 'none';
+    document.getElementById('editNoteForm').style.display = 'block';
+    document.getElementById('viewModeButtons').style.display = 'none';
+    document.getElementById('editModeButtons').style.display = 'flex';
+}
+
+function cancelEdit() {
+    isEditMode = false;
+    document.getElementById('viewNoteContent').style.display = 'block';
+    document.getElementById('editNoteForm').style.display = 'none';
+    document.getElementById('viewModeButtons').style.display = 'flex';
+    document.getElementById('editModeButtons').style.display = 'none';
+}
+
+function saveNote() {
+    // Submit the edit form
+    document.getElementById('editNoteForm').submit();
+}
+
+function deleteNote() {
+    if (!currentNoteId) return;
+
+    const note = notesData[currentNoteId];
+
+    if (confirm(`Are you sure you want to delete the note "${note.title}"?`)) {
+        // Create a form to submit the delete request
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = note.deleteUrl;
+
+        // Add CSRF token
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrfmiddlewaretoken';
+        csrfInput.value = csrfToken;
+        form.appendChild(csrfInput);
+
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+// Close modals when clicking outside
+document.addEventListener('click', function(event) {
+    const noteModal = document.getElementById('noteModal');
+    const viewNoteModal = document.getElementById('viewNoteModal');
+
+    if (event.target === noteModal) {
+        closeNoteModal();
+    }
+    if (event.target === viewNoteModal) {
+        closeViewNoteModal();
+    }
+});
+
+// Close modals with Escape key
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        if (document.getElementById('noteModal').classList.contains('show')) {
+            closeNoteModal();
+        }
+        if (document.getElementById('viewNoteModal').classList.contains('show')) {
+            if (isEditMode) {
+                cancelEdit();
+            } else {
+                closeViewNoteModal();
+            }
+        }
+    }
+});
+</script>
 {% endblock %}

@@ -106,15 +106,29 @@ class TripDetailView(LoginRequiredMixin, DetailView):
                 trip.created_by == self.request.user
             )
             context['can_delete'] = membership.is_admin()
+            context['can_create_note'] = True  # All members can create notes
         except FamilyMember.DoesNotExist:
             context['can_edit'] = False
             context['can_delete'] = False
+            context['can_create_note'] = False
 
         # Get resort if exists
         try:
             context['resort'] = trip.resort
         except Resort.DoesNotExist:
             context['resort'] = None
+
+        # Get recent notes for this trip (up to 5)
+        from apps.notes.models import Note, NoteCategory
+        from apps.notes.forms import NoteForm
+        context['recent_notes'] = Note.objects.filter(trip=trip).select_related(
+            'category', 'created_by'
+        )[:5]
+        context['note_count'] = Note.objects.filter(trip=trip).count()
+
+        # Add note form for modal
+        context['note_form'] = NoteForm(trip=trip, created_by=self.request.user)
+        context['categories'] = NoteCategory.objects.filter(trip=trip)
 
         return context
 

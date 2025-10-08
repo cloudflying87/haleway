@@ -179,7 +179,10 @@ class NoteCreateView(LoginRequiredMixin, CreateView):
         return response
 
     def get_success_url(self):
-        """Redirect to trip's note list."""
+        """Redirect to next URL if provided, otherwise to trip's note list."""
+        next_url = self.request.GET.get('next')
+        if next_url:
+            return next_url
         return reverse_lazy('notes:note_list', kwargs={'trip_pk': self.trip.pk})
 
 
@@ -229,7 +232,10 @@ class NoteUpdateView(LoginRequiredMixin, UpdateView):
         return super().form_valid(form)
 
     def get_success_url(self):
-        """Redirect to note detail."""
+        """Redirect to next URL if provided, otherwise to note detail."""
+        next_url = self.request.GET.get('next') or self.request.POST.get('next')
+        if next_url:
+            return next_url
         return self.object.get_absolute_url()
 
 
