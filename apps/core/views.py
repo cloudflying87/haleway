@@ -1,11 +1,12 @@
 """
 Core app views.
 """
-from django.shortcuts import render, redirect
+
+from django.shortcuts import redirect, render
 from django.utils import timezone
-from django.db.models import Count
-from apps.trips.models import Trip
+
 from apps.families.models import Family
+from apps.trips.models import Resort, Trip
 
 
 def home(request):
@@ -13,13 +14,13 @@ def home(request):
 
     # Redirect authenticated users to dashboard
     if request.user.is_authenticated:
-        return redirect('core:dashboard')
+        return redirect("core:dashboard")
 
     # Show landing page for non-authenticated users
     context = {
-        'project_name': 'haleway',
+        "project_name": "haleway",
     }
-    return render(request, 'core/landing.html', context)
+    return render(request, "core/landing.html", context)
 
 
 def dashboard(request):
@@ -33,17 +34,20 @@ def dashboard(request):
     today = timezone.now().date()
 
     # Get active trip (trip happening right now)
-    active_trip = Trip.objects.filter(
-        family__in=user_families,
-        start_date__lte=today,
-        end_date__gte=today
-    ).select_related('family').prefetch_related('resort').first()
+    active_trip = (
+        Trip.objects.filter(family__in=user_families, start_date__lte=today, end_date__gte=today)
+        .select_related("family")
+        .prefetch_related("resort")
+        .first()
+    )
 
     # Get upcoming trips (future trips)
-    upcoming_trips_qs = Trip.objects.filter(
-        family__in=user_families,
-        start_date__gt=today
-    ).select_related('family').prefetch_related('resort').order_by('start_date')[:5]
+    upcoming_trips_qs = (
+        Trip.objects.filter(family__in=user_families, start_date__gt=today)
+        .select_related("family")
+        .prefetch_related("resort")
+        .order_by("start_date")[:5]
+    )
 
     # Add days_until to each trip
     upcoming_trips = []
@@ -52,23 +56,25 @@ def dashboard(request):
         upcoming_trips.append(trip)
 
     # Get recent/past trips
-    past_trips = Trip.objects.filter(
-        family__in=user_families,
-        end_date__lt=today
-    ).select_related('family').prefetch_related('resort').order_by('-end_date')[:3]
+    past_trips = (
+        Trip.objects.filter(family__in=user_families, end_date__lt=today)
+        .select_related("family")
+        .prefetch_related("resort")
+        .order_by("-end_date")[:3]
+    )
 
     # Get stats
-    context['active_trip'] = active_trip
-    context['upcoming_trips'] = upcoming_trips
-    context['past_trips'] = past_trips
-    context['total_trips'] = Trip.objects.filter(family__in=user_families).count()
-    context['families_count'] = user_families.count()
+    context["active_trip"] = active_trip
+    context["upcoming_trips"] = upcoming_trips
+    context["past_trips"] = past_trips
+    context["total_trips"] = Trip.objects.filter(family__in=user_families).count()
+    context["families_count"] = user_families.count()
 
     # Get resort for active trip if exists
     if active_trip:
         try:
-            context['active_resort'] = active_trip.resort
-        except:
-            context['active_resort'] = None
+            context["active_resort"] = active_trip.resort
+        except Resort.DoesNotExist:
+            context["active_resort"] = None
 
-    return render(request, 'core/dashboard.html', context)
+    return render(request, "core/dashboard.html", context)

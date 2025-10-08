@@ -1,9 +1,11 @@
 """
 Forms for family management.
 """
+
 from django import forms
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
+
 from .models import Family, FamilyInvitation
 
 
@@ -12,26 +14,24 @@ class FamilyForm(forms.ModelForm):
 
     class Meta:
         model = Family
-        fields = ['name']
+        fields = ["name"]
         widgets = {
-            'name': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'e.g., The Smith Family',
-                'required': True
-            })
+            "name": forms.TextInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "e.g., The Smith Family",
+                    "required": True,
+                }
+            )
         }
-        labels = {
-            'name': _('Family Name')
-        }
-        help_texts = {
-            'name': _('Choose a name that all family members will recognize.')
-        }
+        labels = {"name": _("Family Name")}
+        help_texts = {"name": _("Choose a name that all family members will recognize.")}
 
     def clean_name(self):
         """Validate family name."""
-        name = self.cleaned_data.get('name')
+        name = self.cleaned_data.get("name")
         if not name or len(name.strip()) < 2:
-            raise ValidationError(_('Family name must be at least 2 characters long.'))
+            raise ValidationError(_("Family name must be at least 2 characters long."))
         return name.strip()
 
 
@@ -40,20 +40,18 @@ class FamilyInvitationForm(forms.ModelForm):
 
     class Meta:
         model = FamilyInvitation
-        fields = ['email']
+        fields = ["email"]
         widgets = {
-            'email': forms.EmailInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'family.member@example.com',
-                'required': True
-            })
+            "email": forms.EmailInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "family.member@example.com",
+                    "required": True,
+                }
+            )
         }
-        labels = {
-            'email': _('Email Address')
-        }
-        help_texts = {
-            'email': _('We will send an invitation link to this email address.')
-        }
+        labels = {"email": _("Email Address")}
+        help_texts = {"email": _("We will send an invitation link to this email address.")}
 
     def __init__(self, *args, family=None, invited_by=None, **kwargs):
         """Initialize form with family and inviter."""
@@ -63,29 +61,28 @@ class FamilyInvitationForm(forms.ModelForm):
 
     def clean_email(self):
         """Validate that email is not already a member or invited."""
-        email = self.cleaned_data.get('email')
+        email = self.cleaned_data.get("email")
 
         if not self.family:
-            raise ValidationError(_('Invalid family.'))
+            raise ValidationError(_("Invalid family."))
 
         # Check if user is already a family member
         from apps.accounts.models import User
+
         try:
             user = User.objects.get(email=email)
             if self.family.members.filter(user=user).exists():
-                raise ValidationError(_('This email is already a member of your family.'))
+                raise ValidationError(_("This email is already a member of your family."))
         except User.DoesNotExist:
             pass
 
         # Check if there's already a pending invitation
         pending_invitation = FamilyInvitation.objects.filter(
-            family=self.family,
-            email=email,
-            status='pending'
+            family=self.family, email=email, status="pending"
         ).first()
 
         if pending_invitation and pending_invitation.is_valid():
-            raise ValidationError(_('An invitation has already been sent to this email.'))
+            raise ValidationError(_("An invitation has already been sent to this email."))
 
         return email
 

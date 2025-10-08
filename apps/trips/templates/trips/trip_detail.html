@@ -4,1586 +4,1586 @@
 {% block title %}{{ trip.name }} - HaleWay{% endblock %}
 
 {% block content %}
-<div class="container">
+  <div class="container">
     <div class="page-header">
-        <div>
-            <h1>{{ trip.name }}</h1>
-            <p class="destination">📍 {{ trip.destination_name }}</p>
-            <p class="dates">{{ trip.start_date|date:"M d, Y" }} - {{ trip.end_date|date:"M d, Y" }} ({{ trip.duration_days }} days)</p>
-        </div>
-        <div class="trip-actions">
-            {% if can_edit %}
-                <a href="{% url 'trips:trip_edit' trip.pk %}" class="btn btn-outline">Edit Trip</a>
-            {% endif %}
-            {% if can_delete %}
-                <a href="{% url 'trips:trip_delete' trip.pk %}" class="btn btn-danger btn-sm">Delete</a>
-            {% endif %}
-        </div>
+      <div>
+        <h1>{{ trip.name }}</h1>
+        <p class="destination">📍 {{ trip.destination_name }}</p>
+        <p class="dates">{{ trip.start_date|date:"M d, Y" }} - {{ trip.end_date|date:"M d, Y" }} ({{ trip.duration_days }} days)</p>
+      </div>
+      <div class="trip-actions">
+        {% if can_edit %}
+          <a href="{% url 'trips:trip_edit' trip.pk %}" class="btn btn-outline">Edit Trip</a>
+        {% endif %}
+        {% if can_delete %}
+          <a href="{% url 'trips:trip_delete' trip.pk %}" class="btn btn-danger btn-sm">Delete</a>
+        {% endif %}
+      </div>
     </div>
 
     <div class="trip-content">
         <!-- Resort Details -->
-        <div class="section">
-            <div class="section-header">
-                <h2>Resort Details</h2>
-                {% if can_edit %}
-                    <a href="{% url 'trips:resort_edit' trip.pk %}" class="btn btn-sm btn-outline">
-                        {% if resort %}Edit{% else %}Add{% endif %} Resort
-                    </a>
-                {% endif %}
-            </div>
-            {% if resort %}
-                <div class="resort-info">
-                    <h3>
-                        {% if resort.website_url %}
-                            <a href="{{ resort.website_url }}" target="_blank" rel="noopener noreferrer" class="resort-link">
-                                {{ resort.name }}
-                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" class="external-link-icon">
-                                    <path d="M12 8.66667V12.6667C12 13.0203 11.8595 13.3594 11.6095 13.6095C11.3594 13.8595 11.0203 14 10.6667 14H3.33333C2.97971 14 2.64057 13.8595 2.39052 13.6095C2.14048 13.3594 2 13.0203 2 12.6667V5.33333C2 4.97971 2.14048 4.64057 2.39052 4.39052C2.64057 4.14048 2.97971 4 3.33333 4H7.33333" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M10 2H14V6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M6.66667 9.33333L14 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                            </a>
-                        {% else %}
-                            {{ resort.name }}
-                        {% endif %}
-                    </h3>
-
-                    <div class="resort-details">
-                        {% if resort.phone_number %}
-                            <div class="resort-detail-item">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="detail-icon">
-                                    <path d="M22 16.92V19.92C22 20.4728 21.5523 20.92 21 20.92C9.95 20.92 1 11.97 1 0.92C1 0.367715 1.44772 -0.08 2 -0.08H5C5.55228 -0.08 6 0.367715 6 0.92C6 2.92 6.5 4.92 7.5 6.92C7.61 7.12 7.56 7.37 7.39 7.54L5.21 9.72C6.38 12.06 8.94 14.62 11.28 15.79L13.46 13.61C13.63 13.44 13.88 13.39 14.08 13.5C16.08 14.5 18.08 15 20.08 15C20.6323 15 21.08 15.4477 21.08 16V16.92H22Z" fill="currentColor"/>
-                                </svg>
-                                <a href="tel:{{ resort.phone_number }}" class="resort-phone">{{ resort.phone_number }}</a>
-                            </div>
-                        {% endif %}
-
-                        {% if resort.check_in_time or resort.check_out_time %}
-                            <div class="resort-detail-item">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="detail-icon">
-                                    <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20ZM12.5 7H11V13L16.25 16.15L17 14.92L12.5 12.25V7Z" fill="currentColor"/>
-                                </svg>
-                                <span>
-                                    {% if resort.check_in_time %}Check-in: {{ resort.check_in_time|time:"g:i A" }}{% endif %}
-                                    {% if resort.check_in_time and resort.check_out_time %} • {% endif %}
-                                    {% if resort.check_out_time %}Check-out: {{ resort.check_out_time|time:"g:i A" }}{% endif %}
-                                </span>
-                            </div>
-                        {% endif %}
-
-                        {% if resort.get_full_address %}
-                            <div class="resort-detail-item">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="detail-icon">
-                                    <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" fill="currentColor"/>
-                                </svg>
-                                <a href="https://maps.google.com/maps?q={{ resort.get_full_address|urlencode }}" target="_blank" rel="noopener noreferrer" class="address-link">
-                                    {{ resort.get_full_address }}
-                                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" class="external-link-icon" style="display: inline; vertical-align: middle; margin-left: 4px;">
-                                        <path d="M12 8.66667V12.6667C12 13.0203 11.8595 13.3594 11.6095 13.6095C11.3594 13.8595 11.0203 14 10.6667 14H3.33333C2.97971 14 2.64057 13.8595 2.39052 13.6095C2.14048 13.3594 2 13.0203 2 12.6667V5.33333C2 4.97971 2.14048 4.64057 2.39052 4.39052C2.64057 4.14048 2.97971 4 3.33333 4H7.33333" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                        <path d="M10 2H14V6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                        <path d="M6.66667 9.33333L14 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                    </svg>
-                                </a>
-                            </div>
-                        {% endif %}
-                    </div>
-
-                    {% if resort.general_notes %}
-                        <div class="notes">
-                            <strong>Notes:</strong>
-                            <p>{{ resort.general_notes|linebreaks }}</p>
-                        </div>
-                    {% endif %}
-                </div>
-            {% else %}
-                <p class="text-muted">No resort details added yet.</p>
-            {% endif %}
+      <div class="section">
+        <div class="section-header">
+          <h2>Resort Details</h2>
+          {% if can_edit %}
+            <a href="{% url 'trips:resort_edit' trip.pk %}" class="btn btn-sm btn-outline">
+              {% if resort %}Edit{% else %}Add{% endif %} Resort
+            </a>
+          {% endif %}
         </div>
+        {% if resort %}
+          <div class="resort-info">
+            <h3>
+              {% if resort.website_url %}
+                <a href="{{ resort.website_url }}" target="_blank" rel="noopener noreferrer" class="resort-link">
+                  {{ resort.name }}
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" class="external-link-icon">
+                    <path d="M12 8.66667V12.6667C12 13.0203 11.8595 13.3594 11.6095 13.6095C11.3594 13.8595 11.0203 14 10.6667 14H3.33333C2.97971 14 2.64057 13.8595 2.39052 13.6095C2.14048 13.3594 2 13.0203 2 12.6667V5.33333C2 4.97971 2.14048 4.64057 2.39052 4.39052C2.64057 4.14048 2.97971 4 3.33333 4H7.33333" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M10 2H14V6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M6.66667 9.33333L14 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </a>
+              {% else %}
+                {{ resort.name }}
+              {% endif %}
+            </h3>
+
+            <div class="resort-details">
+              {% if resort.phone_number %}
+                <div class="resort-detail-item">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="detail-icon">
+                    <path d="M22 16.92V19.92C22 20.4728 21.5523 20.92 21 20.92C9.95 20.92 1 11.97 1 0.92C1 0.367715 1.44772 -0.08 2 -0.08H5C5.55228 -0.08 6 0.367715 6 0.92C6 2.92 6.5 4.92 7.5 6.92C7.61 7.12 7.56 7.37 7.39 7.54L5.21 9.72C6.38 12.06 8.94 14.62 11.28 15.79L13.46 13.61C13.63 13.44 13.88 13.39 14.08 13.5C16.08 14.5 18.08 15 20.08 15C20.6323 15 21.08 15.4477 21.08 16V16.92H22Z" fill="currentColor"/>
+                  </svg>
+                  <a href="tel:{{ resort.phone_number }}" class="resort-phone">{{ resort.phone_number }}</a>
+                </div>
+              {% endif %}
+
+              {% if resort.check_in_time or resort.check_out_time %}
+                <div class="resort-detail-item">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="detail-icon">
+                    <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20ZM12.5 7H11V13L16.25 16.15L17 14.92L12.5 12.25V7Z" fill="currentColor"/>
+                  </svg>
+                  <span>
+                    {% if resort.check_in_time %}Check-in: {{ resort.check_in_time|time:"g:i A" }}{% endif %}
+                    {% if resort.check_in_time and resort.check_out_time %} • {% endif %}
+                    {% if resort.check_out_time %}Check-out: {{ resort.check_out_time|time:"g:i A" }}{% endif %}
+                  </span>
+                </div>
+              {% endif %}
+
+              {% if resort.get_full_address %}
+                <div class="resort-detail-item">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="detail-icon">
+                    <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" fill="currentColor"/>
+                  </svg>
+                  <a href="https://maps.google.com/maps?q={{ resort.get_full_address|urlencode }}" target="_blank" rel="noopener noreferrer" class="address-link map-link" data-address="{{ resort.get_full_address }}">
+                    {{ resort.get_full_address }}
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" class="external-link-icon" style="display: inline; vertical-align: middle; margin-left: 4px;">
+                      <path d="M12 8.66667V12.6667C12 13.0203 11.8595 13.3594 11.6095 13.6095C11.3594 13.8595 11.0203 14 10.6667 14H3.33333C2.97971 14 2.64057 13.8595 2.39052 13.6095C2.14048 13.3594 2 13.0203 2 12.6667V5.33333C2 4.97971 2.14048 4.64057 2.39052 4.39052C2.64057 4.14048 2.97971 4 3.33333 4H7.33333" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M10 2H14V6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M6.66667 9.33333L14 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </a>
+                </div>
+              {% endif %}
+            </div>
+
+            {% if resort.general_notes %}
+              <div class="notes">
+                <strong>Notes:</strong>
+                <p>{{ resort.general_notes|linebreaks }}</p>
+              </div>
+            {% endif %}
+          </div>
+        {% else %}
+          <p class="text-muted">No resort details added yet.</p>
+        {% endif %}
+      </div>
 
         <!-- Weather Forecast Section -->
-        {% if weather_forecast %}
+      {% if weather_forecast %}
         <div class="section weather-section">
-            <div class="section-header">
-                <h2>🌤️ Weather Forecast</h2>
-                <button class="btn btn-sm btn-outline" onclick="openWeatherModal()">
-                    View Details
-                </button>
-            </div>
+          <div class="section-header">
+            <h2>🌤️ Weather Forecast</h2>
+            <button class="btn btn-sm btn-outline" onclick="openWeatherModal()">
+              View Details
+            </button>
+          </div>
 
-            <div class="weather-location-info">
-                <p class="weather-location">
-                    {% if resort.city and resort.state %}
-                        📍 {{ resort.city }}, {{ resort.state }}
-                    {% elif resort.city %}
-                        📍 {{ resort.city }}
-                    {% else %}
-                        📍 {{ resort.name }}
-                    {% endif %}
-                </p>
-            </div>
+          <div class="weather-location-info">
+            <p class="weather-location">
+              {% if resort.city and resort.state %}
+                📍 {{ resort.city }}, {{ resort.state }}
+              {% elif resort.city %}
+                📍 {{ resort.city }}
+              {% else %}
+                📍 {{ resort.name }}
+              {% endif %}
+            </p>
+          </div>
 
-            {% if temp_range %}
-                <div class="weather-summary-inline">
-                    <p class="temp-range-text">
-                        <strong>{{ temp_range.low }}°F - {{ temp_range.high }}°F</strong>
-                    </p>
+          {% if temp_range %}
+            <div class="weather-summary-inline">
+              <p class="temp-range-text">
+                <strong>{{ temp_range.low }}°F - {{ temp_range.high }}°F</strong>
+              </p>
+            </div>
+          {% endif %}
+
+          <div class="weather-mini-forecast">
+            {% for day in weather_forecast|slice:":5" %}
+              <div class="weather-mini-day">
+                <div class="mini-date">{{ day.date|date:"M j" }}</div>
+                <div class="mini-icon">{{ day.weather_icon }}</div>
+                <div class="mini-temps">
+                  <span class="mini-high">{{ day.high }}°</span>
+                  <span class="mini-low">{{ day.low }}°</span>
                 </div>
-            {% endif %}
-
-            <div class="weather-mini-forecast">
-                {% for day in weather_forecast|slice:":5" %}
-                    <div class="weather-mini-day">
-                        <div class="mini-date">{{ day.date|date:"M j" }}</div>
-                        <div class="mini-icon">{{ day.weather_icon }}</div>
-                        <div class="mini-temps">
-                            <span class="mini-high">{{ day.high }}°</span>
-                            <span class="mini-low">{{ day.low }}°</span>
-                        </div>
-                    </div>
-                {% endfor %}
-            </div>
+              </div>
+            {% endfor %}
+          </div>
         </div>
-        {% endif %}
+      {% endif %}
 
         <!-- Packing Lists Section -->
-        <div class="section">
-            <div class="section-header">
-                <h2>🎒 Packing Lists{% if packing_lists_count %} ({{ packing_lists_count }}){% endif %}</h2>
-                <div class="header-actions">
-                    {% if can_edit %}
-                        <a href="{% url 'packing:create_packing_list' trip.pk %}" class="btn btn-sm btn-primary">
-                            + Create Packing List
-                        </a>
-                    {% endif %}
-                    {% if packing_lists_count > 0 %}
-                        <a href="{% url 'packing:trip_packing_lists' trip.pk %}" class="btn btn-sm btn-outline">
-                            View All ({{ packing_lists_count }})
-                        </a>
-                    {% endif %}
-                </div>
-            </div>
-
-            {% if packing_lists %}
-                <div class="packing-lists-grid">
-                    {% for packing_list in packing_lists %}
-                        <div class="packing-list-card">
-                            <div class="packing-list-header">
-                                <h4>{{ packing_list.name }}</h4>
-                                {% if packing_list.assigned_to %}
-                                    <span class="assigned-badge">{{ packing_list.assigned_to.get_full_name|default:packing_list.assigned_to.username }}</span>
-                                {% endif %}
-                            </div>
-                            <div class="packing-progress">
-                                <div class="progress-bar-mini" style="width: {{ packing_list.get_packed_percentage }}%"></div>
-                            </div>
-                            <p class="packing-status">
-                                {{ packing_list.get_packed_count }}/{{ packing_list.get_total_count }} packed
-                                ({{ packing_list.get_packed_percentage }}%)
-                            </p>
-                            <a href="{% url 'packing:list_detail' packing_list.pk %}" class="btn-link">View List →</a>
-                        </div>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <p class="text-muted">No packing lists yet. Create your first packing list to start organizing!</p>
+      <div class="section">
+        <div class="section-header">
+          <h2>🎒 Packing Lists{% if packing_lists_count %} ({{ packing_lists_count }}){% endif %}</h2>
+          <div class="header-actions">
+            {% if can_edit %}
+              <a href="{% url 'packing:create_packing_list' trip.pk %}" class="btn btn-sm btn-primary">
+                + Create Packing List
+              </a>
             {% endif %}
+            {% if packing_lists_count > 0 %}
+              <a href="{% url 'packing:trip_packing_lists' trip.pk %}" class="btn btn-sm btn-outline">
+                View All ({{ packing_lists_count }})
+              </a>
+            {% endif %}
+          </div>
         </div>
+
+        {% if packing_lists %}
+          <div class="packing-lists-grid">
+            {% for packing_list in packing_lists %}
+              <div class="packing-list-card">
+                <div class="packing-list-header">
+                  <h4>{{ packing_list.name }}</h4>
+                  {% if packing_list.assigned_to %}
+                    <span class="assigned-badge">{{ packing_list.assigned_to.get_full_name|default:packing_list.assigned_to.username }}</span>
+                  {% endif %}
+                </div>
+                <div class="packing-progress">
+                  <div class="progress-bar-mini" style="width: {{ packing_list.get_packed_percentage }}%"></div>
+                </div>
+                <p class="packing-status">
+                  {{ packing_list.get_packed_count }}/{{ packing_list.get_total_count }} packed
+                  ({{ packing_list.get_packed_percentage }}%)
+                </p>
+                <a href="{% url 'packing:list_detail' packing_list.pk %}" class="btn-link">View List →</a>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="text-muted">No packing lists yet. Create your first packing list to start organizing!</p>
+        {% endif %}
+      </div>
 
         <!-- Itinerary Section -->
-        <div class="section">
-            <div class="section-header">
-                <h2>📅 Itinerary{% if itinerary_count %} ({{ itinerary_count }}){% endif %}</h2>
-                <div class="header-actions">
-                    <a href="{% url 'itinerary:calendar' trip.pk %}" class="btn btn-sm btn-primary">
-                        View Calendar
-                    </a>
-                </div>
-            </div>
-
-            {% if upcoming_itinerary %}
-                <div class="itinerary-list">
-                    {% for item in upcoming_itinerary %}
-                        <div class="itinerary-card">
-                            <div class="itinerary-header">
-                                <div class="itinerary-date">
-                                    <span class="date-badge">{{ item.date|date:"M d" }}</span>
-                                    <span class="time-badge">{{ item.get_time_display }}</span>
-                                </div>
-                                <h4 class="itinerary-title">{{ item.get_display_title }}</h4>
-                            </div>
-
-                            {% if item.notes %}
-                                <p class="itinerary-notes">{{ item.notes|truncatewords:15 }}</p>
-                            {% endif %}
-
-                            {% if item.activity %}
-                                <div class="itinerary-activity-info">
-                                    {% if item.activity.city %}
-                                        <span class="info-item">📍 {{ item.activity.city }}</span>
-                                    {% endif %}
-                                    {% if item.activity.distance_from_resort %}
-                                        <span class="info-item">🚗 {{ item.activity.distance_from_resort }} mi</span>
-                                    {% endif %}
-                                    {% if item.activity.estimated_duration %}
-                                        <span class="info-item">⏱️ {{ item.activity.get_duration_display }}</span>
-                                    {% endif %}
-                                </div>
-                            {% endif %}
-
-                            <div class="itinerary-meta">
-                                <small class="text-muted">
-                                    Scheduled by {{ item.created_by.get_full_name|default:item.created_by.email }}
-                                </small>
-                                <a href="{% url 'itinerary:day_detail' trip.pk item.date|date:'Y-m-d' %}" class="btn-link">View Day →</a>
-                            </div>
-                        </div>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <p class="text-muted">No scheduled items yet. Visit the calendar to start planning your daily schedule!</p>
-            {% endif %}
+      <div class="section">
+        <div class="section-header">
+          <h2>📅 Itinerary{% if itinerary_count %} ({{ itinerary_count }}){% endif %}</h2>
+          <div class="header-actions">
+            <a href="{% url 'itinerary:calendar' trip.pk %}" class="btn btn-sm btn-primary">
+              View Calendar
+            </a>
+          </div>
         </div>
+
+        {% if upcoming_itinerary %}
+          <div class="itinerary-list">
+            {% for item in upcoming_itinerary %}
+              <div class="itinerary-card">
+                <div class="itinerary-header">
+                  <div class="itinerary-date">
+                    <span class="date-badge">{{ item.date|date:"M d" }}</span>
+                    <span class="time-badge">{{ item.get_time_display }}</span>
+                  </div>
+                  <h4 class="itinerary-title">{{ item.get_display_title }}</h4>
+                </div>
+
+                {% if item.notes %}
+                  <p class="itinerary-notes">{{ item.notes|truncatewords:15 }}</p>
+                {% endif %}
+
+                {% if item.activity %}
+                  <div class="itinerary-activity-info">
+                    {% if item.activity.city %}
+                      <span class="info-item">📍 {{ item.activity.city }}</span>
+                    {% endif %}
+                    {% if item.activity.distance_from_resort %}
+                      <span class="info-item">🚗 {{ item.activity.distance_from_resort }} mi</span>
+                    {% endif %}
+                    {% if item.activity.estimated_duration %}
+                      <span class="info-item">⏱️ {{ item.activity.get_duration_display }}</span>
+                    {% endif %}
+                  </div>
+                {% endif %}
+
+                <div class="itinerary-meta">
+                  <small class="text-muted">
+                    Scheduled by {{ item.created_by.get_full_name|default:item.created_by.email }}
+                  </small>
+                  <a href="{% url 'itinerary:day_detail' trip.pk item.date|date:'Y-m-d' %}" class="btn-link">View Day →</a>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="text-muted">No scheduled items yet. Visit the calendar to start planning your daily schedule!</p>
+        {% endif %}
+      </div>
 
         <!-- Activities Section -->
-        <div class="section">
-            <div class="section-header">
-                <h2>🎯 Activities{% if activity_count %} ({{ activity_count }}){% endif %}</h2>
-                <div class="header-actions">
-                    {% if can_edit %}
-                        <button type="button" class="btn btn-sm btn-primary" onclick="openActivityModal()">
-                            ➕ Add Activity
-                        </button>
-                    {% endif %}
-                    {% if activity_count > 0 %}
-                        <a href="{% url 'activities:activity_list' trip.pk %}" class="btn btn-sm btn-outline">
-                            View All ({{ activity_count }})
-                        </a>
-                    {% endif %}
-                </div>
-            </div>
-
-            {% if recent_activities %}
-                <div class="activities-list">
-                    {% for activity in recent_activities %}
-                        <div class="activity-card">
-                            <div class="activity-header">
-                                <h4 class="activity-title">
-                                    {% if activity.is_favorite %}⭐ {% endif %}{{ activity.name }}
-                                </h4>
-                                {% if activity.pre_trip_priority > 0 %}
-                                    <span class="priority-badge">
-                                        Priority #{{ activity.pre_trip_priority }}
-                                    </span>
-                                {% endif %}
-                            </div>
-
-                            {% if activity.description %}
-                                <p class="activity-description">{{ activity.description|truncatewords:20 }}</p>
-                            {% endif %}
-
-                            <div class="activity-info">
-                                {% if activity.city %}
-                                    <span class="info-item">📍 {{ activity.city }}{% if activity.state %}, {{ activity.state }}{% endif %}</span>
-                                {% endif %}
-                                {% if activity.distance_from_resort %}
-                                    <span class="info-item">🚗 {{ activity.distance_from_resort }} mi{% if activity.travel_time_from_resort %} ({{ activity.get_travel_time_display }}){% endif %}</span>
-                                {% endif %}
-                                {% if activity.estimated_cost %}
-                                    <span class="info-item">💰 ${{ activity.estimated_cost|floatformat:2 }}</span>
-                                {% endif %}
-                                {% if activity.estimated_duration %}
-                                    <span class="info-item">⏱️ {{ activity.get_duration_display }}</span>
-                                {% endif %}
-                                {% if activity.post_trip_rating %}
-                                    <span class="info-item">⭐ {{ activity.post_trip_rating }}/5</span>
-                                {% endif %}
-                            </div>
-
-                            <div class="activity-meta">
-                                <small class="text-muted">
-                                    Added by {{ activity.created_by.get_full_name|default:activity.created_by.email }} • {{ activity.created_at|date:"M d, Y" }}
-                                </small>
-                                <a href="#" onclick="openViewActivityModal('{{ activity.pk }}'); return false;" class="btn-link">View →</a>
-                            </div>
-                        </div>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <p class="text-muted">No activities yet. Add your first activity to start planning your trip!</p>
+      <div class="section">
+        <div class="section-header">
+          <h2>🎯 Activities{% if activity_count %} ({{ activity_count }}){% endif %}</h2>
+          <div class="header-actions">
+            {% if can_edit %}
+              <button type="button" class="btn btn-sm btn-primary" onclick="openActivityModal()">
+                ➕ Add Activity
+              </button>
             {% endif %}
+            {% if activity_count > 0 %}
+              <a href="{% url 'activities:activity_list' trip.pk %}" class="btn btn-sm btn-outline">
+                View All ({{ activity_count }})
+              </a>
+            {% endif %}
+          </div>
         </div>
+
+        {% if recent_activities %}
+          <div class="activities-list">
+            {% for activity in recent_activities %}
+              <div class="activity-card">
+                <div class="activity-header">
+                  <h4 class="activity-title">
+                    {% if activity.is_favorite %}⭐ {% endif %}{{ activity.name }}
+                  </h4>
+                  {% if activity.pre_trip_priority > 0 %}
+                    <span class="priority-badge">
+                      Priority #{{ activity.pre_trip_priority }}
+                    </span>
+                  {% endif %}
+                </div>
+
+                {% if activity.description %}
+                  <p class="activity-description">{{ activity.description|truncatewords:20 }}</p>
+                {% endif %}
+
+                <div class="activity-info">
+                  {% if activity.city %}
+                    <span class="info-item">📍 {{ activity.city }}{% if activity.state %}, {{ activity.state }}{% endif %}</span>
+                  {% endif %}
+                  {% if activity.distance_from_resort %}
+                    <span class="info-item">🚗 {{ activity.distance_from_resort }} mi{% if activity.travel_time_from_resort %} ({{ activity.get_travel_time_display }}){% endif %}</span>
+                  {% endif %}
+                  {% if activity.estimated_cost %}
+                    <span class="info-item">💰 ${{ activity.estimated_cost|floatformat:2 }}</span>
+                  {% endif %}
+                  {% if activity.estimated_duration %}
+                    <span class="info-item">⏱️ {{ activity.get_duration_display }}</span>
+                  {% endif %}
+                  {% if activity.post_trip_rating %}
+                    <span class="info-item">⭐ {{ activity.post_trip_rating }}/5</span>
+                  {% endif %}
+                </div>
+
+                <div class="activity-meta">
+                  <small class="text-muted">
+                    Added by {{ activity.created_by.get_full_name|default:activity.created_by.email }} • {{ activity.created_at|date:"M d, Y" }}
+                  </small>
+                  <a href="#" onclick="openViewActivityModal('{{ activity.pk }}'); return false;" class="btn-link">View →</a>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="text-muted">No activities yet. Add your first activity to start planning your trip!</p>
+        {% endif %}
+      </div>
 
         <!-- Budget Section -->
-        <div class="section">
-            <div class="section-header">
-                <h2>💰 Budget{% if budget_item_count %} ({{ budget_item_count }}){% endif %}</h2>
-                <div class="header-actions">
-                    {% if budget_item_count > 0 %}
-                        <a href="{% url 'budget:budget_overview' trip.pk %}" class="btn btn-sm btn-outline">
-                            View Full Budget
-                        </a>
-                    {% endif %}
-                </div>
-            </div>
+      <div class="section">
+        <div class="section-header">
+          <h2>💰 Budget{% if budget_item_count %} ({{ budget_item_count }}){% endif %}</h2>
+          <div class="header-actions">
+            {% if budget_item_count > 0 %}
+              <a href="{% url 'budget:budget_overview' trip.pk %}" class="btn btn-sm btn-outline">
+                View Full Budget
+              </a>
+            {% endif %}
+          </div>
+        </div>
 
             <!-- Budget Summary -->
-            <div class="budget-summary-inline">
-                <div class="budget-stat">
-                    <span class="stat-label">Estimated:</span>
-                    <span class="stat-value">${{ budget_total_estimated|floatformat:2 }}</span>
-                </div>
-                <div class="budget-stat">
-                    <span class="stat-label">Actual:</span>
-                    <span class="stat-value">${{ budget_total_actual|floatformat:2 }}</span>
-                </div>
-                <div class="budget-stat {% if budget_variance < 0 %}over-budget{% else %}under-budget{% endif %}">
-                    <span class="stat-label">Variance:</span>
-                    <span class="stat-value">{% if budget_variance >= 0 %}+{% endif %}${{ budget_variance|floatformat:2 }}</span>
-                </div>
-            </div>
-
-            {% if recent_budget_items %}
-                <div class="budget-items-list">
-                    {% for item in recent_budget_items %}
-                        <div class="budget-item-card">
-                            <div class="budget-item-header">
-                                <h4 class="budget-item-title">{{ item.description }}</h4>
-                                {% if item.category %}
-                                    <span class="category-badge" style="background-color: {{ item.category.color_code }}20; color: {{ item.category.color_code }};">
-                                        {{ item.category.name }}
-                                    </span>
-                                {% endif %}
-                            </div>
-
-                            <div class="budget-item-amounts">
-                                <div class="amount-row">
-                                    <span class="amount-label">Estimated:</span>
-                                    <span class="amount-value">${{ item.estimated_amount|floatformat:2 }}</span>
-                                </div>
-                                {% if item.actual_amount %}
-                                    <div class="amount-row paid">
-                                        <span class="amount-label">Paid:</span>
-                                        <span class="amount-value">${{ item.actual_amount|floatformat:2 }}</span>
-                                    </div>
-                                    {% if item.paid_by %}
-                                        <div class="paid-by-info">
-                                            by {{ item.paid_by.get_full_name|default:item.paid_by.username }}
-                                        </div>
-                                    {% endif %}
-                                {% else %}
-                                    <div class="amount-row unpaid">
-                                        <span class="unpaid-label">Not paid yet</span>
-                                    </div>
-                                {% endif %}
-                            </div>
-                        </div>
-                    {% endfor %}
-                </div>
-
-                {% if budget_item_count > 5 %}
-                    <div style="text-align: center; margin-top: var(--spacing-md);">
-                        <a href="{% url 'budget:budget_overview' trip.pk %}" class="btn btn-outline">
-                            View All Budget Items ({{ budget_item_count }})
-                        </a>
-                    </div>
-                {% endif %}
-            {% else %}
-                <p class="text-muted">No budget items yet. <a href="{% url 'budget:budget_overview' trip.pk %}">Start tracking your trip expenses</a>!</p>
-            {% endif %}
+        <div class="budget-summary-inline">
+          <div class="budget-stat">
+            <span class="stat-label">Estimated:</span>
+            <span class="stat-value">${{ budget_total_estimated|floatformat:2 }}</span>
+          </div>
+          <div class="budget-stat">
+            <span class="stat-label">Actual:</span>
+            <span class="stat-value">${{ budget_total_actual|floatformat:2 }}</span>
+          </div>
+          <div class="budget-stat {% if budget_variance < 0 %}over-budget{% else %}under-budget{% endif %}">
+            <span class="stat-label">Variance:</span>
+            <span class="stat-value">{% if budget_variance >= 0 %}+{% endif %}${{ budget_variance|floatformat:2 }}</span>
+          </div>
         </div>
+
+        {% if recent_budget_items %}
+          <div class="budget-items-list">
+            {% for item in recent_budget_items %}
+              <div class="budget-item-card">
+                <div class="budget-item-header">
+                  <h4 class="budget-item-title">{{ item.description }}</h4>
+                  {% if item.category %}
+                    <span class="category-badge" style="background-color: {{ item.category.color_code }}20; color: {{ item.category.color_code }};">
+                      {{ item.category.name }}
+                    </span>
+                  {% endif %}
+                </div>
+
+                <div class="budget-item-amounts">
+                  <div class="amount-row">
+                    <span class="amount-label">Estimated:</span>
+                    <span class="amount-value">${{ item.estimated_amount|floatformat:2 }}</span>
+                  </div>
+                  {% if item.actual_amount %}
+                    <div class="amount-row paid">
+                      <span class="amount-label">Paid:</span>
+                      <span class="amount-value">${{ item.actual_amount|floatformat:2 }}</span>
+                    </div>
+                    {% if item.paid_by %}
+                      <div class="paid-by-info">
+                        by {{ item.paid_by.get_full_name|default:item.paid_by.username }}
+                      </div>
+                    {% endif %}
+                  {% else %}
+                    <div class="amount-row unpaid">
+                      <span class="unpaid-label">Not paid yet</span>
+                    </div>
+                  {% endif %}
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+
+          {% if budget_item_count > 5 %}
+            <div style="text-align: center; margin-top: var(--spacing-md);">
+              <a href="{% url 'budget:budget_overview' trip.pk %}" class="btn btn-outline">
+                View All Budget Items ({{ budget_item_count }})
+              </a>
+            </div>
+          {% endif %}
+        {% else %}
+          <p class="text-muted">No budget items yet. <a href="{% url 'budget:budget_overview' trip.pk %}">Start tracking your trip expenses</a>!</p>
+        {% endif %}
+      </div>
 
         <!-- Notes Section -->
-        <div class="section">
-            <div class="section-header">
-                <h2>📝 Trip Notes{% if note_count %} ({{ note_count }}){% endif %}</h2>
-                <div class="header-actions">
-                    {% if can_create_note %}
-                        <button type="button" class="btn btn-sm btn-primary" onclick="openNoteModal()">
-                            ➕ Add Note
-                        </button>
-                    {% endif %}
-                    {% if note_count > 0 %}
-                        <a href="{% url 'notes:note_list' trip.pk %}" class="btn btn-sm btn-outline">
-                            View All ({{ note_count }})
-                        </a>
-                    {% endif %}
-                </div>
-            </div>
-
-            {% if recent_notes %}
-                <div class="notes-list">
-                    {% for note in recent_notes %}
-                        <div class="note-card">
-                            <div class="note-header">
-                                <h4 class="note-title">
-                                    {% if note.is_pinned %}📌 {% endif %}{{ note.title }}
-                                </h4>
-                                {% if note.category %}
-                                    <span class="category-badge" style="background-color: {{ note.category.color_code }}20; color: {{ note.category.color_code }};">
-                                        {{ note.category.name }}
-                                    </span>
-                                {% endif %}
-                            </div>
-                            <p class="note-content">{{ note.content|truncatewords:30 }}</p>
-                            <div class="note-meta">
-                                <small class="text-muted">
-                                    By {{ note.created_by.get_full_name }} • {{ note.updated_at|date:"M d, Y" }}
-                                </small>
-                                <a href="#" onclick="openViewNoteModal('{{ note.pk }}'); return false;" class="btn-link">View →</a>
-                            </div>
-                        </div>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <p class="text-muted">No notes yet. Add your first note to keep track of important trip information!</p>
+      <div class="section">
+        <div class="section-header">
+          <h2>📝 Trip Notes{% if note_count %} ({{ note_count }}){% endif %}</h2>
+          <div class="header-actions">
+            {% if can_create_note %}
+              <button type="button" class="btn btn-sm btn-primary" onclick="openNoteModal()">
+                ➕ Add Note
+              </button>
             {% endif %}
+            {% if note_count > 0 %}
+              <a href="{% url 'notes:note_list' trip.pk %}" class="btn btn-sm btn-outline">
+                View All ({{ note_count }})
+              </a>
+            {% endif %}
+          </div>
         </div>
+
+        {% if recent_notes %}
+          <div class="notes-list">
+            {% for note in recent_notes %}
+              <div class="note-card">
+                <div class="note-header">
+                  <h4 class="note-title">
+                    {% if note.is_pinned %}📌 {% endif %}{{ note.title }}
+                  </h4>
+                  {% if note.category %}
+                    <span class="category-badge" style="background-color: {{ note.category.color_code }}20; color: {{ note.category.color_code }};">
+                      {{ note.category.name }}
+                    </span>
+                  {% endif %}
+                </div>
+                <p class="note-content">{{ note.content|truncatewords:30 }}</p>
+                <div class="note-meta">
+                  <small class="text-muted">
+                    By {{ note.created_by.get_full_name }} • {{ note.updated_at|date:"M d, Y" }}
+                  </small>
+                  <a href="#" onclick="openViewNoteModal('{{ note.pk }}'); return false;" class="btn-link">View →</a>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="text-muted">No notes yet. Add your first note to keep track of important trip information!</p>
+        {% endif %}
+      </div>
 
         <!-- Photos Section -->
-        <div class="section">
-            <div class="section-header">
-                <h2>📸 Photos{% if photo_count %} ({{ photo_count }}){% endif %}</h2>
-                <div class="header-actions">
-                    <a href="{% url 'memories:photo_upload' trip.pk %}" class="btn btn-sm btn-primary">
-                        ➕ Upload Photo
-                    </a>
-                    {% if photo_count > 0 %}
-                        <a href="{% url 'memories:photo_gallery' trip.pk %}" class="btn btn-sm btn-outline">
-                            View Gallery ({{ photo_count }})
-                        </a>
-                    {% endif %}
-                </div>
-            </div>
-
-            {% if recent_photos %}
-                <div class="photo-grid-preview">
-                    {% for photo in recent_photos %}
-                        <a href="{% url 'memories:photo_detail' photo.pk %}" class="photo-thumb">
-                            <img src="{{ photo.image.url }}" alt="{{ photo.caption|default:'Trip photo' }}">
-                        </a>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <p class="text-muted">No photos yet. Start capturing your trip memories!</p>
+      <div class="section">
+        <div class="section-header">
+          <h2>📸 Photos{% if photo_count %} ({{ photo_count }}){% endif %}</h2>
+          <div class="header-actions">
+            <a href="{% url 'memories:photo_upload' trip.pk %}" class="btn btn-sm btn-primary">
+              ➕ Upload Photo
+            </a>
+            {% if photo_count > 0 %}
+              <a href="{% url 'memories:photo_gallery' trip.pk %}" class="btn btn-sm btn-outline">
+                View Gallery ({{ photo_count }})
+              </a>
             {% endif %}
+          </div>
         </div>
+
+        {% if recent_photos %}
+          <div class="photo-grid-preview">
+            {% for photo in recent_photos %}
+              <a href="{% url 'memories:photo_detail' photo.pk %}" class="photo-thumb">
+                <img src="{{ photo.image.url }}" alt="{{ photo.caption|default:'Trip photo' }}">
+              </a>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="text-muted">No photos yet. Start capturing your trip memories!</p>
+        {% endif %}
+      </div>
 
         <!-- Journal Section -->
-        <div class="section">
-            <div class="section-header">
-                <h2>📔 Journal{% if journal_count %} ({{ journal_count }}){% endif %}</h2>
-                <div class="header-actions">
-                    <a href="{% url 'memories:journal_create' trip.pk %}" class="btn btn-sm btn-primary">
-                        ✏️ New Entry
-                    </a>
-                    {% if journal_count > 0 %}
-                        <a href="{% url 'memories:journal_list' trip.pk %}" class="btn btn-sm btn-outline">
-                            View All ({{ journal_count }})
-                        </a>
-                    {% endif %}
-                </div>
-            </div>
-
-            {% if recent_journals %}
-                <div class="journal-preview-list">
-                    {% for journal in recent_journals %}
-                        <div class="journal-preview-card">
-                            <div class="journal-preview-header">
-                                <h4>{{ journal.date|date:"F d, Y" }}</h4>
-                                {% if journal.mood_rating %}
-                                    <span class="mood-indicator">{{ journal.get_mood_display_emoji }}</span>
-                                {% endif %}
-                            </div>
-                            <p class="journal-preview-content">{{ journal.content|truncatewords:20 }}</p>
-                            <div class="journal-preview-footer">
-                                <small class="text-muted">{{ journal.created_by.get_full_name|default:journal.created_by.email }}</small>
-                                <a href="{% url 'memories:journal_detail' journal.pk %}" class="btn-link">Read →</a>
-                            </div>
-                        </div>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <p class="text-muted">No journal entries yet. Start documenting your trip experiences!</p>
+      <div class="section">
+        <div class="section-header">
+          <h2>📔 Journal{% if journal_count %} ({{ journal_count }}){% endif %}</h2>
+          <div class="header-actions">
+            <a href="{% url 'memories:journal_create' trip.pk %}" class="btn btn-sm btn-primary">
+              ✏️ New Entry
+            </a>
+            {% if journal_count > 0 %}
+              <a href="{% url 'memories:journal_list' trip.pk %}" class="btn btn-sm btn-outline">
+                View All ({{ journal_count }})
+              </a>
             {% endif %}
+          </div>
         </div>
+
+        {% if recent_journals %}
+          <div class="journal-preview-list">
+            {% for journal in recent_journals %}
+              <div class="journal-preview-card">
+                <div class="journal-preview-header">
+                  <h4>{{ journal.date|date:"F d, Y" }}</h4>
+                  {% if journal.mood_rating %}
+                    <span class="mood-indicator">{{ journal.get_mood_display_emoji }}</span>
+                  {% endif %}
+                </div>
+                <p class="journal-preview-content">{{ journal.content|truncatewords:20 }}</p>
+                <div class="journal-preview-footer">
+                  <small class="text-muted">{{ journal.created_by.get_full_name|default:journal.created_by.email }}</small>
+                  <a href="{% url 'memories:journal_detail' journal.pk %}" class="btn-link">Read →</a>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="text-muted">No journal entries yet. Start documenting your trip experiences!</p>
+        {% endif %}
+      </div>
 
         <!-- Trip Info -->
-        <div class="section">
-            <h3>Trip Information</h3>
-            <p><strong>Family:</strong> {{ trip.family.name }}</p>
-            <p><strong>Status:</strong> <span class="badge badge-{{ trip.status }}">{{ trip.get_status_display }}</span></p>
-            <p><strong>Created by:</strong> {{ trip.created_by.get_full_name }}</p>
-        </div>
+      <div class="section">
+        <h3>Trip Information</h3>
+        <p><strong>Family:</strong> {{ trip.family.name }}</p>
+        <p><strong>Status:</strong> <span class="badge badge-{{ trip.status }}">{{ trip.get_status_display }}</span></p>
+        <p><strong>Created by:</strong> {{ trip.created_by.get_full_name }}</p>
+      </div>
     </div>
-</div>
+  </div>
 
 <!-- Add Note Modal -->
-{% if can_create_note %}
-<div id="noteModal" class="modal">
-    <div class="modal-content">
+  {% if can_create_note %}
+    <div id="noteModal" class="modal">
+      <div class="modal-content">
         <div class="modal-header">
-            <h3>Add Note to {{ trip.name }}</h3>
-            <button type="button" class="modal-close" onclick="closeNoteModal()">&times;</button>
+          <h3>Add Note to {{ trip.name }}</h3>
+          <button type="button" class="modal-close" onclick="closeNoteModal()">&times;</button>
         </div>
         <form method="post" action="{% url 'notes:note_create' trip.pk %}?next={% url 'trips:trip_detail' trip.pk %}" class="modal-body">
-            {% csrf_token %}
+          {% csrf_token %}
 
-            <div class="form-group">
-                <label for="{{ note_form.category.id_for_label }}" class="form-label">
-                    {{ note_form.category.label }}
-                </label>
-                {{ note_form.category }}
-                {% if note_form.category.help_text %}
-                    <small class="form-help">{{ note_form.category.help_text }}</small>
-                {% endif %}
-            </div>
+          <div class="form-group">
+            <label for="{{ note_form.category.id_for_label }}" class="form-label">
+              {{ note_form.category.label }}
+            </label>
+            {{ note_form.category }}
+            {% if note_form.category.help_text %}
+              <small class="form-help">{{ note_form.category.help_text }}</small>
+            {% endif %}
+          </div>
 
-            <div class="form-group">
-                <label for="{{ note_form.title.id_for_label }}" class="form-label">
-                    {{ note_form.title.label }} <span class="required">*</span>
-                </label>
-                {{ note_form.title }}
-                {% if note_form.title.help_text %}
-                    <small class="form-help">{{ note_form.title.help_text }}</small>
-                {% endif %}
-            </div>
+          <div class="form-group">
+            <label for="{{ note_form.title.id_for_label }}" class="form-label">
+              {{ note_form.title.label }} <span class="required">*</span>
+            </label>
+            {{ note_form.title }}
+            {% if note_form.title.help_text %}
+              <small class="form-help">{{ note_form.title.help_text }}</small>
+            {% endif %}
+          </div>
 
-            <div class="form-group">
-                <label for="{{ note_form.content.id_for_label }}" class="form-label">
-                    {{ note_form.content.label }} <span class="required">*</span>
-                </label>
-                {{ note_form.content }}
-                {% if note_form.content.help_text %}
-                    <small class="form-help">{{ note_form.content.help_text }}</small>
-                {% endif %}
-            </div>
+          <div class="form-group">
+            <label for="{{ note_form.content.id_for_label }}" class="form-label">
+              {{ note_form.content.label }} <span class="required">*</span>
+            </label>
+            {{ note_form.content }}
+            {% if note_form.content.help_text %}
+              <small class="form-help">{{ note_form.content.help_text }}</small>
+            {% endif %}
+          </div>
 
-            <div class="form-group">
-                <label class="form-check-label">
-                    {{ note_form.is_pinned }}
-                    {{ note_form.is_pinned.label }}
-                </label>
-                {% if note_form.is_pinned.help_text %}
-                    <small class="form-help">{{ note_form.is_pinned.help_text }}</small>
-                {% endif %}
-            </div>
+          <div class="form-group">
+            <label class="form-check-label">
+              {{ note_form.is_pinned }}
+              {{ note_form.is_pinned.label }}
+            </label>
+            {% if note_form.is_pinned.help_text %}
+              <small class="form-help">{{ note_form.is_pinned.help_text }}</small>
+            {% endif %}
+          </div>
 
-            <div class="modal-footer">
-                <button type="button" class="btn btn-outline" onclick="closeNoteModal()">Cancel</button>
-                <button type="submit" class="btn btn-primary">Save Note</button>
-            </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" onclick="closeNoteModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary">Save Note</button>
+          </div>
         </form>
+      </div>
     </div>
-</div>
-{% endif %}
+  {% endif %}
 
 <!-- View/Edit Note Modal -->
-<div id="viewNoteModal" class="modal">
+  <div id="viewNoteModal" class="modal">
     <div class="modal-content">
-        <div class="modal-header">
-            <h3 id="viewNoteTitle"></h3>
-            <button type="button" class="modal-close" onclick="closeViewNoteModal()">&times;</button>
-        </div>
-        <div class="modal-body">
+      <div class="modal-header">
+        <h3 id="viewNoteTitle"></h3>
+        <button type="button" class="modal-close" onclick="closeViewNoteModal()">&times;</button>
+      </div>
+      <div class="modal-body">
             <!-- View Mode -->
-            <div id="viewNoteContent">
-                <div id="viewNoteCategory" class="form-group" style="display: none;">
-                    <span class="category-badge-large"></span>
-                </div>
-                <div id="viewNotePinned" style="display: none; margin-bottom: 1rem;">
-                    <span class="pinned-badge">📌 Pinned</span>
-                </div>
-                <div class="note-content-full" id="viewNoteText"></div>
-                <div class="note-meta" style="margin-top: 1rem;">
-                    <small class="text-muted" id="viewNoteMetaText"></small>
-                </div>
-            </div>
+        <div id="viewNoteContent">
+          <div id="viewNoteCategory" class="form-group" style="display: none;">
+            <span class="category-badge-large"></span>
+          </div>
+          <div id="viewNotePinned" style="display: none; margin-bottom: 1rem;">
+            <span class="pinned-badge">📌 Pinned</span>
+          </div>
+          <div class="note-content-full" id="viewNoteText"></div>
+          <div class="note-meta" style="margin-top: 1rem;">
+            <small class="text-muted" id="viewNoteMetaText"></small>
+          </div>
+        </div>
 
             <!-- Edit Mode (hidden by default) -->
-            <form id="editNoteForm" method="post" style="display: none;">
-                {% csrf_token %}
-                <input type="hidden" name="next" value="{% url 'trips:trip_detail' trip.pk %}">
+        <form id="editNoteForm" method="post" style="display: none;">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{% url 'trips:trip_detail' trip.pk %}">
 
-                <div class="form-group">
-                    <label for="editNoteCategory" class="form-label">Category</label>
-                    <select id="editNoteCategory" name="category" class="form-control">
-                        <option value="">-- No Category --</option>
-                        {% for category in categories %}
-                            <option value="{{ category.pk }}">{{ category.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
+          <div class="form-group">
+            <label for="editNoteCategory" class="form-label">Category</label>
+            <select id="editNoteCategory" name="category" class="form-control">
+              <option value="">-- No Category --</option>
+              {% for category in categories %}
+                <option value="{{ category.pk }}">{{ category.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
 
-                <div class="form-group">
-                    <label for="editNoteTitle" class="form-label">Title <span class="required">*</span></label>
-                    <input type="text" id="editNoteTitle" name="title" class="form-control" required>
-                </div>
+          <div class="form-group">
+            <label for="editNoteTitle" class="form-label">Title <span class="required">*</span></label>
+            <input type="text" id="editNoteTitle" name="title" class="form-control" required>
+          </div>
 
-                <div class="form-group">
-                    <label for="editNoteContentText" class="form-label">Content <span class="required">*</span></label>
-                    <textarea id="editNoteContentText" name="content" class="form-control" rows="6" required></textarea>
-                </div>
+          <div class="form-group">
+            <label for="editNoteContentText" class="form-label">Content <span class="required">*</span></label>
+            <textarea id="editNoteContentText" name="content" class="form-control" rows="6" required></textarea>
+          </div>
 
-                <div class="form-group">
-                    <label class="form-check-label">
-                        <input type="checkbox" id="editNotePinned" name="is_pinned" class="form-check-input">
-                        Pin this note
-                    </label>
-                </div>
-            </form>
+          <div class="form-group">
+            <label class="form-check-label">
+              <input type="checkbox" id="editNotePinned" name="is_pinned" class="form-check-input">
+              Pin this note
+            </label>
+          </div>
+        </form>
 
-            <div class="modal-footer">
-                <div id="viewModeButtons">
-                    <button type="button" class="btn btn-outline" onclick="closeViewNoteModal()">Close</button>
-                    <button type="button" class="btn btn-primary" onclick="toggleEditMode()" id="editButton">Edit</button>
-                    <button type="button" class="btn btn-danger" onclick="deleteNote()" id="deleteButton">Delete</button>
-                </div>
-                <div id="editModeButtons" style="display: none;">
-                    <button type="button" class="btn btn-outline" onclick="cancelEdit()">Cancel</button>
-                    <button type="button" class="btn btn-primary" onclick="saveNote()">Save Changes</button>
-                </div>
-            </div>
+        <div class="modal-footer">
+          <div id="viewModeButtons">
+            <button type="button" class="btn btn-outline" onclick="closeViewNoteModal()">Close</button>
+            <button type="button" class="btn btn-primary" onclick="toggleEditMode()" id="editButton">Edit</button>
+            <button type="button" class="btn btn-danger" onclick="deleteNote()" id="deleteButton">Delete</button>
+          </div>
+          <div id="editModeButtons" style="display: none;">
+            <button type="button" class="btn btn-outline" onclick="cancelEdit()">Cancel</button>
+            <button type="button" class="btn btn-primary" onclick="saveNote()">Save Changes</button>
+          </div>
         </div>
+      </div>
     </div>
-</div>
+  </div>
 
 <!-- Store note data for JavaScript -->
-<script>
-const notesData = {
-    {% for note in recent_notes %}
-    '{{ note.pk }}': {
-        title: '{{ note.title|escapejs }}',
-        content: '{{ note.content|escapejs }}',
-        category: '{{ note.category.pk|default:"" }}',
-        categoryName: '{{ note.category.name|default:""|escapejs }}',
-        categoryColor: '{{ note.category.color_code|default:"" }}',
-        isPinned: {{ note.is_pinned|yesno:"true,false" }},
-        createdBy: '{{ note.created_by.get_full_name|escapejs }}',
-        updatedAt: '{{ note.updated_at|date:"M d, Y" }}',
-        updateUrl: '{% url "notes:note_edit" note.pk %}',
-        deleteUrl: '{% url "notes:note_delete" note.pk %}',
-        canEdit: {% if can_edit or note.created_by == user %}true{% else %}false{% endif %}
-    }{% if not forloop.last %},{% endif %}
-    {% endfor %}
-};
-</script>
+  <script>
+    const notesData = {
+      {% for note in recent_notes %}
+        '{{ note.pk }}': {
+          title: '{{ note.title|escapejs }}',
+          content: '{{ note.content|escapejs }}',
+          category: '{{ note.category.pk|default:"" }}',
+          categoryName: '{{ note.category.name|default:""|escapejs }}',
+          categoryColor: '{{ note.category.color_code|default:"" }}',
+          isPinned: {{ note.is_pinned|yesno:"true,false" }},
+          createdBy: '{{ note.created_by.get_full_name|escapejs }}',
+          updatedAt: '{{ note.updated_at|date:"M d, Y" }}',
+          updateUrl: '{% url "notes:note_edit" note.pk %}',
+          deleteUrl: '{% url "notes:note_delete" note.pk %}',
+          canEdit: {% if can_edit or note.created_by == user %}true{% else %}false{% endif %}
+        }{% if not forloop.last %},{% endif %}
+      {% endfor %}
+    };
+  </script>
 
-<style>
-.page-header {
-    margin-bottom: var(--spacing-xl);
-}
+  <style>
+    .page-header {
+      margin-bottom: var(--spacing-xl);
+    }
 
-.destination {
-    font-size: 1.25rem;
-    margin: var(--spacing-sm) 0;
-}
+    .destination {
+      font-size: 1.25rem;
+      margin: var(--spacing-sm) 0;
+    }
 
-.dates {
-    color: var(--text-secondary);
-}
+    .dates {
+      color: var(--text-secondary);
+    }
 
-.trip-actions {
-    display: flex;
-    gap: var(--spacing-sm);
-}
+    .trip-actions {
+      display: flex;
+      gap: var(--spacing-sm);
+    }
 
-.trip-content {
-    max-width: 800px;
-}
+    .trip-content {
+      max-width: 800px;
+    }
 
-.section {
-    background: var(--bg-primary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius);
-    padding: var(--spacing-lg);
-    margin-bottom: var(--spacing-lg);
-}
+    .section {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      padding: var(--spacing-lg);
+      margin-bottom: var(--spacing-lg);
+    }
 
-.section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: var(--spacing-md);
-    padding-bottom: var(--spacing-sm);
-    border-bottom: 1px solid var(--border-color);
-}
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--spacing-md);
+      padding-bottom: var(--spacing-sm);
+      border-bottom: 1px solid var(--border-color);
+    }
 
-.resort-info h3 {
-    margin-bottom: var(--spacing-md);
-}
+    .resort-info h3 {
+      margin-bottom: var(--spacing-md);
+    }
 
-.resort-details {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-sm);
-    margin-bottom: var(--spacing-md);
-}
+    .resort-details {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-sm);
+      margin-bottom: var(--spacing-md);
+    }
 
-.resort-detail-item {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-    padding: var(--spacing-sm);
-    background: var(--bg-secondary);
-    border-radius: var(--border-radius);
-}
+    .resort-detail-item {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+      padding: var(--spacing-sm);
+      background: var(--bg-secondary);
+      border-radius: var(--border-radius);
+    }
 
-.detail-icon {
-    color: var(--primary-color);
-    flex-shrink: 0;
-}
+    .detail-icon {
+      color: var(--primary-color);
+      flex-shrink: 0;
+    }
 
-.resort-phone {
-    color: var(--primary-color);
-    text-decoration: none;
-    font-weight: 500;
-}
+    .resort-phone {
+      color: var(--primary-color);
+      text-decoration: none;
+      font-weight: 500;
+    }
 
-.resort-phone:hover {
-    text-decoration: underline;
-}
+    .resort-phone:hover {
+      text-decoration: underline;
+    }
 
-.resort-link {
-    color: var(--primary-color);
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    transition: color var(--transition-fast);
-}
+    .resort-link {
+      color: var(--primary-color);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: color var(--transition-fast);
+    }
 
-.resort-link:hover {
-    color: var(--secondary-color);
-    text-decoration: underline;
-}
+    .resort-link:hover {
+      color: var(--secondary-color);
+      text-decoration: underline;
+    }
 
-.external-link-icon {
-    flex-shrink: 0;
-    opacity: 0.6;
-    transition: opacity var(--transition-fast);
-}
+    .external-link-icon {
+      flex-shrink: 0;
+      opacity: 0.6;
+      transition: opacity var(--transition-fast);
+    }
 
-.resort-link:hover .external-link-icon {
-    opacity: 1;
-}
+    .resort-link:hover .external-link-icon {
+      opacity: 1;
+    }
 
-.address {
-    color: var(--text-secondary);
-}
+    .address {
+      color: var(--text-secondary);
+    }
 
-.address-link {
-    color: var(--primary-color);
-    text-decoration: none;
-    font-weight: 500;
-    transition: color var(--transition-fast);
-}
+    .address-link {
+      color: var(--primary-color);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color var(--transition-fast);
+    }
 
-.address-link:hover {
-    color: var(--secondary-color);
-    text-decoration: underline;
-}
+    .address-link:hover {
+      color: var(--secondary-color);
+      text-decoration: underline;
+    }
 
-.notes {
-    margin-top: var(--spacing-md);
-    padding: var(--spacing-md);
-    background: var(--bg-secondary);
-    border-radius: var(--border-radius);
-}
+    .notes {
+      margin-top: var(--spacing-md);
+      padding: var(--spacing-md);
+      background: var(--bg-secondary);
+      border-radius: var(--border-radius);
+    }
 
 /* Notes Section */
-.header-actions {
-    display: flex;
-    gap: var(--spacing-sm);
-}
-
-.notes-list {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-md);
-}
-
-.note-card {
-    padding: var(--spacing-md);
-    background: var(--bg-secondary);
-    border-radius: var(--border-radius);
-    border-left: 3px solid var(--primary-color);
-}
-
-.note-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: var(--spacing-sm);
-    margin-bottom: var(--spacing-sm);
-}
-
-.note-title {
-    margin: 0;
-    font-size: 1.1rem;
-    font-weight: 600;
-    flex: 1;
-}
-
-.category-badge {
-    padding: 0.25rem 0.75rem;
-    border-radius: 1rem;
-    font-size: 0.75rem;
-    font-weight: 500;
-    white-space: nowrap;
-}
-
-.note-content {
-    margin: var(--spacing-sm) 0;
-    color: var(--text-secondary);
-}
-
-.note-meta {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: var(--spacing-sm);
-    padding-top: var(--spacing-sm);
-    border-top: 1px solid var(--border-color);
-}
-
-.btn-link {
-    color: var(--primary-color);
-    text-decoration: none;
-    font-weight: 500;
-}
-
-.btn-link:hover {
-    text-decoration: underline;
-}
-
-/* Activities Section */
-.activities-list {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-md);
-}
-
-.activity-card {
-    padding: var(--spacing-md);
-    background: var(--bg-secondary);
-    border-radius: var(--border-radius);
-    border-left: 3px solid #06A77D; /* Palm Green accent */
-}
-
-.activity-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: var(--spacing-sm);
-    margin-bottom: var(--spacing-sm);
-}
-
-.activity-title {
-    margin: 0;
-    font-size: 1.1rem;
-    font-weight: 600;
-    flex: 1;
-}
-
-.priority-badge {
-    padding: 0.25rem 0.75rem;
-    border-radius: 1rem;
-    font-size: 0.75rem;
-    font-weight: 500;
-    white-space: nowrap;
-    background-color: #2E86AB20;
-    color: #2E86AB;
-}
-
-.activity-description {
-    margin: var(--spacing-sm) 0;
-    color: var(--text-secondary);
-}
-
-.activity-info {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--spacing-sm);
-    margin: var(--spacing-sm) 0;
-}
-
-.info-item {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-    padding: 0.25rem 0.5rem;
-    background: var(--white);
-    border-radius: 0.5rem;
-}
-
-.activity-meta {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: var(--spacing-sm);
-    padding-top: var(--spacing-sm);
-    border-top: 1px solid var(--border-color);
-}
-
-/* Budget Section */
-.budget-summary-inline {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: var(--spacing-md);
-    margin-bottom: var(--spacing-md);
-    padding: var(--spacing-md);
-    background: var(--bg-secondary);
-    border-radius: var(--border-radius);
-}
-
-.budget-stat {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-}
-
-.stat-label {
-    font-size: 0.75rem;
-    color: var(--text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.stat-value {
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: var(--text-primary);
-}
-
-.budget-stat.over-budget .stat-value {
-    color: #E74C3C;
-}
-
-.budget-stat.under-budget .stat-value {
-    color: #06A77D;
-}
-
-.budget-items-list {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-md);
-}
-
-.budget-item-card {
-    padding: var(--spacing-md);
-    background: var(--bg-secondary);
-    border-radius: var(--border-radius);
-    border-left: 3px solid #F4A261; /* Budget accent color */
-}
-
-.budget-item-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: var(--spacing-sm);
-    margin-bottom: var(--spacing-sm);
-}
-
-.budget-item-title {
-    margin: 0;
-    font-size: 1rem;
-    font-weight: 600;
-    flex: 1;
-}
-
-.category-badge {
-    padding: 0.25rem 0.75rem;
-    border-radius: 1rem;
-    font-size: 0.75rem;
-    font-weight: 500;
-    white-space: nowrap;
-}
-
-.budget-item-amounts {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-}
-
-.amount-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 0.875rem;
-}
-
-.amount-label {
-    color: var(--text-secondary);
-}
-
-.amount-value {
-    font-weight: 600;
-}
-
-.amount-row.paid .amount-value {
-    color: #06A77D;
-}
-
-.amount-row.unpaid {
-    font-style: italic;
-    color: var(--text-muted);
-}
-
-.paid-by-info {
-    font-size: 0.75rem;
-    color: var(--text-secondary);
-    margin-left: auto;
-    text-align: right;
-}
-
-/* Itinerary Section */
-.itinerary-list {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-md);
-}
-
-.itinerary-card {
-    padding: var(--spacing-md);
-    background: var(--bg-secondary);
-    border-radius: var(--border-radius);
-    border-left: 3px solid #FF6B6B; /* Sunset Coral accent */
-}
-
-.itinerary-header {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-md);
-    margin-bottom: var(--spacing-sm);
-}
-
-.itinerary-date {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.25rem;
-    min-width: 80px;
-}
-
-.date-badge {
-    padding: 0.25rem 0.75rem;
-    border-radius: 0.5rem;
-    font-size: 0.875rem;
-    font-weight: 600;
-    background-color: #FF6B6B;
-    color: white;
-}
-
-.time-badge {
-    font-size: 0.75rem;
-    color: var(--text-secondary);
-    white-space: nowrap;
-}
-
-.itinerary-title {
-    margin: 0;
-    font-size: 1.1rem;
-    font-weight: 600;
-    flex: 1;
-}
-
-.itinerary-notes {
-    margin: var(--spacing-sm) 0;
-    color: var(--text-secondary);
-    padding-left: 96px; /* Align with title */
-}
-
-.itinerary-activity-info {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--spacing-sm);
-    margin: var(--spacing-sm) 0;
-    padding-left: 96px; /* Align with title */
-}
-
-.itinerary-meta {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: var(--spacing-sm);
-    padding-top: var(--spacing-sm);
-    border-top: 1px solid var(--border-color);
-}
-
-@media (max-width: 576px) {
-    .itinerary-header {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .itinerary-notes,
-    .itinerary-activity-info {
-        padding-left: 0;
-    }
-}
-
-/* Modal Styles */
-.modal-large .modal-content {
-    max-width: 900px;
-    max-height: 95vh;
-}
-
-.form-section-compact {
-    margin-bottom: var(--spacing-lg);
-    padding-bottom: var(--spacing-lg);
-    border-bottom: 1px solid var(--border-color);
-}
-
-.form-section-compact:last-of-type {
-    border-bottom: none;
-    padding-bottom: 0;
-}
-
-.form-section-compact h4 {
-    margin: 0 0 var(--spacing-md) 0;
-    font-size: 1rem;
-    color: var(--primary-color);
-    text-transform: uppercase;
-    font-weight: 600;
-}
-
-.form-row-compact {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: var(--spacing-md);
-}
-
-@media (min-width: 768px) {
-    .form-row-compact {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-.activity-details-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: var(--spacing-md);
-    margin: var(--spacing-md) 0;
-}
-
-@media (min-width: 576px) {
-    .activity-details-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-.detail-group {
-    padding: var(--spacing-sm);
-    background: var(--bg-secondary);
-    border-radius: var(--border-radius);
-}
-
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(4px);
-}
-
-.modal.show {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    animation: fadeIn 0.2s;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-.modal-content {
-    background-color: var(--white);
-    border-radius: 12px;
-    max-width: 600px;
-    width: 90%;
-    max-height: 90vh;
-    overflow-y: auto;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-    animation: slideUp 0.3s;
-}
-
-@keyframes slideUp {
-    from {
-        transform: translateY(20px);
-        opacity: 0;
-    }
-    to {
-        transform: translateY(0);
-        opacity: 1;
-    }
-}
-
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: var(--spacing-lg);
-    border-bottom: 1px solid var(--border-color);
-}
-
-.modal-header h3 {
-    margin: 0;
-}
-
-.modal-close {
-    background: none;
-    border: none;
-    font-size: 2rem;
-    line-height: 1;
-    cursor: pointer;
-    color: var(--text-secondary);
-    transition: color var(--transition-fast);
-}
-
-.modal-close:hover {
-    color: var(--text-primary);
-}
-
-.modal-body {
-    padding: var(--spacing-lg);
-}
-
-.modal-footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: var(--spacing-sm);
-    margin-top: var(--spacing-lg);
-    padding-top: var(--spacing-lg);
-    border-top: 1px solid var(--border-color);
-}
-
-.form-check-label {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-    cursor: pointer;
-}
-
-.required {
-    color: var(--danger-color);
-}
-
-.category-badge-large {
-    display: inline-block;
-    padding: 0.5rem 1rem;
-    border-radius: 1.5rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-}
-
-.pinned-badge {
-    display: inline-block;
-    padding: 0.5rem 1rem;
-    background-color: var(--gray-200);
-    border-radius: var(--border-radius);
-    font-size: 0.875rem;
-    font-weight: 500;
-}
-
-.note-content-full {
-    white-space: pre-wrap;
-    line-height: 1.6;
-    margin: var(--spacing-md) 0;
-}
-
-/* Photos Section */
-.photo-grid-preview {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: var(--spacing-sm);
-    margin-top: var(--spacing-md);
-}
-
-.photo-thumb {
-    position: relative;
-    display: block;
-    padding-top: 100%; /* 1:1 Aspect Ratio */
-    border-radius: var(--border-radius);
-    overflow: hidden;
-    background: var(--bg-secondary);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.photo-thumb:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-}
-
-.photo-thumb img {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-/* Journal Section */
-.journal-preview-list {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-md);
-}
-
-.journal-preview-card {
-    padding: var(--spacing-md);
-    background: var(--bg-secondary);
-    border-radius: var(--border-radius);
-    border-left: 3px solid #F4E8C1; /* Sandy Beige accent */
-}
-
-.journal-preview-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: var(--spacing-sm);
-}
-
-.journal-preview-header h4 {
-    margin: 0;
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--primary-color);
-}
-
-.mood-indicator {
-    font-size: 1.5rem;
-}
-
-.journal-preview-content {
-    margin: var(--spacing-sm) 0;
-    color: var(--text-secondary);
-    line-height: 1.5;
-}
-
-.journal-preview-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: var(--spacing-sm);
-    padding-top: var(--spacing-sm);
-    border-top: 1px solid var(--border-color);
-}
-
-/* Packing Lists Section */
-.packing-lists-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: var(--spacing-md);
-}
-
-.packing-list-card {
-    padding: var(--spacing-md);
-    background: var(--bg-secondary);
-    border-radius: var(--border-radius);
-    border-left: 3px solid #F4E8C1; /* Sandy Beige accent */
-}
-
-.packing-list-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: var(--spacing-sm);
-    margin-bottom: var(--spacing-sm);
-}
-
-.packing-list-header h4 {
-    margin: 0;
-    font-size: 1rem;
-    font-weight: 600;
-    flex: 1;
-}
-
-.assigned-badge {
-    padding: 0.25rem 0.75rem;
-    border-radius: 1rem;
-    font-size: 0.75rem;
-    font-weight: 500;
-    background-color: #06A77D20;
-    color: #06A77D;
-    white-space: nowrap;
-}
-
-.packing-progress {
-    width: 100%;
-    height: 6px;
-    background: #e0e0e0;
-    border-radius: 3px;
-    overflow: hidden;
-    margin: var(--spacing-sm) 0;
-}
-
-.progress-bar-mini {
-    height: 100%;
-    background: linear-gradient(90deg, #06A77D, #2E86AB);
-    transition: width 0.3s ease;
-}
-
-.packing-status {
-    margin: var(--spacing-xs) 0;
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-}
-
-@media (max-width: 768px) {
-    .note-header {
-        flex-direction: column;
-    }
-
     .header-actions {
-        flex-direction: column;
-        width: 100%;
+      display: flex;
+      gap: var(--spacing-sm);
     }
 
-    .header-actions .btn {
-        width: 100%;
+    .notes-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-md);
+    }
+
+    .note-card {
+      padding: var(--spacing-md);
+      background: var(--bg-secondary);
+      border-radius: var(--border-radius);
+      border-left: 3px solid var(--primary-color);
+    }
+
+    .note-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: var(--spacing-sm);
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .note-title {
+      margin: 0;
+      font-size: 1.1rem;
+      font-weight: 600;
+      flex: 1;
+    }
+
+    .category-badge {
+      padding: 0.25rem 0.75rem;
+      border-radius: 1rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .note-content {
+      margin: var(--spacing-sm) 0;
+      color: var(--text-secondary);
     }
 
     .note-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: var(--spacing-sm);
+      padding-top: var(--spacing-sm);
+      border-top: 1px solid var(--border-color);
+    }
+
+    .btn-link {
+      color: var(--primary-color);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .btn-link:hover {
+      text-decoration: underline;
+    }
+
+/* Activities Section */
+    .activities-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-md);
+    }
+
+    .activity-card {
+      padding: var(--spacing-md);
+      background: var(--bg-secondary);
+      border-radius: var(--border-radius);
+      border-left: 3px solid #06A77D; /* Palm Green accent */
+    }
+
+    .activity-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: var(--spacing-sm);
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .activity-title {
+      margin: 0;
+      font-size: 1.1rem;
+      font-weight: 600;
+      flex: 1;
+    }
+
+    .priority-badge {
+      padding: 0.25rem 0.75rem;
+      border-radius: 1rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      white-space: nowrap;
+      background-color: #2E86AB20;
+      color: #2E86AB;
+    }
+
+    .activity-description {
+      margin: var(--spacing-sm) 0;
+      color: var(--text-secondary);
+    }
+
+    .activity-info {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--spacing-sm);
+      margin: var(--spacing-sm) 0;
+    }
+
+    .info-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      padding: 0.25rem 0.5rem;
+      background: var(--white);
+      border-radius: 0.5rem;
+    }
+
+    .activity-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: var(--spacing-sm);
+      padding-top: var(--spacing-sm);
+      border-top: 1px solid var(--border-color);
+    }
+
+/* Budget Section */
+    .budget-summary-inline {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: var(--spacing-md);
+      margin-bottom: var(--spacing-md);
+      padding: var(--spacing-md);
+      background: var(--bg-secondary);
+      border-radius: var(--border-radius);
+    }
+
+    .budget-stat {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .stat-value {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .budget-stat.over-budget .stat-value {
+      color: #E74C3C;
+    }
+
+    .budget-stat.under-budget .stat-value {
+      color: #06A77D;
+    }
+
+    .budget-items-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-md);
+    }
+
+    .budget-item-card {
+      padding: var(--spacing-md);
+      background: var(--bg-secondary);
+      border-radius: var(--border-radius);
+      border-left: 3px solid #F4A261; /* Budget accent color */
+    }
+
+    .budget-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: var(--spacing-sm);
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .budget-item-title {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 600;
+      flex: 1;
+    }
+
+    .category-badge {
+      padding: 0.25rem 0.75rem;
+      border-radius: 1rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .budget-item-amounts {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .amount-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.875rem;
+    }
+
+    .amount-label {
+      color: var(--text-secondary);
+    }
+
+    .amount-value {
+      font-weight: 600;
+    }
+
+    .amount-row.paid .amount-value {
+      color: #06A77D;
+    }
+
+    .amount-row.unpaid {
+      font-style: italic;
+      color: var(--text-muted);
+    }
+
+    .paid-by-info {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      margin-left: auto;
+      text-align: right;
+    }
+
+/* Itinerary Section */
+    .itinerary-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-md);
+    }
+
+    .itinerary-card {
+      padding: var(--spacing-md);
+      background: var(--bg-secondary);
+      border-radius: var(--border-radius);
+      border-left: 3px solid #FF6B6B; /* Sunset Coral accent */
+    }
+
+    .itinerary-header {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-md);
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .itinerary-date {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.25rem;
+      min-width: 80px;
+    }
+
+    .date-badge {
+      padding: 0.25rem 0.75rem;
+      border-radius: 0.5rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      background-color: #FF6B6B;
+      color: white;
+    }
+
+    .time-badge {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+
+    .itinerary-title {
+      margin: 0;
+      font-size: 1.1rem;
+      font-weight: 600;
+      flex: 1;
+    }
+
+    .itinerary-notes {
+      margin: var(--spacing-sm) 0;
+      color: var(--text-secondary);
+      padding-left: 96px; /* Align with title */
+    }
+
+    .itinerary-activity-info {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--spacing-sm);
+      margin: var(--spacing-sm) 0;
+      padding-left: 96px; /* Align with title */
+    }
+
+    .itinerary-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: var(--spacing-sm);
+      padding-top: var(--spacing-sm);
+      border-top: 1px solid var(--border-color);
+    }
+
+    @media (max-width: 576px) {
+      .itinerary-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .itinerary-notes,
+      .itinerary-activity-info {
+        padding-left: 0;
+      }
+    }
+
+/* Modal Styles */
+    .modal-large .modal-content {
+      max-width: 900px;
+      max-height: 95vh;
+    }
+
+    .form-section-compact {
+      margin-bottom: var(--spacing-lg);
+      padding-bottom: var(--spacing-lg);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .form-section-compact:last-of-type {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .form-section-compact h4 {
+      margin: 0 0 var(--spacing-md) 0;
+      font-size: 1rem;
+      color: var(--primary-color);
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    .form-row-compact {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: var(--spacing-md);
+    }
+
+    @media (min-width: 768px) {
+      .form-row-compact {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .activity-details-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: var(--spacing-md);
+      margin: var(--spacing-md) 0;
+    }
+
+    @media (min-width: 576px) {
+      .activity-details-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .detail-group {
+      padding: var(--spacing-sm);
+      background: var(--bg-secondary);
+      border-radius: var(--border-radius);
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+    }
+
+    .modal.show {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn 0.2s;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .modal-content {
+      background-color: var(--white);
+      border-radius: 12px;
+      max-width: 600px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      animation: slideUp 0.3s;
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(20px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--spacing-lg);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .modal-header h3 {
+      margin: 0;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 2rem;
+      line-height: 1;
+      cursor: pointer;
+      color: var(--text-secondary);
+      transition: color var(--transition-fast);
+    }
+
+    .modal-close:hover {
+      color: var(--text-primary);
+    }
+
+    .modal-body {
+      padding: var(--spacing-lg);
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: var(--spacing-sm);
+      margin-top: var(--spacing-lg);
+      padding-top: var(--spacing-lg);
+      border-top: 1px solid var(--border-color);
+    }
+
+    .form-check-label {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+      cursor: pointer;
+    }
+
+    .required {
+      color: var(--danger-color);
+    }
+
+    .category-badge-large {
+      display: inline-block;
+      padding: 0.5rem 1rem;
+      border-radius: 1.5rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    .pinned-badge {
+      display: inline-block;
+      padding: 0.5rem 1rem;
+      background-color: var(--gray-200);
+      border-radius: var(--border-radius);
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    .note-content-full {
+      white-space: pre-wrap;
+      line-height: 1.6;
+      margin: var(--spacing-md) 0;
+    }
+
+/* Photos Section */
+    .photo-grid-preview {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: var(--spacing-sm);
+      margin-top: var(--spacing-md);
+    }
+
+    .photo-thumb {
+      position: relative;
+      display: block;
+      padding-top: 100%; /* 1:1 Aspect Ratio */
+      border-radius: var(--border-radius);
+      overflow: hidden;
+      background: var(--bg-secondary);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .photo-thumb:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+
+    .photo-thumb img {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+/* Journal Section */
+    .journal-preview-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-md);
+    }
+
+    .journal-preview-card {
+      padding: var(--spacing-md);
+      background: var(--bg-secondary);
+      border-radius: var(--border-radius);
+      border-left: 3px solid #F4E8C1; /* Sandy Beige accent */
+    }
+
+    .journal-preview-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .journal-preview-header h4 {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--primary-color);
+    }
+
+    .mood-indicator {
+      font-size: 1.5rem;
+    }
+
+    .journal-preview-content {
+      margin: var(--spacing-sm) 0;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    .journal-preview-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: var(--spacing-sm);
+      padding-top: var(--spacing-sm);
+      border-top: 1px solid var(--border-color);
+    }
+
+/* Packing Lists Section */
+    .packing-lists-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: var(--spacing-md);
+    }
+
+    .packing-list-card {
+      padding: var(--spacing-md);
+      background: var(--bg-secondary);
+      border-radius: var(--border-radius);
+      border-left: 3px solid #F4E8C1; /* Sandy Beige accent */
+    }
+
+    .packing-list-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: var(--spacing-sm);
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .packing-list-header h4 {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 600;
+      flex: 1;
+    }
+
+    .assigned-badge {
+      padding: 0.25rem 0.75rem;
+      border-radius: 1rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      background-color: #06A77D20;
+      color: #06A77D;
+      white-space: nowrap;
+    }
+
+    .packing-progress {
+      width: 100%;
+      height: 6px;
+      background: #e0e0e0;
+      border-radius: 3px;
+      overflow: hidden;
+      margin: var(--spacing-sm) 0;
+    }
+
+    .progress-bar-mini {
+      height: 100%;
+      background: linear-gradient(90deg, #06A77D, #2E86AB);
+      transition: width 0.3s ease;
+    }
+
+    .packing-status {
+      margin: var(--spacing-xs) 0;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+    }
+
+    @media (max-width: 768px) {
+      .note-header {
+        flex-direction: column;
+      }
+
+      .header-actions {
+        flex-direction: column;
+        width: 100%;
+      }
+
+      .header-actions .btn {
+        width: 100%;
+      }
+
+      .note-meta {
         flex-direction: column;
         align-items: flex-start;
         gap: var(--spacing-xs);
-    }
+      }
 
-    .packing-lists-grid {
+      .packing-lists-grid {
         grid-template-columns: 1fr;
+      }
     }
-}
-</style>
+  </style>
 
-<script>
-let currentNoteId = null;
-let isEditMode = false;
+  <script>
+    let currentNoteId = null;
+    let isEditMode = false;
 
 // Add Note Modal
-function openNoteModal() {
-    document.getElementById('noteModal').classList.add('show');
-    document.body.style.overflow = 'hidden';
-}
-
-function closeNoteModal() {
-    document.getElementById('noteModal').classList.remove('show');
-    document.body.style.overflow = '';
-}
-
-// View/Edit Note Modal
-function openViewNoteModal(noteId) {
-    currentNoteId = noteId;
-    const note = notesData[noteId];
-
-    if (!note) {
-        console.error('Note not found:', noteId);
-        return;
+    function openNoteModal() {
+      document.getElementById('noteModal').classList.add('show');
+      document.body.style.overflow = 'hidden';
     }
 
+    function closeNoteModal() {
+      document.getElementById('noteModal').classList.remove('show');
+      document.body.style.overflow = '';
+    }
+
+// View/Edit Note Modal
+    function openViewNoteModal(noteId) {
+      currentNoteId = noteId;
+      const note = notesData[noteId];
+
+      if (!note) {
+        console.error('Note not found:', noteId);
+        return;
+      }
+
     // Populate view mode
-    document.getElementById('viewNoteTitle').textContent = note.title;
-    document.getElementById('viewNoteText').textContent = note.content;
-    document.getElementById('viewNoteMetaText').textContent = `By ${note.createdBy} • ${note.updatedAt}`;
+      document.getElementById('viewNoteTitle').textContent = note.title;
+      document.getElementById('viewNoteText').textContent = note.content;
+      document.getElementById('viewNoteMetaText').textContent = `By ${note.createdBy} • ${note.updatedAt}`;
 
     // Show/hide category
-    if (note.categoryName) {
+      if (note.categoryName) {
         const categoryBadge = document.querySelector('#viewNoteCategory .category-badge-large');
         categoryBadge.textContent = note.categoryName;
         categoryBadge.style.backgroundColor = note.categoryColor + '20';
         categoryBadge.style.color = note.categoryColor;
         document.getElementById('viewNoteCategory').style.display = 'block';
-    } else {
+      } else {
         document.getElementById('viewNoteCategory').style.display = 'none';
-    }
+      }
 
     // Show/hide pinned badge
-    if (note.isPinned) {
+      if (note.isPinned) {
         document.getElementById('viewNotePinned').style.display = 'block';
-    } else {
+      } else {
         document.getElementById('viewNotePinned').style.display = 'none';
-    }
+      }
 
     // Show/hide edit and delete buttons based on permissions
-    if (note.canEdit) {
+      if (note.canEdit) {
         document.getElementById('editButton').style.display = 'inline-block';
         document.getElementById('deleteButton').style.display = 'inline-block';
-    } else {
+      } else {
         document.getElementById('editButton').style.display = 'none';
         document.getElementById('deleteButton').style.display = 'none';
-    }
+      }
 
     // Reset to view mode
-    isEditMode = false;
-    document.getElementById('viewNoteContent').style.display = 'block';
-    document.getElementById('editNoteForm').style.display = 'none';
-    document.getElementById('viewModeButtons').style.display = 'flex';
-    document.getElementById('editModeButtons').style.display = 'none';
+      isEditMode = false;
+      document.getElementById('viewNoteContent').style.display = 'block';
+      document.getElementById('editNoteForm').style.display = 'none';
+      document.getElementById('viewModeButtons').style.display = 'flex';
+      document.getElementById('editModeButtons').style.display = 'none';
 
     // Show modal
-    document.getElementById('viewNoteModal').classList.add('show');
-    document.body.style.overflow = 'hidden';
-}
+      document.getElementById('viewNoteModal').classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
 
-function closeViewNoteModal() {
-    document.getElementById('viewNoteModal').classList.remove('show');
-    document.body.style.overflow = '';
-    currentNoteId = null;
-    isEditMode = false;
-}
+    function closeViewNoteModal() {
+      document.getElementById('viewNoteModal').classList.remove('show');
+      document.body.style.overflow = '';
+      currentNoteId = null;
+      isEditMode = false;
+    }
 
-function toggleEditMode() {
-    if (!currentNoteId) return;
+    function toggleEditMode() {
+      if (!currentNoteId) return;
 
-    const note = notesData[currentNoteId];
-    isEditMode = true;
+      const note = notesData[currentNoteId];
+      isEditMode = true;
 
     // Populate edit form
-    document.getElementById('editNoteCategory').value = note.category;
-    document.getElementById('editNoteTitle').value = note.title;
-    document.getElementById('editNoteContentText').value = note.content;
-    document.getElementById('editNotePinned').checked = note.isPinned;
+      document.getElementById('editNoteCategory').value = note.category;
+      document.getElementById('editNoteTitle').value = note.title;
+      document.getElementById('editNoteContentText').value = note.content;
+      document.getElementById('editNotePinned').checked = note.isPinned;
 
     // Update form action
-    const tripDetailUrl = '{% url "trips:trip_detail" trip.pk %}';
-    document.getElementById('editNoteForm').action = note.updateUrl + '?next=' + encodeURIComponent(tripDetailUrl);
+      const tripDetailUrl = '{% url "trips:trip_detail" trip.pk %}';
+      document.getElementById('editNoteForm').action = note.updateUrl + '?next=' + encodeURIComponent(tripDetailUrl);
 
     // Toggle views
-    document.getElementById('viewNoteContent').style.display = 'none';
-    document.getElementById('editNoteForm').style.display = 'block';
-    document.getElementById('viewModeButtons').style.display = 'none';
-    document.getElementById('editModeButtons').style.display = 'flex';
-}
+      document.getElementById('viewNoteContent').style.display = 'none';
+      document.getElementById('editNoteForm').style.display = 'block';
+      document.getElementById('viewModeButtons').style.display = 'none';
+      document.getElementById('editModeButtons').style.display = 'flex';
+    }
 
-function cancelEdit() {
-    isEditMode = false;
-    document.getElementById('viewNoteContent').style.display = 'block';
-    document.getElementById('editNoteForm').style.display = 'none';
-    document.getElementById('viewModeButtons').style.display = 'flex';
-    document.getElementById('editModeButtons').style.display = 'none';
-}
+    function cancelEdit() {
+      isEditMode = false;
+      document.getElementById('viewNoteContent').style.display = 'block';
+      document.getElementById('editNoteForm').style.display = 'none';
+      document.getElementById('viewModeButtons').style.display = 'flex';
+      document.getElementById('editModeButtons').style.display = 'none';
+    }
 
-function saveNote() {
+    function saveNote() {
     // Submit the edit form
-    document.getElementById('editNoteForm').submit();
-}
+      document.getElementById('editNoteForm').submit();
+    }
 
-function deleteNote() {
-    if (!currentNoteId) return;
+    function deleteNote() {
+      if (!currentNoteId) return;
 
-    const note = notesData[currentNoteId];
+      const note = notesData[currentNoteId];
 
-    if (confirm(`Are you sure you want to delete the note "${note.title}"?`)) {
+      if (confirm(`Are you sure you want to delete the note "${note.title}"?`)) {
         // Create a form to submit the delete request
         const form = document.createElement('form');
         form.method = 'POST';
@@ -1599,627 +1599,651 @@ function deleteNote() {
 
         document.body.appendChild(form);
         form.submit();
+      }
     }
-}
 
 // Close modals when clicking outside
-document.addEventListener('click', function(event) {
-    const noteModal = document.getElementById('noteModal');
-    const viewNoteModal = document.getElementById('viewNoteModal');
+    document.addEventListener('click', function(event) {
+      const noteModal = document.getElementById('noteModal');
+      const viewNoteModal = document.getElementById('viewNoteModal');
 
-    if (event.target === noteModal) {
+      if (event.target === noteModal) {
         closeNoteModal();
-    }
-    if (event.target === viewNoteModal) {
+      }
+      if (event.target === viewNoteModal) {
         closeViewNoteModal();
-    }
-});
+      }
+    });
 
 // Close modals with Escape key
-document.addEventListener('keydown', function(event) {
-    if (event.key === 'Escape') {
+    document.addEventListener('keydown', function(event) {
+      if (event.key === 'Escape') {
         if (document.getElementById('noteModal').classList.contains('show')) {
-            closeNoteModal();
+          closeNoteModal();
         }
         if (document.getElementById('viewNoteModal').classList.contains('show')) {
-            if (isEditMode) {
-                cancelEdit();
-            } else {
-                closeViewNoteModal();
-            }
+          if (isEditMode) {
+            cancelEdit();
+          } else {
+            closeViewNoteModal();
+          }
         }
-    }
-});
-</script>
+      }
+    });
+  </script>
 
 <!-- Add Activity Modal -->
-{% if can_edit %}
-<div id="activityModal" class="modal">
-    <div class="modal-content modal-large">
+  {% if can_edit %}
+    <div id="activityModal" class="modal">
+      <div class="modal-content modal-large">
         <div class="modal-header">
-            <h3 id="activityModalTitle">Add Activity to {{ trip.name }}</h3>
-            <button type="button" class="modal-close" onclick="closeActivityModal()">&times;</button>
+          <h3 id="activityModalTitle">Add Activity to {{ trip.name }}</h3>
+          <button type="button" class="modal-close" onclick="closeActivityModal()">&times;</button>
         </div>
         <form method="post" id="activityForm" action="{% url 'activities:activity_create' trip.pk %}?next={% url 'trips:trip_detail' trip.pk %}" class="modal-body">
-            {% csrf_token %}
+          {% csrf_token %}
 
-            <div class="form-section-compact">
-                <h4>Basic Information</h4>
-                <div class="form-group">
-                    <label for="{{ activity_form.name.id_for_label }}">{{ activity_form.name.label }} <span class="required">*</span></label>
-                    {{ activity_form.name }}
-                </div>
-
-                <div class="form-group">
-                    <label for="{{ activity_form.description.id_for_label }}">{{ activity_form.description.label }}</label>
-                    {{ activity_form.description }}
-                </div>
-
-                <div class="form-group">
-                    <label for="{{ activity_form.website_url.id_for_label }}">{{ activity_form.website_url.label }}</label>
-                    {{ activity_form.website_url }}
-                </div>
+          <div class="form-section-compact">
+            <h4>Basic Information</h4>
+            <div class="form-group">
+              <label for="{{ activity_form.name.id_for_label }}">{{ activity_form.name.label }} <span class="required">*</span></label>
+              {{ activity_form.name }}
             </div>
 
-            <div class="form-section-compact">
-                <h4>Location</h4>
-
-                {% if mapbox_token %}
-                <div class="form-group">
-                    <label for="activity-address-search">Search for Address</label>
-                    <input
-                        type="text"
-                        id="activity-address-search"
-                        class="form-control"
-                        placeholder="Start typing an address..."
-                        autocomplete="off"
-                    >
-                    <div id="activity-address-results" class="address-autocomplete-results"></div>
-                    <small class="form-help">Search to auto-fill address fields and calculate distance</small>
-                </div>
-                {% endif %}
-
-                <div class="form-row-compact">
-                    <div class="form-group">
-                        <label for="{{ activity_form.city.id_for_label }}">City</label>
-                        {{ activity_form.city }}
-                    </div>
-                    <div class="form-group">
-                        <label for="{{ activity_form.state.id_for_label }}">State</label>
-                        {{ activity_form.state }}
-                    </div>
-                </div>
-
-                <div class="form-row-compact">
-                    <div class="form-group">
-                        <label for="{{ activity_form.distance_from_resort.id_for_label }}">Distance (miles)</label>
-                        {{ activity_form.distance_from_resort }}
-                    </div>
-                    <div class="form-group">
-                        <label for="{{ activity_form.travel_time_from_resort.id_for_label }}">Travel Time (min)</label>
-                        {{ activity_form.travel_time_from_resort }}
-                    </div>
-                </div>
+            <div class="form-group">
+              <label for="{{ activity_form.description.id_for_label }}">{{ activity_form.description.label }}</label>
+              {{ activity_form.description }}
             </div>
 
-            <div class="form-section-compact">
-                <h4>Planning Details</h4>
-                <div class="form-row-compact">
-                    <div class="form-group">
-                        <label for="{{ activity_form.estimated_cost.id_for_label }}">Cost per person</label>
-                        {{ activity_form.estimated_cost }}
-                    </div>
-                    <div class="form-group">
-                        <label for="{{ activity_form.estimated_duration.id_for_label }}">Duration (minutes)</label>
-                        {{ activity_form.estimated_duration }}
-                    </div>
-                </div>
+            <div class="form-group">
+              <label for="{{ activity_form.website_url.id_for_label }}">{{ activity_form.website_url.label }}</label>
+              {{ activity_form.website_url }}
+            </div>
+          </div>
 
-                <div class="form-group">
-                    <label for="{{ activity_form.pre_trip_priority.id_for_label }}">Priority</label>
-                    {{ activity_form.pre_trip_priority }}
-                    <small class="form-help">0 = unranked, lower numbers = higher priority</small>
-                </div>
+          <div class="form-section-compact">
+            <h4>Location</h4>
+
+            {% if mapbox_token %}
+              <div class="form-group">
+                <label for="activity-address-search">Search for Address</label>
+                <input
+                  type="text"
+                  id="activity-address-search"
+                  class="form-control"
+                  placeholder="Start typing an address..."
+                  autocomplete="off"
+                >
+                <div id="activity-address-results" class="address-autocomplete-results"></div>
+                <small class="form-help">Search to auto-fill address fields and calculate distance</small>
+              </div>
+            {% endif %}
+
+            <div class="form-row-compact">
+              <div class="form-group">
+                <label for="{{ activity_form.city.id_for_label }}">City</label>
+                {{ activity_form.city }}
+              </div>
+              <div class="form-group">
+                <label for="{{ activity_form.state.id_for_label }}">State</label>
+                {{ activity_form.state }}
+              </div>
             </div>
 
-            <div class="modal-footer">
-                <button type="button" class="btn btn-outline" onclick="closeActivityModal()">Cancel</button>
-                <button type="submit" class="btn btn-primary">Save Activity</button>
+            <div class="form-row-compact">
+              <div class="form-group">
+                <label for="{{ activity_form.distance_from_resort.id_for_label }}">Distance (miles)</label>
+                {{ activity_form.distance_from_resort }}
+              </div>
+              <div class="form-group">
+                <label for="{{ activity_form.travel_time_from_resort.id_for_label }}">Travel Time (min)</label>
+                {{ activity_form.travel_time_from_resort }}
+              </div>
             </div>
+          </div>
+
+          <div class="form-section-compact">
+            <h4>Planning Details</h4>
+            <div class="form-row-compact">
+              <div class="form-group">
+                <label for="{{ activity_form.estimated_cost.id_for_label }}">Cost per person</label>
+                {{ activity_form.estimated_cost }}
+              </div>
+              <div class="form-group">
+                <label for="{{ activity_form.estimated_duration.id_for_label }}">Duration (minutes)</label>
+                {{ activity_form.estimated_duration }}
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="{{ activity_form.pre_trip_priority.id_for_label }}">Priority</label>
+              {{ activity_form.pre_trip_priority }}
+              <small class="form-help">0 = unranked, lower numbers = higher priority</small>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" onclick="closeActivityModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary">Save Activity</button>
+          </div>
         </form>
+      </div>
     </div>
-</div>
-{% endif %}
+  {% endif %}
 
 <!-- View/Edit Activity Modal -->
-<div id="viewActivityModal" class="modal">
+  <div id="viewActivityModal" class="modal">
     <div class="modal-content modal-large">
-        <div class="modal-header">
-            <h3 id="viewActivityTitle"></h3>
-            <button type="button" class="modal-close" onclick="closeViewActivityModal()">&times;</button>
+      <div class="modal-header">
+        <h3 id="viewActivityTitle"></h3>
+        <button type="button" class="modal-close" onclick="closeViewActivityModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="viewActivityContent">
+          <div id="viewActivityDescription" class="form-group"></div>
+
+          <div class="activity-details-grid">
+            <div id="viewActivityLocation" class="detail-group"></div>
+            <div id="viewActivityDistance" class="detail-group"></div>
+            <div id="viewActivityCost" class="detail-group"></div>
+            <div id="viewActivityDuration" class="detail-group"></div>
+            <div id="viewActivityPriority" class="detail-group"></div>
+            <div id="viewActivityRating" class="detail-group"></div>
+          </div>
+
+          <div class="note-meta" style="margin-top: 1rem;">
+            <small class="text-muted" id="viewActivityMeta"></small>
+          </div>
         </div>
-        <div class="modal-body">
-            <div id="viewActivityContent">
-                <div id="viewActivityDescription" class="form-group"></div>
 
-                <div class="activity-details-grid">
-                    <div id="viewActivityLocation" class="detail-group"></div>
-                    <div id="viewActivityDistance" class="detail-group"></div>
-                    <div id="viewActivityCost" class="detail-group"></div>
-                    <div id="viewActivityDuration" class="detail-group"></div>
-                    <div id="viewActivityPriority" class="detail-group"></div>
-                    <div id="viewActivityRating" class="detail-group"></div>
-                </div>
-
-                <div class="note-meta" style="margin-top: 1rem;">
-                    <small class="text-muted" id="viewActivityMeta"></small>
-                </div>
-            </div>
-
-            <div class="modal-footer">
-                <button type="button" class="btn btn-outline" onclick="closeViewActivityModal()">Close</button>
-                <a href="" id="viewActivityFullLink" class="btn btn-primary">View Full Details</a>
-            </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeViewActivityModal()">Close</button>
+          <a href="" id="viewActivityFullLink" class="btn btn-primary">View Full Details</a>
         </div>
+      </div>
     </div>
-</div>
+  </div>
 
 <!-- Store activity data for JavaScript -->
-<script>
-const activitiesData = {
-    {% for activity in recent_activities %}
-    '{{ activity.pk }}': {
-        name: '{{ activity.name|escapejs }}',
-        description: '{{ activity.description|escapejs }}',
-        website_url: '{{ activity.website_url }}',
-        city: '{{ activity.city }}',
-        state: '{{ activity.state }}',
-        distance_from_resort: '{{ activity.distance_from_resort|default:"" }}',
-        travel_time_from_resort: '{{ activity.travel_time_from_resort|default:"" }}',
-        estimated_cost: '{{ activity.estimated_cost|default:"" }}',
-        estimated_duration: '{{ activity.estimated_duration|default:"" }}',
-        estimated_duration_display: '{{ activity.get_duration_display }}',
-        travel_time_display: '{{ activity.get_travel_time_display }}',
-        pre_trip_priority: '{{ activity.pre_trip_priority }}',
-        post_trip_rating: '{{ activity.post_trip_rating|default:"" }}',
-        is_favorite: {{ activity.is_favorite|yesno:"true,false" }},
-        createdBy: '{{ activity.created_by.get_full_name|escapejs }}',
-        createdAt: '{{ activity.created_at|date:"M d, Y" }}',
-        detailUrl: '{% url "activities:activity_detail" activity.pk %}',
-        canEdit: true
-    }{% if not forloop.last %},{% endif %}
-    {% endfor %}
-};
+  <script>
+    const activitiesData = {
+      {% for activity in recent_activities %}
+        '{{ activity.pk }}': {
+          name: '{{ activity.name|escapejs }}',
+          description: '{{ activity.description|escapejs }}',
+          website_url: '{{ activity.website_url }}',
+          city: '{{ activity.city }}',
+          state: '{{ activity.state }}',
+          distance_from_resort: '{{ activity.distance_from_resort|default:"" }}',
+          travel_time_from_resort: '{{ activity.travel_time_from_resort|default:"" }}',
+          estimated_cost: '{{ activity.estimated_cost|default:"" }}',
+          estimated_duration: '{{ activity.estimated_duration|default:"" }}',
+          estimated_duration_display: '{{ activity.get_duration_display }}',
+          travel_time_display: '{{ activity.get_travel_time_display }}',
+          pre_trip_priority: '{{ activity.pre_trip_priority }}',
+          post_trip_rating: '{{ activity.post_trip_rating|default:"" }}',
+          is_favorite: {{ activity.is_favorite|yesno:"true,false" }},
+          createdBy: '{{ activity.created_by.get_full_name|escapejs }}',
+          createdAt: '{{ activity.created_at|date:"M d, Y" }}',
+          detailUrl: '{% url "activities:activity_detail" activity.pk %}',
+          canEdit: true
+        }{% if not forloop.last %},{% endif %}
+      {% endfor %}
+    };
 
-function openActivityModal() {
-    document.getElementById('activityModal').classList.add('show');
-    document.body.style.overflow = 'hidden';
-}
+    function openActivityModal() {
+      document.getElementById('activityModal').classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
 
-function closeActivityModal() {
-    document.getElementById('activityModal').classList.remove('show');
-    document.body.style.overflow = '';
-    document.getElementById('activityForm').reset();
-}
+    function closeActivityModal() {
+      document.getElementById('activityModal').classList.remove('show');
+      document.body.style.overflow = '';
+      document.getElementById('activityForm').reset();
+    }
 
-function openViewActivityModal(activityId) {
-    const activity = activitiesData[activityId];
-    if (!activity) return;
+    function openViewActivityModal(activityId) {
+      const activity = activitiesData[activityId];
+      if (!activity) return;
 
     // Set title
-    document.getElementById('viewActivityTitle').textContent = activity.name;
+      document.getElementById('viewActivityTitle').textContent = activity.name;
 
     // Set description
-    const descDiv = document.getElementById('viewActivityDescription');
-    if (activity.description) {
+      const descDiv = document.getElementById('viewActivityDescription');
+      if (activity.description) {
         descDiv.innerHTML = '<p>' + activity.description + '</p>';
         descDiv.style.display = 'block';
-    } else {
+      } else {
         descDiv.style.display = 'none';
-    }
+      }
 
     // Set location
-    const locationDiv = document.getElementById('viewActivityLocation');
-    if (activity.city || activity.state) {
+      const locationDiv = document.getElementById('viewActivityLocation');
+      if (activity.city || activity.state) {
         locationDiv.innerHTML = '<strong>📍 Location:</strong> ' +
-            (activity.city ? activity.city : '') +
-            (activity.state ? ', ' + activity.state : '');
+        (activity.city ? activity.city : '') +
+        (activity.state ? ', ' + activity.state : '');
         locationDiv.style.display = 'block';
-    } else {
+      } else {
         locationDiv.style.display = 'none';
-    }
+      }
 
     // Set distance
-    const distanceDiv = document.getElementById('viewActivityDistance');
-    if (activity.distance_from_resort) {
+      const distanceDiv = document.getElementById('viewActivityDistance');
+      if (activity.distance_from_resort) {
         distanceDiv.innerHTML = '<strong>🚗 Distance:</strong> ' + activity.distance_from_resort + ' miles' +
-            (activity.travel_time_from_resort ? ' (' + activity.travel_time_display + ')' : '');
+        (activity.travel_time_from_resort ? ' (' + activity.travel_time_display + ')' : '');
         distanceDiv.style.display = 'block';
-    } else {
+      } else {
         distanceDiv.style.display = 'none';
-    }
+      }
 
     // Set cost
-    const costDiv = document.getElementById('viewActivityCost');
-    if (activity.estimated_cost) {
+      const costDiv = document.getElementById('viewActivityCost');
+      if (activity.estimated_cost) {
         costDiv.innerHTML = '<strong>💰 Cost:</strong> $' + parseFloat(activity.estimated_cost).toFixed(2) + ' per person';
         costDiv.style.display = 'block';
-    } else {
+      } else {
         costDiv.style.display = 'none';
-    }
+      }
 
     // Set duration
-    const durationDiv = document.getElementById('viewActivityDuration');
-    if (activity.estimated_duration) {
+      const durationDiv = document.getElementById('viewActivityDuration');
+      if (activity.estimated_duration) {
         durationDiv.innerHTML = '<strong>⏱️ Duration:</strong> ' + activity.estimated_duration_display;
         durationDiv.style.display = 'block';
-    } else {
+      } else {
         durationDiv.style.display = 'none';
-    }
+      }
 
     // Set priority
-    const priorityDiv = document.getElementById('viewActivityPriority');
-    if (activity.pre_trip_priority > 0) {
+      const priorityDiv = document.getElementById('viewActivityPriority');
+      if (activity.pre_trip_priority > 0) {
         priorityDiv.innerHTML = '<strong>Priority:</strong> #' + activity.pre_trip_priority;
         priorityDiv.style.display = 'block';
-    } else {
+      } else {
         priorityDiv.style.display = 'none';
-    }
+      }
 
     // Set rating
-    const ratingDiv = document.getElementById('viewActivityRating');
-    if (activity.post_trip_rating) {
+      const ratingDiv = document.getElementById('viewActivityRating');
+      if (activity.post_trip_rating) {
         ratingDiv.innerHTML = '<strong>⭐ Rating:</strong> ' + activity.post_trip_rating + '/5 stars' +
-            (activity.is_favorite ? ' • Favorite' : '');
+        (activity.is_favorite ? ' • Favorite' : '');
         ratingDiv.style.display = 'block';
-    } else {
+      } else {
         ratingDiv.style.display = 'none';
-    }
+      }
 
     // Set meta
-    document.getElementById('viewActivityMeta').textContent =
+      document.getElementById('viewActivityMeta').textContent =
         'Added by ' + activity.createdBy + ' on ' + activity.createdAt;
 
     // Set full details link
-    document.getElementById('viewActivityFullLink').href = activity.detailUrl;
+      document.getElementById('viewActivityFullLink').href = activity.detailUrl;
 
     // Show modal
-    document.getElementById('viewActivityModal').classList.add('show');
-    document.body.style.overflow = 'hidden';
-}
+      document.getElementById('viewActivityModal').classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
 
-function closeViewActivityModal() {
-    document.getElementById('viewActivityModal').classList.remove('show');
-    document.body.style.overflow = '';
-}
+    function closeViewActivityModal() {
+      document.getElementById('viewActivityModal').classList.remove('show');
+      document.body.style.overflow = '';
+    }
 
 // Initialize address autocomplete for activity modal if Mapbox token exists
-{% if mapbox_token %}
-</script>
-<script src="{% static 'js/address-autocomplete.js' %}"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const activityAutocomplete = new AddressAutocomplete({
-        accessToken: '{{ mapbox_token }}',
-        searchInputId: 'activity-address-search',
-        resultsContainerId: 'activity-address-results',
-        fieldMapping: {
-            address_line1: '{{ activity_form.address_line1.id_for_label }}',
-            city: '{{ activity_form.city.id_for_label }}',
-            state: '{{ activity_form.state.id_for_label }}',
-            zip_code: '{{ activity_form.zip_code.id_for_label }}',
-            latitude: '{{ activity_form.latitude.id_for_label }}',
-            longitude: '{{ activity_form.longitude.id_for_label }}'
-        },
-        onSelect: function(addressData) {
-            {% if resort_latitude and resort_longitude %}
-            if (addressData.latitude && addressData.longitude) {
-                const distance = calculateDistance(
+    {% if mapbox_token %}
+      </script>
+      <script src="{% static 'js/address-autocomplete.js' %}"></script>
+      <script>
+        document.addEventListener('DOMContentLoaded', function() {
+          const activityAutocomplete = new AddressAutocomplete({
+            accessToken: '{{ mapbox_token }}',
+            searchInputId: 'activity-address-search',
+            resultsContainerId: 'activity-address-results',
+            fieldMapping: {
+              address_line1: '{{ activity_form.address_line1.id_for_label }}',
+              city: '{{ activity_form.city.id_for_label }}',
+              state: '{{ activity_form.state.id_for_label }}',
+              zip_code: '{{ activity_form.zip_code.id_for_label }}',
+              latitude: '{{ activity_form.latitude.id_for_label }}',
+              longitude: '{{ activity_form.longitude.id_for_label }}'
+            },
+            onSelect: function(addressData) {
+              {% if resort_latitude and resort_longitude %}
+                if (addressData.latitude && addressData.longitude) {
+                  const distance = calculateDistance(
                     {{ resort_latitude }},
                     {{ resort_longitude }},
                     addressData.latitude,
                     addressData.longitude
-                );
+                  );
 
-                const distanceField = document.getElementById('{{ activity_form.distance_from_resort.id_for_label }}');
-                if (distanceField) {
+                  const distanceField = document.getElementById('{{ activity_form.distance_from_resort.id_for_label }}');
+                  if (distanceField) {
                     distanceField.value = distance;
-                }
+                  }
 
-                const travelTime = calculateTravelTime(distance);
-                const travelTimeField = document.getElementById('{{ activity_form.travel_time_from_resort.id_for_label }}');
-                if (travelTimeField) {
+                  const travelTime = calculateTravelTime(distance);
+                  const travelTimeField = document.getElementById('{{ activity_form.travel_time_from_resort.id_for_label }}');
+                  if (travelTimeField) {
                     travelTimeField.value = travelTime;
+                  }
                 }
+              {% endif %}
             }
-            {% endif %}
-        }
-    });
-});
-{% endif %}
-</script>
+          });
+        });
+    {% endif %}
+  </script>
 
 <!-- Weather Forecast Modal -->
-{% if weather_forecast %}
-<div id="weatherModal" class="modal" style="display: none;">
-    <div class="modal-content modal-large">
+  {% if weather_forecast %}
+    <div id="weatherModal" class="modal" style="display: none;">
+      <div class="modal-content modal-large">
         <div class="modal-header">
-            <div>
-                <h2>🌤️ Weather Forecast</h2>
-                <p class="modal-location">
-                    {% if resort.city and resort.state %}
-                        📍 {{ resort.city }}, {{ resort.state }}
-                    {% elif resort.city %}
-                        📍 {{ resort.city }}
-                    {% else %}
-                        📍 {{ resort.name }}
-                    {% endif %}
-                </p>
-            </div>
-            <button class="modal-close" onclick="closeWeatherModal()">&times;</button>
+          <div>
+            <h2>🌤️ Weather Forecast</h2>
+            <p class="modal-location">
+              {% if resort.city and resort.state %}
+                📍 {{ resort.city }}, {{ resort.state }}
+              {% elif resort.city %}
+                📍 {{ resort.city }}
+              {% else %}
+                📍 {{ resort.name }}
+              {% endif %}
+            </p>
+          </div>
+          <button class="modal-close" onclick="closeWeatherModal()">&times;</button>
         </div>
         <div class="modal-body">
-            {% if temp_range %}
-                <div class="weather-stats-grid">
-                    <div class="weather-stat-card">
-                        <div class="stat-label">Expected High</div>
-                        <div class="stat-value high">{{ temp_range.high }}°F</div>
-                    </div>
-                    <div class="weather-stat-card">
-                        <div class="stat-label">Expected Low</div>
-                        <div class="stat-value low">{{ temp_range.low }}°F</div>
-                    </div>
+          {% if temp_range %}
+            <div class="weather-stats-grid">
+              <div class="weather-stat-card">
+                <div class="stat-label">Expected High</div>
+                <div class="stat-value high">{{ temp_range.high }}°F</div>
+              </div>
+              <div class="weather-stat-card">
+                <div class="stat-label">Expected Low</div>
+                <div class="stat-value low">{{ temp_range.low }}°F</div>
+              </div>
+            </div>
+          {% endif %}
+
+          <div class="modal-forecast-grid">
+            {% for day in weather_forecast %}
+              <div class="modal-forecast-day">
+                <div class="forecast-day-name">{{ day.date|date:"l" }}</div>
+                <div class="forecast-day-date">{{ day.date|date:"M j, Y" }}</div>
+                <div class="forecast-day-icon">{{ day.weather_icon }}</div>
+                <div class="forecast-day-temps">
+                  <span class="temp-high">{{ day.high }}°</span>
+                  <span class="temp-separator">/</span>
+                  <span class="temp-low">{{ day.low }}°</span>
                 </div>
-            {% endif %}
+              </div>
+            {% endfor %}
+          </div>
 
-            <div class="modal-forecast-grid">
-                {% for day in weather_forecast %}
-                    <div class="modal-forecast-day">
-                        <div class="forecast-day-name">{{ day.date|date:"l" }}</div>
-                        <div class="forecast-day-date">{{ day.date|date:"M j, Y" }}</div>
-                        <div class="forecast-day-icon">{{ day.weather_icon }}</div>
-                        <div class="forecast-day-temps">
-                            <span class="temp-high">{{ day.high }}°</span>
-                            <span class="temp-separator">/</span>
-                            <span class="temp-low">{{ day.low }}°</span>
-                        </div>
-                    </div>
-                {% endfor %}
-            </div>
-
-            <div class="weather-attribution-modal">
-                <p>Weather data provided by <a href="https://open-meteo.com/" target="_blank">Open-Meteo</a></p>
-                <p class="coordinates-info">📍 Using resort coordinates: {{ resort.latitude }}, {{ resort.longitude }}</p>
-            </div>
+          <div class="weather-attribution-modal">
+            <p>Weather data provided by <a href="https://open-meteo.com/" target="_blank">Open-Meteo</a></p>
+            <p class="coordinates-info">📍 Using resort coordinates: {{ resort.latitude }}, {{ resort.longitude }}</p>
+          </div>
         </div>
+      </div>
     </div>
-</div>
 
-<script>
-function openWeatherModal() {
-    document.getElementById('weatherModal').style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-}
+    <script>
+      function openWeatherModal() {
+        document.getElementById('weatherModal').style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+      }
 
-function closeWeatherModal() {
-    document.getElementById('weatherModal').style.display = 'none';
-    document.body.style.overflow = 'auto';
-}
+      function closeWeatherModal() {
+        document.getElementById('weatherModal').style.display = 'none';
+        document.body.style.overflow = 'auto';
+      }
 
 // Close modal when clicking outside
-document.getElementById('weatherModal')?.addEventListener('click', function(e) {
-    if (e.target === this) {
-        closeWeatherModal();
-    }
-});
+      document.getElementById('weatherModal')?.addEventListener('click', function(e) {
+        if (e.target === this) {
+          closeWeatherModal();
+        }
+      });
 
 // Close modal on Escape key
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape' && document.getElementById('weatherModal').style.display === 'flex') {
-        closeWeatherModal();
-    }
-});
-</script>
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && document.getElementById('weatherModal').style.display === 'flex') {
+          closeWeatherModal();
+        }
+      });
+    </script>
 
-<style>
+    <style>
 /* Weather Mini Forecast Styles */
-.weather-location-info {
-    margin-bottom: var(--spacing-sm);
-}
+      .weather-location-info {
+        margin-bottom: var(--spacing-sm);
+      }
 
-.weather-location {
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-    margin: 0;
-    font-weight: 500;
-}
+      .weather-location {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+        margin: 0;
+        font-weight: 500;
+      }
 
-.weather-summary-inline {
-    margin-bottom: var(--spacing-md);
-}
+      .weather-summary-inline {
+        margin-bottom: var(--spacing-md);
+      }
 
-.temp-range-text {
-    color: var(--text-secondary);
-    margin: 0;
-}
+      .temp-range-text {
+        color: var(--text-secondary);
+        margin: 0;
+      }
 
-.weather-mini-forecast {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-    gap: var(--spacing-sm);
-}
+      .weather-mini-forecast {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+        gap: var(--spacing-sm);
+      }
 
-.weather-mini-day {
-    text-align: center;
-    padding: var(--spacing-sm);
-    background: var(--bg-secondary);
-    border-radius: var(--border-radius);
-}
+      .weather-mini-day {
+        text-align: center;
+        padding: var(--spacing-sm);
+        background: var(--bg-secondary);
+        border-radius: var(--border-radius);
+      }
 
-.mini-date {
-    font-size: 0.75rem;
-    color: var(--text-secondary);
-    margin-bottom: 0.25rem;
-}
+      .mini-date {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        margin-bottom: 0.25rem;
+      }
 
-.mini-icon {
-    font-size: 1.5rem;
-    margin: 0.25rem 0;
-}
+      .mini-icon {
+        font-size: 1.5rem;
+        margin: 0.25rem 0;
+      }
 
-.mini-temps {
-    display: flex;
-    justify-content: center;
-    gap: 0.25rem;
-    font-size: 0.875rem;
-}
+      .mini-temps {
+        display: flex;
+        justify-content: center;
+        gap: 0.25rem;
+        font-size: 0.875rem;
+      }
 
-.mini-high {
-    color: #e74c3c;
-    font-weight: 600;
-}
+      .mini-high {
+        color: #e74c3c;
+        font-weight: 600;
+      }
 
-.mini-low {
-    color: #3498db;
-    font-weight: 600;
-}
+      .mini-low {
+        color: #3498db;
+        font-weight: 600;
+      }
 
 /* Weather Modal Styles */
-.modal-large {
-    max-width: 900px;
-    max-height: 90vh;
-    overflow-y: auto;
-}
+      .modal-large {
+        max-width: 900px;
+        max-height: 90vh;
+        overflow-y: auto;
+      }
 
-.modal-location {
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-    margin: 0.25rem 0 0 0;
-    font-weight: 500;
-}
+      .modal-location {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+        margin: 0.25rem 0 0 0;
+        font-weight: 500;
+      }
 
-.weather-stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: var(--spacing-md);
-    margin-bottom: var(--spacing-lg);
-}
+      .weather-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: var(--spacing-md);
+        margin-bottom: var(--spacing-lg);
+      }
 
-.weather-stat-card {
-    background: var(--bg-secondary);
-    padding: var(--spacing-md);
-    border-radius: var(--border-radius);
-    text-align: center;
-}
+      .weather-stat-card {
+        background: var(--bg-secondary);
+        padding: var(--spacing-md);
+        border-radius: var(--border-radius);
+        text-align: center;
+      }
 
-.stat-label {
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-    margin-bottom: var(--spacing-xs);
-}
+      .stat-label {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+        margin-bottom: var(--spacing-xs);
+      }
 
-.stat-value {
-    font-size: 2rem;
-    font-weight: bold;
-    color: var(--text-primary);
-}
+      .stat-value {
+        font-size: 2rem;
+        font-weight: bold;
+        color: var(--text-primary);
+      }
 
-.stat-value.high {
-    color: #e74c3c;
-}
+      .stat-value.high {
+        color: #e74c3c;
+      }
 
-.stat-value.low {
-    color: #3498db;
-}
+      .stat-value.low {
+        color: #3498db;
+      }
 
-.modal-forecast-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: var(--spacing-md);
-    margin-bottom: var(--spacing-lg);
-}
+      .modal-forecast-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: var(--spacing-md);
+        margin-bottom: var(--spacing-lg);
+      }
 
-.modal-forecast-day {
-    background: var(--bg-secondary);
-    padding: var(--spacing-md);
-    border-radius: var(--border-radius);
-    text-align: center;
-}
+      .modal-forecast-day {
+        background: var(--bg-secondary);
+        padding: var(--spacing-md);
+        border-radius: var(--border-radius);
+        text-align: center;
+      }
 
-.forecast-day-name {
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 0.25rem;
-}
+      .forecast-day-name {
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+      }
 
-.forecast-day-date {
-    font-size: 0.75rem;
-    color: var(--text-secondary);
-    margin-bottom: var(--spacing-sm);
-}
+      .forecast-day-date {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        margin-bottom: var(--spacing-sm);
+      }
 
-.forecast-day-icon {
-    font-size: 2.5rem;
-    margin: var(--spacing-sm) 0;
-}
+      .forecast-day-icon {
+        font-size: 2.5rem;
+        margin: var(--spacing-sm) 0;
+      }
 
-.forecast-day-temps {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 1.25rem;
-}
+      .forecast-day-temps {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 1.25rem;
+      }
 
-.temp-high {
-    color: #e74c3c;
-    font-weight: 600;
-}
+      .temp-high {
+        color: #e74c3c;
+        font-weight: 600;
+      }
 
-.temp-low {
-    color: #3498db;
-    font-weight: 600;
-}
+      .temp-low {
+        color: #3498db;
+        font-weight: 600;
+      }
 
-.temp-separator {
-    color: var(--text-secondary);
-}
+      .temp-separator {
+        color: var(--text-secondary);
+      }
 
-.weather-attribution-modal {
-    text-align: center;
-    padding-top: var(--spacing-md);
-    border-top: 1px solid var(--border-color);
-}
+      .weather-attribution-modal {
+        text-align: center;
+        padding-top: var(--spacing-md);
+        border-top: 1px solid var(--border-color);
+      }
 
-.weather-attribution-modal p {
-    margin: 0.25rem 0;
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-}
+      .weather-attribution-modal p {
+        margin: 0.25rem 0;
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+      }
 
-.weather-attribution-modal a {
-    color: var(--color-primary);
-    text-decoration: none;
-}
+      .weather-attribution-modal a {
+        color: var(--color-primary);
+        text-decoration: none;
+      }
 
-.weather-attribution-modal a:hover {
-    text-decoration: underline;
-}
+      .weather-attribution-modal a:hover {
+        text-decoration: underline;
+      }
 
-.coordinates-info {
-    font-size: 0.75rem;
-}
+      .coordinates-info {
+        font-size: 0.75rem;
+      }
 
-@media (max-width: 768px) {
-    .weather-mini-forecast {
-        grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
-    }
+      @media (max-width: 768px) {
+        .weather-mini-forecast {
+          grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+        }
 
-    .modal-forecast-grid {
-        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    }
-}
-</style>
-{% endif %}
+        .modal-forecast-grid {
+          grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        }
+      }
+    </style>
+  {% endif %}
+
+  <script>
+// Detect iOS and update map links to use Apple Maps
+    (function() {
+    // Check if device is iOS
+      function isIOS() {
+        return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+      }
+
+    // Update all map links on page load
+      if (isIOS()) {
+        document.addEventListener('DOMContentLoaded', function() {
+            // Update all map links with data-address attribute
+          document.querySelectorAll('.map-link[data-address]').forEach(function(link) {
+            const address = link.getAttribute('data-address');
+            if (address) {
+                    // Use Apple Maps for iOS devices
+              link.href = 'http://maps.apple.com/?q=' + encodeURIComponent(address);
+            }
+          });
+        });
+      }
+    })();
+  </script>
 
 {% endblock %}

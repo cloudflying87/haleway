@@ -26,13 +26,13 @@ class ContinueSetup:
         """Print a formatted header."""
         print(f"\n{'=' * 60}")
         print(f"  {text}")
-        print('=' * 60)
+        print("=" * 60)
 
     def print_step(self, number, text):
         """Print a step number and description."""
         print(f"\n{'─' * 60}")
         print(f"📍 Step {number}: {text}")
-        print('─' * 60)
+        print("─" * 60)
 
     def run_command(self, cmd, description, check=True, shell=False, show_output=True, env=None):
         """Run a command and handle errors."""
@@ -53,9 +53,13 @@ class ContinueSetup:
             else:
                 # Capture output (for quick commands)
                 if shell:
-                    result = subprocess.run(cmd, shell=True, check=check, capture_output=True, text=True, env=env)
+                    result = subprocess.run(
+                        cmd, shell=True, check=check, capture_output=True, text=True, env=env
+                    )
                 else:
-                    result = subprocess.run(cmd, check=check, capture_output=True, text=True, env=env)
+                    result = subprocess.run(
+                        cmd, check=check, capture_output=True, text=True, env=env
+                    )
 
                 if result.stdout:
                     print(result.stdout)
@@ -64,13 +68,13 @@ class ContinueSetup:
                 return True
         except subprocess.CalledProcessError as e:
             print(f"❌ Error: {e}")
-            if hasattr(e, 'stderr') and e.stderr:
+            if hasattr(e, "stderr") and e.stderr:
                 print(f"   {e.stderr}")
             if check:
                 raise
             return False
         except FileNotFoundError:
-            print(f"❌ Command not found")
+            print("❌ Command not found")
             return False
 
     def create_pyenv(self):
@@ -79,20 +83,16 @@ class ContinueSetup:
 
         # Check if pyenv is installed
         try:
-            subprocess.run(['pyenv', '--version'], capture_output=True, check=True)
+            subprocess.run(["pyenv", "--version"], capture_output=True, check=True)
         except (FileNotFoundError, subprocess.CalledProcessError):
             print("⚠️  pyenv not found. Skipping virtual environment creation.")
             print("   You can install pyenv later or use venv:")
-            print(f"   python3 -m venv .venv")
-            print(f"   source .venv/bin/activate")
+            print("   python3 -m venv .venv")
+            print("   source .venv/bin/activate")
             return False
 
         # Check if environment already exists
-        result = subprocess.run(
-            ['pyenv', 'virtualenvs', '--bare'],
-            capture_output=True,
-            text=True
-        )
+        result = subprocess.run(["pyenv", "virtualenvs", "--bare"], capture_output=True, text=True)
 
         if self.project_name in result.stdout:
             print(f"✅ Environment '{self.project_name}' already exists")
@@ -104,9 +104,9 @@ class ContinueSetup:
 
         # Create environment
         success = self.run_command(
-            ['pyenv', 'virtualenv', self.python_version, self.project_name],
+            ["pyenv", "virtualenv", self.python_version, self.project_name],
             f"Creating pyenv environment: {self.project_name}",
-            check=False
+            check=False,
         )
 
         if success:
@@ -114,12 +114,12 @@ class ContinueSetup:
             pyenv_root = Path.home() / ".pyenv" / "versions" / self.project_name / "bin" / "python"
             if pyenv_root.exists():
                 self.venv_python = str(pyenv_root)
-                print(f"\n✅ Environment created!")
+                print("\n✅ Environment created!")
                 print(f"   Using: {self.venv_python}")
             else:
-                print(f"\n✅ Environment created!")
-                print(f"   It will auto-activate when you cd into this directory")
-                print(f"   (thanks to .python-version file)")
+                print("\n✅ Environment created!")
+                print("   It will auto-activate when you cd into this directory")
+                print("   (thanks to .python-version file)")
 
         return success
 
@@ -132,18 +132,16 @@ class ContinueSetup:
 
         # Check if already installed
         try:
-            subprocess.run(['uv', '--version'], capture_output=True, check=True)
+            subprocess.run(["uv", "--version"], capture_output=True, check=True)
             print("✅ UV already installed")
             return True
         except (FileNotFoundError, subprocess.CalledProcessError):
             pass
 
         print("UV is 10-100x faster than pip!")
-        if input("Install UV? (Y/n): ").lower() != 'n':
+        if input("Install UV? (Y/n): ").lower() != "n":
             return self.run_command(
-                [python_cmd, '-m', 'pip', 'install', 'uv'],
-                "Installing UV via pip",
-                check=False
+                [python_cmd, "-m", "pip", "install", "uv"], "Installing UV via pip", check=False
             )
         else:
             print("⏭️  Skipping UV installation")
@@ -162,33 +160,34 @@ class ContinueSetup:
         if not makefile.exists():
             print("⚠️  Makefile not found. Installing manually...")
             return self.run_command(
-                [python_cmd, '-m', 'pip', 'install', '-r', 'requirements/development.txt'],
+                [python_cmd, "-m", "pip", "install", "-r", "requirements/development.txt"],
                 "Installing dependencies with pip",
-                check=False
+                check=False,
             )
 
         # Set up environment to use virtualenv
         import os
+
         env = os.environ.copy()
         if self.venv_python:
             venv_bin = str(Path(self.venv_python).parent)
-            env['PATH'] = f"{venv_bin}:{env.get('PATH', '')}"
-            env['VIRTUAL_ENV'] = str(Path(self.venv_python).parent.parent)
+            env["PATH"] = f"{venv_bin}:{env.get('PATH', '')}"
+            env["VIRTUAL_ENV"] = str(Path(self.venv_python).parent.parent)
             print(f"   Using virtualenv: {env['VIRTUAL_ENV']}")
 
         # Try using make commands with virtualenv activated
         self.run_command(
-            ['make', 'install-uv'],
+            ["make", "install-uv"],
             "Installing UV via Makefile",
             check=False,
-            env=env if self.venv_python else None
+            env=env if self.venv_python else None,
         )
 
         return self.run_command(
-            ['make', 'install'],
+            ["make", "install"],
             "Installing all dependencies",
             check=False,
-            env=env if self.venv_python else None
+            env=env if self.venv_python else None,
         )
 
     def verify_django_setup(self):
@@ -224,32 +223,31 @@ class ContinueSetup:
         self.print_step(5, "Running Initial Setup")
 
         # Use virtualenv Python if available
-        python_cmd = self.venv_python or 'python'
+        python_cmd = self.venv_python or "python"
 
         # Set up environment to use virtualenv
         import os
+
         env = None
         if self.venv_python:
             env = os.environ.copy()
             venv_bin = str(Path(self.venv_python).parent)
-            env['PATH'] = f"{venv_bin}:{env.get('PATH', '')}"
-            env['VIRTUAL_ENV'] = str(Path(self.venv_python).parent.parent)
+            env["PATH"] = f"{venv_bin}:{env.get('PATH', '')}"
+            env["VIRTUAL_ENV"] = str(Path(self.venv_python).parent.parent)
 
         makefile = self.project_dir / "Makefile"
         if makefile.exists():
             return self.run_command(
-                ['make', 'setup'],
+                ["make", "setup"],
                 "Running make setup (migrations, pre-commit hooks, etc.)",
                 check=False,
-                env=env
+                env=env,
             )
         else:
             # Manual setup
             print("Running migrations...")
             self.run_command(
-                [python_cmd, 'manage.py', 'migrate'],
-                "Applying database migrations",
-                check=False
+                [python_cmd, "manage.py", "migrate"], "Applying database migrations", check=False
             )
             return True
 
@@ -262,36 +260,24 @@ class ContinueSetup:
         if git_dir.exists():
             print("✅ Git repository already initialized")
         else:
-            self.run_command(
-                ['git', 'init'],
-                "Initializing git repository",
-                check=True
-            )
+            self.run_command(["git", "init"], "Initializing git repository", check=True)
 
         # Check if there are uncommitted changes
-        result = subprocess.run(
-            ['git', 'status', '--porcelain'],
-            capture_output=True,
-            text=True
-        )
+        result = subprocess.run(["git", "status", "--porcelain"], capture_output=True, text=True)
 
         if result.stdout.strip():
-            if input("\nCreate initial commit? (Y/n): ").lower() != 'n':
-                self.run_command(
-                    ['git', 'add', '.'],
-                    "Staging all files",
-                    check=False
-                )
+            if input("\nCreate initial commit? (Y/n): ").lower() != "n":
+                self.run_command(["git", "add", "."], "Staging all files", check=False)
 
                 self.run_command(
-                    ['git', 'commit', '-m', 'Initial project setup'],
+                    ["git", "commit", "-m", "Initial project setup"],
                     "Creating initial commit",
-                    check=False
+                    check=False,
                 )
 
                 print("\n📝 Next: Add remote and push")
                 print(f"   git remote add origin git@github.com:username/{self.project_name}.git")
-                print(f"   git push -u origin main")
+                print("   git push -u origin main")
         else:
             print("✅ No changes to commit")
 
@@ -352,7 +338,7 @@ We'll automate:
 Press Ctrl+C at any time to stop.
 """)
 
-        if input("Continue? (Y/n): ").lower() == 'n':
+        if input("Continue? (Y/n): ").lower() == "n":
             print("\n❌ Setup cancelled")
             print("   You can run this script again anytime")
             print("   Or follow manual steps in NEXT_STEPS.md")

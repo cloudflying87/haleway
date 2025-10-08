@@ -1,8 +1,9 @@
 """
 Weather service for fetching forecast data.
 """
+
 from datetime import date, datetime
-from typing import Optional, List, Dict
+
 import httpx
 import structlog
 
@@ -21,8 +22,8 @@ class WeatherService:
         longitude: float,
         start_date: date,
         end_date: date,
-        timezone: str = "auto"
-    ) -> Optional[List[Dict]]:
+        timezone: str = "auto",
+    ) -> list[dict] | None:
         """
         Fetch weather forecast for a location and date range.
 
@@ -44,7 +45,7 @@ class WeatherService:
                 "start_date": start_date.strftime("%Y-%m-%d"),
                 "end_date": end_date.strftime("%Y-%m-%d"),
                 "timezone": timezone,
-                "temperature_unit": "fahrenheit"
+                "temperature_unit": "fahrenheit",
             }
 
             logger.info(
@@ -52,7 +53,7 @@ class WeatherService:
                 latitude=latitude,
                 longitude=longitude,
                 start_date=str(start_date),
-                end_date=str(end_date)
+                end_date=str(end_date),
             )
 
             response = httpx.get(cls.BASE_URL, params=params, timeout=10.0)
@@ -70,32 +71,37 @@ class WeatherService:
 
             for i, forecast_date in enumerate(dates):
                 # Convert string date to date object for Django template filter
-                date_obj = datetime.strptime(forecast_date, "%Y-%m-%d").date() if isinstance(forecast_date, str) else forecast_date
+                date_obj = (
+                    datetime.strptime(forecast_date, "%Y-%m-%d").date()
+                    if isinstance(forecast_date, str)
+                    else forecast_date
+                )
 
-                forecasts.append({
-                    "date": date_obj,
-                    "date_str": forecast_date,  # Keep string version for display
-                    "high": round(max_temps[i]) if i < len(max_temps) else None,
-                    "low": round(min_temps[i]) if i < len(min_temps) else None,
-                    "weather_code": weather_codes[i] if i < len(weather_codes) else None,
-                    "weather_icon": cls._get_weather_icon(weather_codes[i] if i < len(weather_codes) else None)
-                })
+                forecasts.append(
+                    {
+                        "date": date_obj,
+                        "date_str": forecast_date,  # Keep string version for display
+                        "high": round(max_temps[i]) if i < len(max_temps) else None,
+                        "low": round(min_temps[i]) if i < len(min_temps) else None,
+                        "weather_code": weather_codes[i] if i < len(weather_codes) else None,
+                        "weather_icon": cls._get_weather_icon(
+                            weather_codes[i] if i < len(weather_codes) else None
+                        ),
+                    }
+                )
 
             logger.info(
                 "weather_forecast_success",
                 forecast_count=len(forecasts),
                 latitude=latitude,
-                longitude=longitude
+                longitude=longitude,
             )
 
             return forecasts
 
         except httpx.HTTPError as e:
             logger.error(
-                "weather_api_http_error",
-                error=str(e),
-                latitude=latitude,
-                longitude=longitude
+                "weather_api_http_error", error=str(e), latitude=latitude, longitude=longitude
             )
             return None
         except Exception as e:
@@ -104,12 +110,12 @@ class WeatherService:
                 error=str(e),
                 latitude=latitude,
                 longitude=longitude,
-                exc_info=True
+                exc_info=True,
             )
             return None
 
     @staticmethod
-    def _get_weather_icon(weather_code: Optional[int]) -> str:
+    def _get_weather_icon(weather_code: int | None) -> str:
         """
         Get emoji icon for WMO weather code.
 
@@ -133,9 +139,7 @@ class WeatherService:
             return "🌤️"
         elif weather_code <= 48:
             return "🌫️"
-        elif weather_code <= 57:
-            return "🌧️"
-        elif weather_code <= 67:
+        elif weather_code <= 57 or weather_code <= 67:
             return "🌧️"
         elif weather_code <= 77:
             return "❄️"

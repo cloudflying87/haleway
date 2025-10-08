@@ -5,15 +5,13 @@ Checks for common deployment issues and suggests fixes
 Run on the server before deploying
 """
 
-import os
-import sys
-import socket
-import subprocess
 import json
 import secrets
+import socket
 import string
+import subprocess
+import sys
 from pathlib import Path
-from typing import Dict, List, Tuple, Optional
 
 
 class DeploymentValidator:
@@ -41,20 +39,17 @@ class DeploymentValidator:
         """Check if Docker is running."""
         print("\n📦 Checking Docker...")
         try:
-            subprocess.run(
-                ["docker", "ps"],
-                capture_output=True,
-                check=True,
-                timeout=5
-            )
+            subprocess.run(["docker", "ps"], capture_output=True, check=True, timeout=5)
             print("  ✅ Docker is running")
         except (subprocess.CalledProcessError, FileNotFoundError, subprocess.TimeoutExpired):
-            self.issues.append({
-                'type': 'docker',
-                'message': 'Docker is not running or not installed',
-                'fix_location': 'SERVER',
-                'fix': 'Start Docker: sudo systemctl start docker'
-            })
+            self.issues.append(
+                {
+                    "type": "docker",
+                    "message": "Docker is not running or not installed",
+                    "fix_location": "SERVER",
+                    "fix": "Start Docker: sudo systemctl start docker",
+                }
+            )
             print("  ❌ Docker is not running")
 
     def check_env_file(self):
@@ -65,12 +60,14 @@ class DeploymentValidator:
         env_example = self.project_dir / ".env.example"
 
         if not env_path.exists():
-            self.issues.append({
-                'type': 'env',
-                'message': '.env file missing',
-                'fix_location': 'SERVER',
-                'fix': f'cp .env.example .env && nano .env'
-            })
+            self.issues.append(
+                {
+                    "type": "env",
+                    "message": ".env file missing",
+                    "fix_location": "SERVER",
+                    "fix": "cp .env.example .env && nano .env",
+                }
+            )
             print("  ❌ .env file not found")
             return
 
@@ -79,20 +76,22 @@ class DeploymentValidator:
         # Check for placeholder values
         env_content = env_path.read_text()
         placeholders = [
-            ('your-secret-key-here', 'SECRET_KEY'),
-            ('secure-password-here', 'DB_PASSWORD'),
-            ('your-sentry-dsn-here', 'SENTRY_DSN'),
-            ('your-tunnel-token-here', 'CLOUDFLARE_TUNNEL_TOKEN'),
+            ("your-secret-key-here", "SECRET_KEY"),
+            ("secure-password-here", "DB_PASSWORD"),
+            ("your-sentry-dsn-here", "SENTRY_DSN"),
+            ("your-tunnel-token-here", "CLOUDFLARE_TUNNEL_TOKEN"),
         ]
 
         for placeholder, var_name in placeholders:
             if placeholder in env_content:
-                self.warnings.append({
-                    'type': 'env_placeholder',
-                    'message': f'{var_name} still has placeholder value',
-                    'fix_location': 'SERVER',
-                    'fix': f'Edit .env and set real {var_name}'
-                })
+                self.warnings.append(
+                    {
+                        "type": "env_placeholder",
+                        "message": f"{var_name} still has placeholder value",
+                        "fix_location": "SERVER",
+                        "fix": f"Edit .env and set real {var_name}",
+                    }
+                )
                 print(f"  ⚠️  {var_name} needs a real value")
 
     def check_port_availability(self):
@@ -111,7 +110,7 @@ class DeploymentValidator:
                 conflicts.append((port, used_ports[port]))
 
         if conflicts:
-            print(f"  ❌ Port conflicts detected")
+            print("  ❌ Port conflicts detected")
 
             # Find available ports
             override_config = "services:\n"
@@ -125,15 +124,17 @@ class DeploymentValidator:
                 service_name = self._port_to_service(port)
                 if service_name:
                     override_config += f"  {service_name}:\n"
-                    override_config += f"    ports:\n"
+                    override_config += "    ports:\n"
                     override_config += f"      - '{available_port}:{port}'\n"
 
-            self.issues.append({
-                'type': 'port_conflict',
-                'message': f'Ports in use: {[p for p, _ in conflicts]}',
-                'fix_location': 'SERVER',
-                'fix': f'Create docker-compose.override.yml with:\n{override_config}'
-            })
+            self.issues.append(
+                {
+                    "type": "port_conflict",
+                    "message": f"Ports in use: {[p for p, _ in conflicts]}",
+                    "fix_location": "SERVER",
+                    "fix": f"Create docker-compose.override.yml with:\n{override_config}",
+                }
+            )
         else:
             print(f"  ✅ All required ports available: {required_ports}")
 
@@ -150,9 +151,9 @@ class DeploymentValidator:
                 ["docker", "network", "ls", "--format", "{{.Name}}"],
                 capture_output=True,
                 text=True,
-                check=True
+                check=True,
             )
-            existing_networks = result.stdout.strip().split('\n')
+            existing_networks = result.stdout.strip().split("\n")
         except subprocess.CalledProcessError:
             print("  ⚠️  Could not check Docker networks")
             return
@@ -168,25 +169,27 @@ class DeploymentValidator:
 
             if subnet_conflicts:
                 available_subnet = self._find_available_subnet()
-                print(f"     Subnet conflict detected")
+                print("     Subnet conflict detected")
                 print(f"     Suggested subnet: {available_subnet}")
 
                 override_config = "networks:\n"
                 for net in name_conflicts:
                     override_config += f"  {net}:\n"
-                    override_config += f"    driver: bridge\n"
-                    override_config += f"    ipam:\n"
-                    override_config += f"      config:\n"
+                    override_config += "    driver: bridge\n"
+                    override_config += "    ipam:\n"
+                    override_config += "      config:\n"
                     override_config += f"        - subnet: {available_subnet}\n"
 
-                self.issues.append({
-                    'type': 'network_conflict',
-                    'message': f'Network conflicts: {name_conflicts}',
-                    'fix_location': 'SERVER',
-                    'fix': f'Add to docker-compose.override.yml:\n{override_config}'
-                })
+                self.issues.append(
+                    {
+                        "type": "network_conflict",
+                        "message": f"Network conflicts: {name_conflicts}",
+                        "fix_location": "SERVER",
+                        "fix": f"Add to docker-compose.override.yml:\n{override_config}",
+                    }
+                )
             else:
-                print(f"  ✅ Networks exist but no subnet conflicts")
+                print("  ✅ Networks exist but no subnet conflicts")
         else:
             print("  ✅ No network conflicts")
 
@@ -201,9 +204,9 @@ class DeploymentValidator:
                 ["docker", "volume", "ls", "--format", "{{.Name}}"],
                 capture_output=True,
                 text=True,
-                check=True
+                check=True,
             )
-            existing_volumes = result.stdout.strip().split('\n')
+            existing_volumes = result.stdout.strip().split("\n")
         except subprocess.CalledProcessError:
             print("  ⚠️  Could not check Docker volumes")
             return
@@ -212,15 +215,17 @@ class DeploymentValidator:
 
         if conflicts:
             print(f"  ⚠️  Volume name conflicts: {conflicts}")
-            print(f"     These volumes already exist and will be reused")
-            print(f"     This may contain data from another project!")
+            print("     These volumes already exist and will be reused")
+            print("     This may contain data from another project!")
 
-            self.warnings.append({
-                'type': 'volume_conflict',
-                'message': f'Volumes exist: {conflicts}',
-                'fix_location': 'SERVER',
-                'fix': 'Either: 1) Remove old volumes: docker volume rm <name>, OR 2) Rename in docker-compose.yml'
-            })
+            self.warnings.append(
+                {
+                    "type": "volume_conflict",
+                    "message": f"Volumes exist: {conflicts}",
+                    "fix_location": "SERVER",
+                    "fix": "Either: 1) Remove old volumes: docker volume rm <name>, OR 2) Rename in docker-compose.yml",
+                }
+            )
         else:
             print("  ✅ No volume conflicts")
 
@@ -236,34 +241,39 @@ class DeploymentValidator:
 
         # Check SECRET_KEY length and randomness
         import re
-        secret_match = re.search(r'SECRET_KEY=([^\n]+)', env_content)
+
+        secret_match = re.search(r"SECRET_KEY=([^\n]+)", env_content)
         if secret_match:
             secret_key = secret_match.group(1)
             if len(secret_key) < 50:
                 secure_key = self._generate_secret_key()
-                self.warnings.append({
-                    'type': 'weak_secret',
-                    'message': 'SECRET_KEY is too short',
-                    'fix_location': 'SERVER',
-                    'fix': f'Replace SECRET_KEY in .env with:\nSECRET_KEY={secure_key}'
-                })
+                self.warnings.append(
+                    {
+                        "type": "weak_secret",
+                        "message": "SECRET_KEY is too short",
+                        "fix_location": "SERVER",
+                        "fix": f"Replace SECRET_KEY in .env with:\nSECRET_KEY={secure_key}",
+                    }
+                )
                 print("  ⚠️  SECRET_KEY is weak")
             else:
                 print("  ✅ SECRET_KEY looks secure")
 
         # Check for ALLOWED_HOSTS
-        if 'ALLOWED_HOSTS=' in env_content:
-            hosts_match = re.search(r'ALLOWED_HOSTS=([^\n]+)', env_content)
-            if hosts_match and 'yourdomain.com' in hosts_match.group(1):
-                self.warnings.append({
-                    'type': 'allowed_hosts',
-                    'message': 'ALLOWED_HOSTS still has placeholder',
-                    'fix_location': 'SERVER',
-                    'fix': 'Update ALLOWED_HOSTS in .env with your actual domain'
-                })
+        if "ALLOWED_HOSTS=" in env_content:
+            hosts_match = re.search(r"ALLOWED_HOSTS=([^\n]+)", env_content)
+            if hosts_match and "yourdomain.com" in hosts_match.group(1):
+                self.warnings.append(
+                    {
+                        "type": "allowed_hosts",
+                        "message": "ALLOWED_HOSTS still has placeholder",
+                        "fix_location": "SERVER",
+                        "fix": "Update ALLOWED_HOSTS in .env with your actual domain",
+                    }
+                )
                 print("  ⚠️  ALLOWED_HOSTS needs updating")
 
-    def _get_required_ports(self) -> List[str]:
+    def _get_required_ports(self) -> list[str]:
         """Parse docker-compose.yml for required ports."""
         compose_file = self.project_dir / "docker-compose.yml"
         if not compose_file.exists():
@@ -274,12 +284,13 @@ class DeploymentValidator:
 
         # Simple regex to find port mappings like "80:80" or "8000:8000"
         import re
+
         matches = re.findall(r'["\'"]?(\d+):\d+["\'"]?', content)
         ports = list(set(matches))  # Remove duplicates
 
         return ports
 
-    def _get_used_ports(self) -> Dict[str, str]:
+    def _get_used_ports(self) -> dict[str, str]:
         """Get ports currently in use by Docker and system."""
         used = {}
 
@@ -289,19 +300,20 @@ class DeploymentValidator:
                 ["docker", "ps", "--format", "{{.Names}}\t{{.Ports}}"],
                 capture_output=True,
                 text=True,
-                check=True
+                check=True,
             )
 
             import re
-            for line in result.stdout.split('\n'):
+
+            for line in result.stdout.split("\n"):
                 if not line.strip():
                     continue
-                parts = line.split('\t')
+                parts = line.split("\t")
                 if len(parts) >= 2:
                     container_name = parts[0]
                     ports_str = parts[1]
                     # Extract host ports like "0.0.0.0:80->80/tcp"
-                    ports = re.findall(r'0\.0\.0\.0:(\d+)', ports_str)
+                    ports = re.findall(r"0\.0\.0\.0:(\d+)", ports_str)
                     for port in ports:
                         used[port] = container_name
         except subprocess.CalledProcessError:
@@ -310,13 +322,12 @@ class DeploymentValidator:
         # Check system ports using lsof (if available)
         try:
             result = subprocess.run(
-                ["lsof", "-iTCP", "-sTCP:LISTEN", "-n", "-P"],
-                capture_output=True,
-                text=True
+                ["lsof", "-iTCP", "-sTCP:LISTEN", "-n", "-P"], capture_output=True, text=True
             )
             import re
-            for line in result.stdout.split('\n'):
-                match = re.search(r':(\d+)\s+\(LISTEN\)', line)
+
+            for line in result.stdout.split("\n"):
+                match = re.search(r":(\d+)\s+\(LISTEN\)", line)
                 if match:
                     port = match.group(1)
                     if port not in used:
@@ -355,24 +366,24 @@ class DeploymentValidator:
         """Check if a port is available by trying to bind to it."""
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                s.bind(('', port))
+                s.bind(("", port))
                 return True
         except OSError:
             return False
 
-    def _port_to_service(self, port: str) -> Optional[str]:
+    def _port_to_service(self, port: str) -> str | None:
         """Map port number to likely service name."""
         mapping = {
-            '80': 'nginx',
-            '443': 'nginx',
-            '8080': 'web',
-            '8000': 'web',
-            '5432': 'db',
-            '6379': 'redis',
+            "80": "nginx",
+            "443": "nginx",
+            "8080": "web",
+            "8000": "web",
+            "5432": "db",
+            "6379": "redis",
         }
         return mapping.get(port)
 
-    def _get_project_networks(self) -> List[str]:
+    def _get_project_networks(self) -> list[str]:
         """Get network names from docker-compose.yml."""
         compose_file = self.project_dir / "docker-compose.yml"
         if not compose_file.exists():
@@ -383,13 +394,14 @@ class DeploymentValidator:
 
         # Look for networks section
         import re
+
         # Match network names in networks: section
-        matches = re.findall(r'networks:\s*\n\s+(\w+):', content)
+        matches = re.findall(r"networks:\s*\n\s+(\w+):", content)
         networks.extend(matches)
 
         return networks
 
-    def _get_project_volumes(self) -> List[str]:
+    def _get_project_volumes(self) -> list[str]:
         """Get volume names from docker-compose.yml."""
         compose_file = self.project_dir / "docker-compose.yml"
         if not compose_file.exists():
@@ -399,7 +411,8 @@ class DeploymentValidator:
         content = compose_file.read_text()
 
         import re
-        matches = re.findall(r'volumes:\s*\n\s+(\w+):', content)
+
+        matches = re.findall(r"volumes:\s*\n\s+(\w+):", content)
         volumes.extend(matches)
 
         return volumes
@@ -411,7 +424,7 @@ class DeploymentValidator:
                 ["docker", "network", "inspect", "bridge"],
                 capture_output=True,
                 text=True,
-                check=True
+                check=True,
             )
             # If we can inspect, networks exist - detailed check would parse JSON
             return False  # Simplified for now
@@ -426,10 +439,10 @@ class DeploymentValidator:
                 ["docker", "network", "ls", "--format", "{{.Name}}"],
                 capture_output=True,
                 text=True,
-                check=True
+                check=True,
             )
 
-            networks = result.stdout.strip().split('\n')
+            networks = result.stdout.strip().split("\n")
             used_subnets = set()
 
             for network in networks:
@@ -440,13 +453,13 @@ class DeploymentValidator:
                         ["docker", "network", "inspect", network],
                         capture_output=True,
                         text=True,
-                        check=True
+                        check=True,
                     )
                     network_data = json.loads(inspect_result.stdout)
-                    if network_data and 'IPAM' in network_data[0]:
-                        for config in network_data[0]['IPAM'].get('Config', []):
-                            if 'Subnet' in config:
-                                used_subnets.add(config['Subnet'])
+                    if network_data and "IPAM" in network_data[0]:
+                        for config in network_data[0]["IPAM"].get("Config", []):
+                            if "Subnet" in config:
+                                used_subnets.add(config["Subnet"])
                 except (subprocess.CalledProcessError, json.JSONDecodeError, KeyError):
                     continue
 
@@ -469,8 +482,8 @@ class DeploymentValidator:
 
     def _generate_secret_key(self, length: int = 50) -> str:
         """Generate a secure SECRET_KEY."""
-        alphabet = string.ascii_letters + string.digits + '!@#$%^&*(-_=+)'
-        return ''.join(secrets.choice(alphabet) for _ in range(length))
+        alphabet = string.ascii_letters + string.digits + "!@#$%^&*(-_=+)"
+        return "".join(secrets.choice(alphabet) for _ in range(length))
 
     def show_results(self) -> bool:
         """Show validation results and fixes."""
@@ -502,7 +515,7 @@ class DeploymentValidator:
         if self.issues:
             print("\n💡 Would you like to auto-generate fixes?")
             response = input("Generate docker-compose.override.yml? (y/N): ")
-            if response.lower() == 'y':
+            if response.lower() == "y":
                 self._generate_override_file()
 
         return len(self.issues) == 0
@@ -512,9 +525,9 @@ class DeploymentValidator:
         override_path = self.project_dir / "docker-compose.override.yml"
 
         if override_path.exists():
-            print(f"\n⚠️  docker-compose.override.yml already exists")
+            print("\n⚠️  docker-compose.override.yml already exists")
             response = input("Overwrite? (y/N): ")
-            if response.lower() != 'y':
+            if response.lower() != "y":
                 return
 
         content = "# Auto-generated by validate_deployment.py\n"
@@ -529,17 +542,17 @@ class DeploymentValidator:
         networks_section = "networks:\n"
 
         for issue in self.issues:
-            if issue['type'] == 'port_conflict':
+            if issue["type"] == "port_conflict":
                 # Extract service config from fix
-                if 'services:' in issue['fix']:
-                    fix_lines = issue['fix'].split('\n')[1:]  # Skip 'services:' line
-                    services_section += '\n'.join(fix_lines) + '\n'
+                if "services:" in issue["fix"]:
+                    fix_lines = issue["fix"].split("\n")[1:]  # Skip 'services:' line
+                    services_section += "\n".join(fix_lines) + "\n"
                     has_services = True
 
-            elif issue['type'] == 'network_conflict':
-                if 'networks:' in issue['fix']:
-                    fix_lines = issue['fix'].split('\n')[1:]  # Skip 'networks:' line
-                    networks_section += '\n'.join(fix_lines) + '\n'
+            elif issue["type"] == "network_conflict":
+                if "networks:" in issue["fix"]:
+                    fix_lines = issue["fix"].split("\n")[1:]  # Skip 'networks:' line
+                    networks_section += "\n".join(fix_lines) + "\n"
                     has_networks = True
 
         if has_services:
@@ -560,9 +573,9 @@ def main():
     """Main entry point."""
     import argparse
 
-    parser = argparse.ArgumentParser(description='Validate deployment readiness')
-    parser.add_argument('--project-dir', type=Path, help='Project directory (default: current)')
-    parser.add_argument('--non-interactive', action='store_true', help='No prompts, just report')
+    parser = argparse.ArgumentParser(description="Validate deployment readiness")
+    parser.add_argument("--project-dir", type=Path, help="Project directory (default: current)")
+    parser.add_argument("--non-interactive", action="store_true", help="No prompts, just report")
 
     args = parser.parse_args()
 

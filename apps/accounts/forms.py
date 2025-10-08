@@ -1,9 +1,10 @@
 """
 Authentication forms for haleway.
 """
+
 from django import forms
 from django.contrib.auth import get_user_model
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.utils.translation import gettext_lazy as _
 
 User = get_user_model()
@@ -11,35 +12,31 @@ User = get_user_model()
 
 class UserLoginForm(AuthenticationForm):
     """Custom login form."""
+
     username = forms.CharField(
-        label='Username',
-        widget=forms.TextInput(attrs={
-            'class': 'form-control',
-            'placeholder': 'username',
-            'autofocus': True
-        })
+        label="Username",
+        widget=forms.TextInput(
+            attrs={"class": "form-control", "placeholder": "username", "autofocus": True}
+        ),
     )
     password = forms.CharField(
-        label=_('Password'),
-        widget=forms.PasswordInput(attrs={
-            'class': 'form-control',
-            'placeholder': 'Password'
-        })
+        label=_("Password"),
+        widget=forms.PasswordInput(attrs={"class": "form-control", "placeholder": "Password"}),
     )
 
 
 class UserRegistrationForm(UserCreationForm):
     """Custom registration form."""
+
     email = forms.EmailField(
-        required=True,
-        widget=forms.EmailInput(attrs={'class': 'form-control'})
+        required=True, widget=forms.EmailInput(attrs={"class": "form-control"})
     )
 
     class Meta:
         model = User
-        fields = ('username', 'email', 'password1', 'password2')
+        fields = ("username", "email", "password1", "password2")
         widgets = {
-            'username': forms.TextInput(attrs={'class': 'form-control'}),
+            "username": forms.TextInput(attrs={"class": "form-control"}),
         }
 
 
@@ -48,28 +45,24 @@ class UserProfileForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ('first_name', 'last_name', 'email', 'phone_number')
+        fields = ("first_name", "last_name", "email", "phone_number")
         widgets = {
-            'first_name': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'First name'
-            }),
-            'last_name': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Last name'
-            }),
-            'email': forms.EmailInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Email address'
-            }),
-            'phone_number': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Phone number (optional)'
-            }),
+            "first_name": forms.TextInput(
+                attrs={"class": "form-control", "placeholder": "First name"}
+            ),
+            "last_name": forms.TextInput(
+                attrs={"class": "form-control", "placeholder": "Last name"}
+            ),
+            "email": forms.EmailInput(
+                attrs={"class": "form-control", "placeholder": "Email address"}
+            ),
+            "phone_number": forms.TextInput(
+                attrs={"class": "form-control", "placeholder": "Phone number (optional)"}
+            ),
         }
         labels = {
-            'first_name': _('First Name'),
-            'last_name': _('Last Name'),
-            'email': _('Email'),
-            'phone_number': _('Phone Number'),
+            "first_name": _("First Name"),
+            "last_name": _("Last Name"),
+            "email": _("Email"),
+            "phone_number": _("Phone Number"),
         }
