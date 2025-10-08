@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}{{ note.title }} - HaleWay{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <div>
+            <h1>
+                {% if note.is_pinned %}📌 {% endif %}
+                {{ note.title }}
+            </h1>
+            {% if note.category %}
+                <span class="badge" style="background-color: {{ note.category.color_code }};">
+                    {{ note.category.name }}
+                </span>
+            {% endif %}
+        </div>
+        <div class="note-actions">
+            {% if can_edit %}
+                <a href="{% url 'notes:note_edit' note.pk %}" class="btn btn-outline">Edit</a>
+            {% endif %}
+            {% if can_delete %}
+                <a href="{% url 'notes:note_delete' note.pk %}" class="btn btn-danger btn-sm">Delete</a>
+            {% endif %}
+            <a href="{% url 'notes:note_list' note.trip.pk %}" class="btn btn-outline">Back to Notes</a>
+        </div>
+    </div>
+
+    <div class="note-content">
+        <div class="note-body">
+            {{ note.content|linebreaks }}
+        </div>
+
+        <div class="note-meta">
+            <p><strong>Trip:</strong> <a href="{% url 'trips:trip_detail' note.trip.pk %}">{{ note.trip.name }}</a></p>
+            <p><strong>Created by:</strong> {{ note.created_by.get_full_name }}</p>
+            <p><strong>Created:</strong> {{ note.created_at|date:"F d, Y g:i A" }}</p>
+            <p><strong>Last updated:</strong> {{ note.updated_at|date:"F d, Y g:i A" }}</p>
+        </div>
+    </div>
+</div>
+
+<style>
+.page-header {
+    margin-bottom: var(--spacing-xl);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--spacing-lg);
+}
+
+.note-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+}
+
+.note-content {
+    background: white;
+    padding: var(--spacing-xl);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-md);
+}
+
+.note-body {
+    font-size: 1.125rem;
+    line-height: 1.7;
+    margin-bottom: var(--spacing-xl);
+    padding-bottom: var(--spacing-xl);
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.note-meta {
+    color: var(--text-secondary);
+}
+
+.note-meta p {
+    margin: var(--spacing-xs) 0;
+}
+
+.badge {
+    display: inline-block;
+    padding: var(--spacing-xs) var(--spacing-md);
+    border-radius: var(--border-radius);
+    color: white;
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-top: var(--spacing-sm);
+}
+</style>
+{% endblock %}

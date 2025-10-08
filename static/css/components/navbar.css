@@ -59,6 +59,21 @@
     gap: var(--spacing-md);
 }
 
+/* Override button styles for navbar - use !important to ensure visibility */
+.navbar .btn-outline,
+.navbar .navbar-user .btn-outline {
+    color: var(--white) !important;
+    border-color: var(--white) !important;
+    background-color: transparent;
+}
+
+.navbar .btn-outline:hover:not(:disabled),
+.navbar .navbar-user .btn-outline:hover:not(:disabled) {
+    color: var(--primary-color) !important;
+    background-color: var(--white) !important;
+    border-color: var(--white) !important;
+}
+
 .user-name-link {
     color: var(--white);
     font-weight: 500;
@@ -77,14 +92,25 @@
 @media (max-width: 768px) {
     .navbar-menu {
         gap: var(--spacing-sm);
+        flex-wrap: wrap;
     }
 
-    .user-name {
+    .navbar-user {
+        gap: var(--spacing-sm);
+    }
+
+    .user-name-link {
         display: none;
     }
 
     .nav-link {
         font-size: 0.875rem;
+    }
+
+    /* Make logout button more visible on mobile */
+    .navbar-user .btn {
+        font-size: 0.875rem;
+        padding: 0.5rem 1rem;
     }
 }
 

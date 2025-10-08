@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }} - HaleWay{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>{{ page_title }}</h1>
+    </div>
+
+    <div class="form-container">
+        <form method="post" class="note-form">
+            {% csrf_token %}
+
+            {% if form.errors %}
+                <div class="alert alert-error">
+                    Please correct the errors below.
+                </div>
+            {% endif %}
+
+            <div class="form-group">
+                <label for="{{ form.category.id_for_label }}">{{ form.category.label }}</label>
+                {{ form.category }}
+                {% if form.category.errors %}
+                    <div class="error">{{ form.category.errors.0 }}</div>
+                {% endif %}
+                {% if form.category.help_text %}
+                    <small class="help-text">{{ form.category.help_text }}</small>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.title.id_for_label }}">{{ form.title.label }}</label>
+                {{ form.title }}
+                {% if form.title.errors %}
+                    <div class="error">{{ form.title.errors.0 }}</div>
+                {% endif %}
+                {% if form.title.help_text %}
+                    <small class="help-text">{{ form.title.help_text }}</small>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.content.id_for_label }}">{{ form.content.label }}</label>
+                {{ form.content }}
+                {% if form.content.errors %}
+                    <div class="error">{{ form.content.errors.0 }}</div>
+                {% endif %}
+                {% if form.content.help_text %}
+                    <small class="help-text">{{ form.content.help_text }}</small>
+                {% endif %}
+            </div>
+
+            <div class="form-group checkbox-group">
+                {{ form.is_pinned }}
+                <label for="{{ form.is_pinned.id_for_label }}">{{ form.is_pinned.label }}</label>
+                {% if form.is_pinned.help_text %}
+                    <small class="help-text">{{ form.is_pinned.help_text }}</small>
+                {% endif %}
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Save Note</button>
+                <a href="{% url 'notes:note_list' trip.pk %}" class="btn btn-outline">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.page-header {
+    margin-bottom: var(--spacing-xl);
+}
+
+.form-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.note-form {
+    background: white;
+    padding: var(--spacing-xl);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-md);
+}
+
+.form-group {
+    margin-bottom: var(--spacing-lg);
+}
+
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.checkbox-group label {
+    margin-bottom: 0;
+}
+
+.form-actions {
+    display: flex;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-xl);
+}
+
+.error {
+    color: var(--error-color);
+    font-size: 0.875rem;
+    margin-top: var(--spacing-xs);
+}
+
+.help-text {
+    display: block;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    margin-top: var(--spacing-xs);
+}
+</style>
+{% endblock %}

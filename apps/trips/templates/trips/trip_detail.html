@@ -7,7 +7,7 @@
     <div class="page-header">
         <div>
             <h1>{{ trip.name }}</h1>
-            <p class="destination">=� {{ trip.destination_name }}</p>
+            <p class="destination">📍 {{ trip.destination_name }}</p>
             <p class="dates">{{ trip.start_date|date:"M d, Y" }} - {{ trip.end_date|date:"M d, Y" }} ({{ trip.duration_days }} days)</p>
         </div>
         <div class="trip-actions">
@@ -50,6 +50,17 @@
             {% else %}
                 <p class="text-muted">No resort details added yet.</p>
             {% endif %}
+        </div>
+
+        <!-- Notes Section -->
+        <div class="section">
+            <div class="section-header">
+                <h2>📝 Trip Notes</h2>
+                <a href="{% url 'notes:note_list' trip.pk %}" class="btn btn-sm btn-primary">
+                    View All Notes
+                </a>
+            </div>
+            <p class="text-muted">Keep important trip information organized with searchable, categorized notes.</p>
         </div>
 
         <!-- Trip Info -->

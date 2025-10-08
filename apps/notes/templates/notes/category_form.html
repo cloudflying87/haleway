@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }} - HaleWay{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>{{ page_title }}</h1>
+    </div>
+
+    <div class="form-container">
+        <form method="post" class="category-form">
+            {% csrf_token %}
+
+            {% if form.errors %}
+                <div class="alert alert-error">
+                    Please correct the errors below.
+                </div>
+            {% endif %}
+
+            <div class="form-group">
+                <label for="{{ form.name.id_for_label }}">{{ form.name.label }}</label>
+                {{ form.name }}
+                {% if form.name.errors %}
+                    <div class="error">{{ form.name.errors.0 }}</div>
+                {% endif %}
+                {% if form.name.help_text %}
+                    <small class="help-text">{{ form.name.help_text }}</small>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.color_code.id_for_label }}">{{ form.color_code.label }}</label>
+                {{ form.color_code }}
+                {% if form.color_code.errors %}
+                    <div class="error">{{ form.color_code.errors.0 }}</div>
+                {% endif %}
+                {% if form.color_code.help_text %}
+                    <small class="help-text">{{ form.color_code.help_text }}</small>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.order.id_for_label }}">{{ form.order.label }}</label>
+                {{ form.order }}
+                {% if form.order.errors %}
+                    <div class="error">{{ form.order.errors.0 }}</div>
+                {% endif %}
+                {% if form.order.help_text %}
+                    <small class="help-text">{{ form.order.help_text }}</small>
+                {% endif %}
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Save Category</button>
+                <a href="{% url 'notes:note_list' trip.pk %}" class="btn btn-outline">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.page-header {
+    margin-bottom: var(--spacing-xl);
+}
+
+.form-container {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.category-form {
+    background: white;
+    padding: var(--spacing-xl);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-md);
+}
+
+.form-group {
+    margin-bottom: var(--spacing-lg);
+}
+
+.form-actions {
+    display: flex;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-xl);
+}
+
+.error {
+    color: var(--error-color);
+    font-size: 0.875rem;
+    margin-top: var(--spacing-xs);
+}
+
+.help-text {
+    display: block;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    margin-top: var(--spacing-xs);
+}
+</style>
+{% endblock %}

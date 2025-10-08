@@ -134,6 +134,13 @@ class TripCreateView(LoginRequiredMixin, CreateView):
         )
         return super().dispatch(request, *args, **kwargs)
 
+    def get_form_kwargs(self):
+        """Override to prevent passing instance to regular Form."""
+        kwargs = super().get_form_kwargs()
+        # TripResortForm is a regular Form, not ModelForm, so remove instance
+        kwargs.pop('instance', None)
+        return kwargs
+
     def get_context_data(self, **kwargs):
         """Add family context."""
         context = super().get_context_data(**kwargs)

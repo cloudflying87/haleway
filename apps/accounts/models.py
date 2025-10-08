@@ -47,7 +47,7 @@ class User(AbstractUser):
 
     def get_full_name(self):
         """Return the first_name plus the last_name, with a space in between."""
-        full_name = f"{{self.first_name}} {{self.last_name}}".strip()
+        full_name = f"{self.first_name} {self.last_name}".strip()
         return full_name or self.email
 
     def get_short_name(self):
