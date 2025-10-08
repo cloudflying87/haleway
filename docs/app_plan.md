@@ -229,9 +229,11 @@
 - ✅ Phase 2: Core Trip Management - COMPLETED (2025-10-07)
 - ✅ Phase 3: Notes System - COMPLETED (2025-10-07)
 - ✅ Phase 4: Activities - COMPLETED (2025-10-07)
-- ⏳ Phase 5: Itinerary - Pending
-- ⏳ Phase 6: Packing & Budget - Pending
-- ⏳ Phase 7-10: Advanced Features - Pending
+- ✅ Phase 5: Itinerary - COMPLETED (2025-10-07)
+- ✅ Phase 6: Packing Lists - COMPLETED (2025-10-07)
+- ✅ Phase 7: Post-Trip Features - COMPLETED (2025-10-07)
+- ⏳ Phase 8-10: Advanced Features - Pending
+- ⏳ Budget Tracking - Not yet implemented (deferred from Phase 6)
 
 ---
 
@@ -346,7 +348,7 @@
 
 ---
 
-### Phase 5: Itinerary (Week 4)
+### Phase 5: Itinerary (Week 4) ✅ COMPLETED
 1. Create DailyItinerary model
 2. Calendar view for trip dates
 3. Drag activities onto specific days/times
@@ -355,27 +357,134 @@
 
 **Deliverable**: Daily schedule planning
 
+**✅ What Was Built:**
+- Created itinerary app with DailyItinerary model
+- Implemented calendar view showing all trip dates with scheduled items
+- Built day detail view with timeline visualization
+- Created activity assignment functionality (assign existing activities to days/times)
+- Developed quick-add feature for standalone events (breakfast, check-in, free time)
+- Implemented itinerary item CRUD operations with proper permissions
+- Created responsive calendar grid and timeline templates
+- Added prev/next day navigation in day detail view
+- Integrated with trip detail page
+- Shows unscheduled activities for easy planning
+- Supports all-day events and timed events
+- Automatic ordering by time and custom order field
+- Database indexes for performance (trip + date, trip + date + order)
+- Structured logging for all itinerary operations
+
 ---
 
-### Phase 6: Packing & Budget (Week 5)
-1. Create packing list models
-2. Packing list UI with checkboxes
-3. Create budget models
-4. Budget tracking interface
-5. Budget summary/totals
+### Phase 6: Packing Lists (Week 5) ✅ COMPLETED
+1. Create packing list models ✅
+2. Packing list UI with checkboxes ✅
+3. Reusable template system ✅
+4. Outfit calculator feature ✅
+5. Save as template feature ✅
 
-**Deliverable**: Packing and budget management
+**Deliverable**: Packing list management (Budget tracking deferred)
+
+**✅ What Was Built:**
+- Created packing app with 4 models:
+  - PackingListTemplate: Reusable templates (system and custom)
+  - PackingListTemplateItem: Items within templates
+  - TripPackingList: Trip-specific packing lists
+  - TripPackingItem: Individual items with checkbox tracking
+- Seeded 4 default system templates: Beach Trip, Mountain Trip, Summer Vacation, Winter Vacation
+- Built template management views (list, detail, create, edit, delete)
+- Created trip packing list views with template duplication
+- Developed interactive checkbox UI with AJAX toggle for packed status
+- Implemented "outfit calculator" feature:
+  - Input: number of outfits (e.g., 5)
+  - Output: 5 shirts, 3 pants (for mix & match), 5 underwear, 5 socks, 2 pajamas
+- Added "save as template" feature to convert modified trip lists into reusable templates
+- Created person assignment system (assign lists to specific family members)
+- Built progress tracking with visual progress bars
+- Integrated packing lists into trip detail page
+- Added comprehensive admin interface with inline editing
+- Database indexes for performance (trip, assigned_to, category, is_packed)
+- Structured logging for all packing operations
+- Full CRUD operations for items (add, edit, delete)
+- Category-based organization of items
+
+**Note**: Budget tracking (originally part of Phase 6) has been deferred to a future phase
 
 ---
 
-### Phase 7: Post-Trip Features (Week 5-6)
-1. Post-trip rating system for activities
-2. Favorite flagging
-3. Post-trip notes on activities
-4. Trip photo upload (to activities or days)
-5. Daily journal entries
+### Phase 7: Post-Trip Features (Week 5-6) ✅ COMPLETED
+1. Post-trip rating system for activities ✅
+2. Favorite flagging ✅
+3. Post-trip notes on activities ✅
+4. Trip photo upload (to activities or days) ✅
+5. Daily journal entries ✅
 
 **Deliverable**: Document and rate trip experiences
+
+**✅ What Was Built:**
+- Created memories app with TripPhoto and DailyJournal models
+- TripPhoto features:
+  - Photo upload with ImageField (stored in trip_photos/%Y/%m/%d/)
+  - Optional caption and date taken fields
+  - Link photos to specific activities or itinerary items
+  - Photo gallery view with responsive grid (24 photos per page, 4x6 grid)
+  - Photo detail view with full metadata display
+  - Filter and organize by activity or itinerary item
+  - Database indexes: (trip + taken_date), (trip + uploaded_at), (activity), (daily_itinerary)
+  - Ordering: By taken_date (most recent first), then uploaded_at
+- DailyJournal features:
+  - Daily journal entries with date, content, weather, mood rating
+  - Mood rating system with 5 emoji levels (😞 Poor, 😐 Fair, 🙂 Good, 😊 Great, 🤩 Excellent)
+  - Weather field for conditions tracking (e.g., "Sunny, 78°F")
+  - One journal entry per user per day (unique constraint: trip + date + created_by)
+  - Journal list view with timeline cards showing date, mood, and weather
+  - Journal detail view with full content display
+  - Database indexes: (trip + date), (trip + created_by)
+  - Ordering: By date (most recent first)
+- Built comprehensive view system:
+  - TripPhotoListView: Paginated gallery (24 per page) with filtering
+  - TripPhotoDetailView: Full-size photo with metadata and navigation
+  - TripPhotoCreateView: Upload form with activity/itinerary linking
+  - TripPhotoUpdateView: Edit caption, date, and links (uploader only)
+  - TripPhotoDeleteView: Remove photos (uploader only)
+  - TripJournalListView: Timeline view of all journal entries
+  - DailyJournalDetailView: Full journal entry with mood and weather
+  - DailyJournalCreateView: Entry form with date validation
+  - DailyJournalUpdateView: Edit journal entries (author only)
+  - DailyJournalDeleteView: Remove journal entries (author only)
+- Created responsive templates:
+  - photo_gallery.html: Grid layout with hover effects and pagination
+  - photo_detail.html: Full-size image with metadata sidebar
+  - photo_form.html: Upload form with dropdowns for linking
+  - journal_list.html: Timeline cards with date badges and mood indicators
+  - journal_detail.html: Full journal display with weather and mood
+  - journal_form.html: Entry form with radio buttons for mood rating
+  - Delete confirmation templates for both photos and journals
+- Form validation and features:
+  - TripPhotoForm: Link photos to activities or itinerary items, date validation
+  - DailyJournalForm: Weather and mood rating fields, date range validation
+  - Date validation ensures photos/journals fall within trip dates
+  - Duplicate detection prevents multiple journals per user per day
+  - Conflict detection warns if activity/itinerary links mismatch
+- Integrated with trip detail page:
+  - Photos section with 6-photo grid preview
+  - Journal section with 3 most recent entries preview
+  - Quick upload and create entry buttons
+  - Photo and journal counts displayed in section headers
+  - Links to full gallery and journal list views
+- Permission system:
+  - All family members can upload photos and create journal entries
+  - Users can only edit/delete their own uploads and journal entries
+  - Proper LoginRequiredMixin on all views
+  - Permission checks in get_queryset methods
+- Additional features:
+  - Post-trip rating system for activities (already in Phase 4)
+  - Favorite flagging for activities (already in Phase 4)
+  - Post-trip notes on activities (already in Phase 4)
+  - Structured logging for all photo and journal operations
+  - Django admin interface with organized fieldsets and search
+  - Image file handling with media storage configuration
+
+**Note**: Items 1-3 (post-trip ratings, favorites, notes) were already implemented in Phase 4 as part of the Activity model. Phase 7 focused on adding trip photos and daily journal entries.
 
 ---
 
