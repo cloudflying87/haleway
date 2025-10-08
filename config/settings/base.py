@@ -45,6 +45,9 @@ INSTALLED_APPS = [
     # Local apps
     'apps.accounts',  # Custom user model (MUST be before core)
     'apps.core',
+    'apps.families',  # Family management
+    'apps.trips',  # Trip and resort management
+    'apps.notes',  # Note and category management
 ]
 
 # Custom User Model
@@ -221,8 +224,8 @@ DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@haleway.flyho
 
 # Authentication URLs
 LOGIN_URL = '/accounts/login/'
-LOGIN_REDIRECT_URL = '/'
-LOGOUT_REDIRECT_URL = '/'
+LOGIN_REDIRECT_URL = '/families/'  # After login, go to families list
+LOGOUT_REDIRECT_URL = '/'  # After logout, go to homepage
 
 # Django REST Framework
 REST_FRAMEWORK = {

@@ -64,6 +64,18 @@
     background-color: var(--primary-color);
 }
 
+/* Danger button */
+.btn-danger {
+    color: var(--white);
+    background-color: var(--danger-color);
+    border-color: var(--danger-color);
+}
+
+.btn-danger:hover:not(:disabled) {
+    background-color: var(--danger-color);
+    filter: brightness(90%);
+}
+
 /* Disabled state */
 .btn:disabled {
     opacity: 0.5;

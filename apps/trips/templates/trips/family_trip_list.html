@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}{{ family.name }} Trips - HaleWay{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>{{ family.name }} - Trips</h1>
+        {% if can_create_trip %}
+            <a href="{% url 'trips:trip_create' family.pk %}" class="btn btn-primary">
+                Create New Trip
+            </a>
+        {% endif %}
+    </div>
+
+    {% if trips %}
+        <div class="trips-grid">
+            {% for trip in trips %}
+                <div class="card trip-card">
+                    <div class="card-header">
+                        <h3>{{ trip.name }}</h3>
+                        <span class="badge badge-{{ trip.status }}">{{ trip.get_status_display }}</span>
+                    </div>
+                    <div class="card-body">
+                        <p class="destination">=Í {{ trip.destination_name }}</p>
+                        <p class="dates">
+                            {{ trip.start_date|date:"M d, Y" }} - {{ trip.end_date|date:"M d, Y" }}
+                            <span class="text-muted">({{ trip.duration_days }} days)</span>
+                        </p>
+                    </div>
+                    <div class="card-footer">
+                        <a href="{% url 'trips:trip_detail' trip.pk %}" class="btn btn-primary">
+                            View Trip
+                        </a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <h2>No Trips Yet</h2>
+            <p>Start planning your first family vacation!</p>
+            {% if can_create_trip %}
+                <a href="{% url 'trips:trip_create' family.pk %}" class="btn btn-primary btn-lg">
+                    Create Your First Trip
+                </a>
+            {% endif %}
+        </div>
+    {% endif %}
+
+    <div class="back-link">
+        <a href="{% url 'families:family_detail' family.pk %}">&larr; Back to Family</a>
+    </div>
+</div>
+
+<style>
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-xl);
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+}
+
+.trips-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-xl);
+}
+
+@media (min-width: 768px) {
+    .trips-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 992px) {
+    .trips-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.trip-card {
+    transition: transform var(--transition-fast);
+}
+
+.trip-card:hover {
+    transform: translateY(-4px);
+}
+
+.destination {
+    font-size: 1.125rem;
+    margin: var(--spacing-sm) 0;
+}
+
+.dates {
+    color: var(--text-secondary);
+}
+
+.badge-planning {
+    background-color: var(--warning-color);
+    color: #000;
+}
+
+.badge-active {
+    background-color: var(--success-color);
+    color: white;
+}
+
+.badge-completed {
+    background-color: var(--gray-600);
+    color: white;
+}
+
+.empty-state {
+    text-align: center;
+    padding: var(--spacing-xxl);
+}
+
+.back-link {
+    margin-top: var(--spacing-xl);
+}
+
+.back-link a {
+    color: var(--primary-color);
+}
+</style>
+{% endblock %}

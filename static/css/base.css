@@ -2,10 +2,11 @@
 /* Generated on 2025-10-07 */
 
 :root {
-    /* Brand Colors */
-    --primary-color: #2e86ab;
-    --secondary-color: #f4e8c1;
-    --accent-color: #ff6b6b;
+    /* Brand Colors - HaleWay Theme */
+    --primary-color: #2e86ab;      /* Ocean Blue - trust, calm, travel-friendly */
+    --secondary-color: #ff6b6b;    /* Sunset Coral - warm, energetic, fun */
+    --tertiary-color: #f4e8c1;     /* Sandy Beige - neutral, easy on eyes */
+    --accent-color: #06a77d;       /* Palm Green - fresh, adventurous */
     
     /* Semantic Colors */
     --success-color: #28a745;
@@ -15,15 +16,15 @@
     
     /* Neutral Colors */
     --white: #ffffff;
-    --gray-100: #f8f9fa;
-    --gray-200: #e9ecef;
+    --gray-100: #f8f9fa;    /* Light background */
+    --gray-200: #e0e0e0;    /* Borders/dividers */
     --gray-300: #dee2e6;
     --gray-400: #ced4da;
     --gray-500: #adb5bd;
     --gray-600: #6c757d;
     --gray-700: #495057;
     --gray-800: #343a40;
-    --gray-900: #212529;
+    --gray-900: #2c3e50;    /* Dark text */
     --black: #000000;
     
     /* Light Theme (default) */

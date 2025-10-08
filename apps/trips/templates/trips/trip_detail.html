@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}{{ trip.name }} - HaleWay{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <div>
+            <h1>{{ trip.name }}</h1>
+            <p class="destination">=Í {{ trip.destination_name }}</p>
+            <p class="dates">{{ trip.start_date|date:"M d, Y" }} - {{ trip.end_date|date:"M d, Y" }} ({{ trip.duration_days }} days)</p>
+        </div>
+        <div class="trip-actions">
+            {% if can_edit %}
+                <a href="{% url 'trips:trip_edit' trip.pk %}" class="btn btn-outline">Edit Trip</a>
+            {% endif %}
+            {% if can_delete %}
+                <a href="{% url 'trips:trip_delete' trip.pk %}" class="btn btn-danger btn-sm">Delete</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="trip-content">
+        <!-- Resort Details -->
+        <div class="section">
+            <div class="section-header">
+                <h2>Resort Details</h2>
+                {% if can_edit %}
+                    <a href="{% url 'trips:resort_edit' trip.pk %}" class="btn btn-sm btn-outline">
+                        {% if resort %}Edit{% else %}Add{% endif %} Resort
+                    </a>
+                {% endif %}
+            </div>
+            {% if resort %}
+                <div class="resort-info">
+                    <h3>{{ resort.name }}</h3>
+                    {% if resort.website_url %}
+                        <p><a href="{{ resort.website_url }}" target="_blank">{{ resort.website_url }}</a></p>
+                    {% endif %}
+                    {% if resort.get_full_address %}
+                        <p class="address">{{ resort.get_full_address }}</p>
+                    {% endif %}
+                    {% if resort.general_notes %}
+                        <div class="notes">
+                            <strong>Notes:</strong>
+                            <p>{{ resort.general_notes|linebreaks }}</p>
+                        </div>
+                    {% endif %}
+                </div>
+            {% else %}
+                <p class="text-muted">No resort details added yet.</p>
+            {% endif %}
+        </div>
+
+        <!-- Trip Info -->
+        <div class="section">
+            <h3>Trip Information</h3>
+            <p><strong>Family:</strong> {{ trip.family.name }}</p>
+            <p><strong>Status:</strong> <span class="badge badge-{{ trip.status }}">{{ trip.get_status_display }}</span></p>
+            <p><strong>Created by:</strong> {{ trip.created_by.get_full_name }}</p>
+        </div>
+    </div>
+</div>
+
+<style>
+.page-header {
+    margin-bottom: var(--spacing-xl);
+}
+
+.destination {
+    font-size: 1.25rem;
+    margin: var(--spacing-sm) 0;
+}
+
+.dates {
+    color: var(--text-secondary);
+}
+
+.trip-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+.trip-content {
+    max-width: 800px;
+}
+
+.section {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-md);
+    padding-bottom: var(--spacing-sm);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.resort-info h3 {
+    margin-bottom: var(--spacing-sm);
+}
+
+.address {
+    color: var(--text-secondary);
+}
+
+.notes {
+    margin-top: var(--spacing-md);
+    padding: var(--spacing-md);
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius);
+}
+</style>
+{% endblock %}

@@ -8,11 +8,12 @@ from . import views
 from . import api_views
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
+app_name = 'accounts'
 
 urlpatterns = [
     # Web Authentication
     path('login/', auth_views.LoginView.as_view(template_name='accounts/login.html'), name='login'),
-    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
+    path('logout/', auth_views.LogoutView.as_view(template_name='accounts/logout.html'), name='logout'),
     path('register/', views.register_view, name='register'),
     path('profile/', views.profile_view, name='profile'),
 

@@ -1,0 +1,285 @@
+"""
+Views for trip management.
+"""
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db import transaction
+from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse_lazy
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.utils.translation import gettext_lazy as _
+import structlog
+
+from apps.families.models import Family, FamilyMember
+from .models import Trip, Resort
+from .forms import TripForm, ResortForm, TripResortForm
+
+logger = structlog.get_logger(__name__)
+
+
+class TripListView(LoginRequiredMixin, ListView):
+    """List all trips for families the user is a member of."""
+    model = Trip
+    template_name = 'trips/trip_list.html'
+    context_object_name = 'trips'
+
+    def get_queryset(self):
+        """Return trips for families the user belongs to."""
+        user_families = Family.objects.filter(members__user=self.request.user)
+        return Trip.objects.filter(family__in=user_families).select_related(
+            'family', 'created_by'
+        ).prefetch_related('resort').order_by('-start_date')
+
+    def get_context_data(self, **kwargs):
+        """Add family context."""
+        context = super().get_context_data(**kwargs)
+        # Get user's families for the "create trip" dropdown
+        context['user_families'] = Family.objects.filter(
+            members__user=self.request.user
+        ).distinct()
+        return context
+
+
+class FamilyTripListView(LoginRequiredMixin, ListView):
+    """List trips for a specific family."""
+    model = Trip
+    template_name = 'trips/family_trip_list.html'
+    context_object_name = 'trips'
+
+    def get_queryset(self):
+        """Return trips for the specified family."""
+        self.family = get_object_or_404(
+            Family,
+            pk=self.kwargs['family_pk'],
+            members__user=self.request.user
+        )
+        return Trip.objects.filter(family=self.family).select_related(
+            'created_by'
+        ).prefetch_related('resort').order_by('-start_date')
+
+    def get_context_data(self, **kwargs):
+        """Add family context."""
+        context = super().get_context_data(**kwargs)
+        context['family'] = self.family
+
+        # Check if user can create trips
+        try:
+            membership = FamilyMember.objects.get(
+                family=self.family,
+                user=self.request.user
+            )
+            context['can_create_trip'] = True  # All members can create trips
+        except FamilyMember.DoesNotExist:
+            context['can_create_trip'] = False
+
+        return context
+
+
+class TripDetailView(LoginRequiredMixin, DetailView):
+    """Display trip details."""
+    model = Trip
+    template_name = 'trips/trip_detail.html'
+    context_object_name = 'trip'
+
+    def get_queryset(self):
+        """Ensure user can only view trips from their families."""
+        user_families = Family.objects.filter(members__user=self.request.user)
+        return Trip.objects.filter(family__in=user_families).select_related(
+            'family', 'created_by'
+        ).prefetch_related('resort')
+
+    def get_context_data(self, **kwargs):
+        """Add permissions context."""
+        context = super().get_context_data(**kwargs)
+        trip = self.object
+
+        # Check if user can edit/delete
+        try:
+            membership = FamilyMember.objects.get(
+                family=trip.family,
+                user=self.request.user
+            )
+            # Admins and trip creator can edit
+            context['can_edit'] = (
+                membership.is_admin() or
+                trip.created_by == self.request.user
+            )
+            context['can_delete'] = membership.is_admin()
+        except FamilyMember.DoesNotExist:
+            context['can_edit'] = False
+            context['can_delete'] = False
+
+        # Get resort if exists
+        try:
+            context['resort'] = trip.resort
+        except Resort.DoesNotExist:
+            context['resort'] = None
+
+        return context
+
+
+class TripCreateView(LoginRequiredMixin, CreateView):
+    """Create a new trip."""
+    model = Trip
+    form_class = TripResortForm
+    template_name = 'trips/trip_form.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        """Verify user is a member of the family."""
+        self.family = get_object_or_404(
+            Family,
+            pk=self.kwargs['family_pk'],
+            members__user=request.user
+        )
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        """Add family context."""
+        context = super().get_context_data(**kwargs)
+        context['family'] = self.family
+        context['page_title'] = f'Create Trip for {self.family.name}'
+        return context
+
+    def form_valid(self, form):
+        """Save the trip and optional resort."""
+        with transaction.atomic():
+            # Create the trip
+            trip = Trip.objects.create(
+                family=self.family,
+                name=form.cleaned_data['trip_name'],
+                destination_name=form.cleaned_data['destination_name'],
+                start_date=form.cleaned_data['start_date'],
+                end_date=form.cleaned_data['end_date'],
+                status='planning',
+                created_by=self.request.user
+            )
+
+            # Create resort if name was provided
+            resort_name = form.cleaned_data.get('resort_name')
+            if resort_name:
+                Resort.objects.create(
+                    trip=trip,
+                    name=resort_name,
+                    website_url=form.cleaned_data.get('resort_website', '')
+                )
+
+            logger.info(
+                "trip_created",
+                trip_id=str(trip.id),
+                trip_name=trip.name,
+                family_id=str(self.family.id),
+                user_id=self.request.user.id
+            )
+
+            messages.success(
+                self.request,
+                _('Trip "{}" created successfully!').format(trip.name)
+            )
+
+            self.object = trip
+            return redirect('trips:trip_detail', pk=trip.pk)
+
+
+class TripUpdateView(LoginRequiredMixin, UpdateView):
+    """Update trip details."""
+    model = Trip
+    form_class = TripForm
+    template_name = 'trips/trip_form.html'
+
+    def get_queryset(self):
+        """Ensure user can only edit trips they have permission for."""
+        user_families = Family.objects.filter(members__user=self.request.user)
+        return Trip.objects.filter(family__in=user_families)
+
+    def get_context_data(self, **kwargs):
+        """Add context."""
+        context = super().get_context_data(**kwargs)
+        context['page_title'] = f'Edit {self.object.name}'
+        return context
+
+    def form_valid(self, form):
+        """Log the update."""
+        logger.info(
+            "trip_updated",
+            trip_id=str(self.object.id),
+            trip_name=self.object.name,
+            user_id=self.request.user.id
+        )
+        messages.success(self.request, _('Trip updated successfully!'))
+        return super().form_valid(form)
+
+
+@login_required
+def edit_resort(request, trip_pk):
+    """Edit or create resort details for a trip."""
+    # Get the trip and verify permissions
+    user_families = Family.objects.filter(members__user=request.user)
+    trip = get_object_or_404(
+        Trip,
+        pk=trip_pk,
+        family__in=user_families
+    )
+
+    # Get or create resort
+    try:
+        resort = trip.resort
+    except Resort.DoesNotExist:
+        resort = None
+
+    if request.method == 'POST':
+        form = ResortForm(request.POST, instance=resort)
+        if form.is_valid():
+            resort = form.save(commit=False)
+            resort.trip = trip
+            resort.save()
+
+            logger.info(
+                "resort_updated",
+                trip_id=str(trip.id),
+                resort_id=str(resort.id),
+                user_id=request.user.id
+            )
+
+            messages.success(request, _('Resort details saved!'))
+            return redirect('trips:trip_detail', pk=trip.pk)
+    else:
+        form = ResortForm(instance=resort)
+
+    return render(request, 'trips/resort_form.html', {
+        'form': form,
+        'trip': trip,
+        'resort': resort,
+    })
+
+
+class TripDeleteView(LoginRequiredMixin, DeleteView):
+    """Delete a trip."""
+    model = Trip
+    template_name = 'trips/trip_confirm_delete.html'
+
+    def get_queryset(self):
+        """Ensure only admins can delete trips."""
+        admin_families = Family.objects.filter(
+            members__user=self.request.user,
+            members__role__in=['owner', 'admin']
+        )
+        return Trip.objects.filter(family__in=admin_families)
+
+    def get_success_url(self):
+        """Redirect to family's trip list."""
+        return reverse_lazy('trips:family_trip_list', kwargs={
+            'family_pk': self.object.family.pk
+        })
+
+    def delete(self, request, *args, **kwargs):
+        """Log the deletion."""
+        trip = self.get_object()
+        logger.info(
+            "trip_deleted",
+            trip_id=str(trip.id),
+            trip_name=trip.name,
+            user_id=request.user.id
+        )
+        messages.success(request, _('Trip deleted successfully.'))
+        return super().delete(request, *args, **kwargs)

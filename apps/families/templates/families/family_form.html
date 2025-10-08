@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}{% if form.instance.pk %}Edit Family{% else %}Create Family{% endif %} - HaleWay{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="form-container">
+        <h1>{% if form.instance.pk %}Edit Family{% else %}Create a New Family{% endif %}</h1>
+
+        <form method="post" class="family-form">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label for="{{ form.name.id_for_label }}">{{ form.name.label }}</label>
+                {{ form.name }}
+                {% if form.name.help_text %}
+                    <small class="form-help">{{ form.name.help_text }}</small>
+                {% endif %}
+                {% if form.name.errors %}
+                    <div class="form-error">
+                        {{ form.name.errors }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">
+                    {% if form.instance.pk %}Save Changes{% else %}Create Family{% endif %}
+                </button>
+                <a href="{% if form.instance.pk %}{% url 'families:family_detail' form.instance.pk %}{% else %}{% url 'families:family_list' %}{% endif %}"
+                   class="btn btn-outline">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.form-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: var(--spacing-xl) 0;
+}
+
+.form-container h1 {
+    margin-bottom: var(--spacing-xl);
+}
+
+.family-form {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-xl);
+}
+
+.form-group {
+    margin-bottom: var(--spacing-lg);
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: var(--spacing-sm);
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.form-group input {
+    width: 100%;
+}
+
+.form-help {
+    display: block;
+    margin-top: var(--spacing-sm);
+    color: var(--text-muted);
+    font-size: 0.875rem;
+}
+
+.form-error {
+    display: block;
+    margin-top: var(--spacing-sm);
+    color: var(--danger-color);
+    font-size: 0.875rem;
+}
+
+.form-actions {
+    display: flex;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-xl);
+}
+
+@media (max-width: 576px) {
+    .form-actions {
+        flex-direction: column;
+    }
+
+    .form-actions .btn {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}

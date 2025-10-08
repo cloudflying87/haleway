@@ -1,0 +1,244 @@
+{% extends "base.html" %}
+
+{% block title %}{{ family.name }} - HaleWay{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <div>
+            <h1>{{ family.name }}</h1>
+            <p class="text-muted">
+                {{ members.count }} member{{ members.count|pluralize }}
+            </p>
+        </div>
+        <div class="header-actions">
+            <a href="{% url 'trips:family_trip_list' family.pk %}" class="btn btn-primary">
+                View Trips
+            </a>
+            {% if can_manage %}
+                <a href="{% url 'families:family_edit' family.pk %}" class="btn btn-outline">
+                    Edit Family
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="family-content">
+        <!-- Members Section -->
+        <div class="section">
+            <div class="section-header">
+                <h2>Family Members</h2>
+            </div>
+
+            <div class="members-list">
+                {% for member in members %}
+                    <div class="member-item">
+                        <div class="member-info">
+                            <span class="member-name">{{ member.user.get_full_name }}</span>
+                            <span class="member-role badge badge-{{ member.role }}">
+                                {{ member.get_role_display }}
+                            </span>
+                        </div>
+                        {% if can_manage and not member.is_owner %}
+                            <form method="post" action="{% url 'families:remove_member' family.pk member.pk %}" style="display: inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-danger"
+                                        onclick="return confirm('Are you sure you want to remove this member?')">
+                                    Remove
+                                </button>
+                            </form>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Invite Section -->
+        {% if can_invite %}
+            <div class="section">
+                <div class="section-header">
+                    <h2>Invite Members</h2>
+                </div>
+
+                <form method="post" action="{% url 'families:invite_member' family.pk %}" class="invite-form">
+                    {% csrf_token %}
+                    <div class="form-row">
+                        <div class="form-group flex-grow">
+                            {{ invitation_form.email }}
+                            {% if invitation_form.email.errors %}
+                                <div class="form-error">
+                                    {{ invitation_form.email.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <button type="submit" class="btn btn-primary">Send Invitation</button>
+                    </div>
+                    {% if invitation_form.email.help_text %}
+                        <small class="form-help">{{ invitation_form.email.help_text }}</small>
+                    {% endif %}
+                </form>
+            </div>
+
+            <!-- Pending Invitations -->
+            {% if pending_invitations %}
+                <div class="section">
+                    <div class="section-header">
+                        <h3>Pending Invitations</h3>
+                    </div>
+
+                    <div class="invitations-list">
+                        {% for invitation in pending_invitations %}
+                            <div class="invitation-item">
+                                <div class="invitation-info">
+                                    <span class="invitation-email">{{ invitation.email }}</span>
+                                    <span class="text-muted">
+                                        Invited {{ invitation.created_at|date:"M d, Y" }}
+                                    </span>
+                                </div>
+                                <form method="post" action="{% url 'families:cancel_invitation' invitation.pk %}" style="display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline">Cancel</button>
+                                </form>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: var(--spacing-xl);
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+}
+
+.family-content {
+    max-width: 800px;
+}
+
+.section {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.section-header {
+    margin-bottom: var(--spacing-md);
+    padding-bottom: var(--spacing-sm);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.section-header h2,
+.section-header h3 {
+    margin: 0;
+}
+
+.members-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.member-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-md);
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius);
+}
+
+.member-info {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.member-name {
+    font-weight: 500;
+}
+
+.badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.badge-owner {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.badge-admin {
+    background-color: var(--secondary-color);
+    color: white;
+}
+
+.badge-member {
+    background-color: var(--gray-300);
+    color: var(--gray-900);
+}
+
+.invite-form {
+    margin-top: var(--spacing-md);
+}
+
+.form-row {
+    display: flex;
+    gap: var(--spacing-md);
+    align-items: flex-start;
+}
+
+.flex-grow {
+    flex: 1;
+}
+
+.invitations-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-md);
+}
+
+.invitation-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-md);
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius);
+}
+
+.invitation-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.invitation-email {
+    font-weight: 500;
+}
+
+@media (max-width: 768px) {
+    .member-item,
+    .invitation-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-sm);
+    }
+
+    .form-row {
+        flex-direction: column;
+    }
+}
+</style>
+{% endblock %}

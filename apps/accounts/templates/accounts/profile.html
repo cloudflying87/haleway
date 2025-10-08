@@ -1,22 +1,177 @@
 {% extends "base.html" %}
 
-{% block title %}Profile{% endblock %}
+{% block title %}My Profile - HaleWay{% endblock %}
 
 {% block content %}
 <div class="container">
-    <div class="card">
-        <div class="card-header">
-            <h2>My Profile</h2>
-        </div>
-        <div class="card-body">
-            <p><strong>Name:</strong> {{ user.get_full_name }}</p>
-            <p><strong>Email:</strong> {{ user.email }}</p>
-            <p><strong>Joined:</strong> {{ user.date_joined|date:"F d, Y" }}</p>
+    <div class="page-header">
+        <h1>My Profile</h1>
+    </div>
 
-            <div style="margin-top: 2rem;">
-                <a href="{% url 'password_change' %}" class="btn btn-outline">Change Password</a>
+    <div class="profile-content">
+        <!-- Profile Information -->
+        <div class="section">
+            <div class="section-header">
+                <h2>Account Information</h2>
+            </div>
+
+            <form method="post" class="profile-form">
+                {% csrf_token %}
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="{{ form.first_name.id_for_label }}">{{ form.first_name.label }}</label>
+                        {{ form.first_name }}
+                        {% if form.first_name.errors %}
+                            <div class="form-error">{{ form.first_name.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.last_name.id_for_label }}">{{ form.last_name.label }}</label>
+                        {{ form.last_name }}
+                        {% if form.last_name.errors %}
+                            <div class="form-error">{{ form.last_name.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.email.id_for_label }}">{{ form.email.label }}</label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                        <div class="form-error">{{ form.email.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.phone_number.id_for_label }}">{{ form.phone_number.label }}</label>
+                    {{ form.phone_number }}
+                    <small class="form-help">Optional</small>
+                    {% if form.phone_number.errors %}
+                        <div class="form-error">{{ form.phone_number.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Account Details -->
+        <div class="section">
+            <div class="section-header">
+                <h3>Account Details</h3>
+            </div>
+
+            <div class="account-details">
+                <p><strong>Username:</strong> {{ user.username }}</p>
+                <p><strong>Member since:</strong> {{ user.date_joined|date:"F d, Y" }}</p>
+                <p><strong>Email verified:</strong>
+                    {% if user.email_verified %}
+                        <span class="badge badge-completed">Verified</span>
+                    {% else %}
+                        <span class="badge badge-planning">Not Verified</span>
+                    {% endif %}
+                </p>
+            </div>
+
+            <div class="account-actions">
+                <a href="{% url 'accounts:password_change' %}" class="btn btn-outline">
+                    Change Password
+                </a>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+.page-header {
+    margin-bottom: var(--spacing-xl);
+}
+
+.profile-content {
+    max-width: 800px;
+}
+
+.section {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.section-header {
+    margin-bottom: var(--spacing-md);
+    padding-bottom: var(--spacing-sm);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.section-header h2,
+.section-header h3 {
+    margin: 0;
+}
+
+.profile-form {
+    margin-top: var(--spacing-md);
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--spacing-md);
+}
+
+@media (min-width: 768px) {
+    .form-row {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.form-group {
+    margin-bottom: var(--spacing-lg);
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: var(--spacing-sm);
+    font-weight: 500;
+}
+
+.form-group input {
+    width: 100%;
+}
+
+.form-help {
+    display: block;
+    margin-top: var(--spacing-sm);
+    color: var(--text-muted);
+    font-size: 0.875rem;
+}
+
+.form-error {
+    display: block;
+    margin-top: var(--spacing-sm);
+    color: var(--danger-color);
+    font-size: 0.875rem;
+}
+
+.form-actions {
+    margin-top: var(--spacing-xl);
+}
+
+.account-details {
+    margin-top: var(--spacing-md);
+}
+
+.account-details p {
+    margin-bottom: var(--spacing-sm);
+}
+
+.account-actions {
+    margin-top: var(--spacing-lg);
+}
+</style>
 {% endblock %}

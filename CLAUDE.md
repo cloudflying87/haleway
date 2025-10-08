@@ -39,55 +39,144 @@ HaleWay helps families plan vacations and preserve memories in one place. Organi
 ### Apps Structure
 ```
 apps/
-├── core/           # [Description of core functionality]
-├── [app_name]/     # [Description of this app]
-├── [app_name]/     # [Description of this app]  
-└── [app_name]/     # [Description of this app]
+├── core/           # Core functionality and homepage
+├── accounts/       # Custom user authentication and profiles
+├── families/       # Family management, invitations, and member roles
+├── trips/          # Trip and resort management
+└── notes/          # Note and category management with search
 ```
 
 ### Key Models
-- **[ModelName]**: [Brief description and purpose]
-- **[ModelName]**: [Brief description and purpose]
-- **[ModelName]**: [Brief description and purpose]
+- **User** (accounts): Custom user model with email verification
+- **Family** (families): Family group that can share trips
+- **FamilyMember** (families): User membership in a family with roles (owner/admin/member)
+- **FamilyInvitation** (families): Email-based family invitations with expiration
+- **Trip** (trips): Vacation trip with dates, status, and destination
+- **Resort** (trips): Lodging details with address and coordinates
+- **NoteCategory** (notes): Category for organizing notes with color coding
+- **Note** (notes): Trip notes with full-text search, pinning, and categorization
 
 ### Important URLs
 - **Admin**: `/admin/` - Django admin interface
-- **API**: `/api/` - API endpoints (if applicable)
-- **[Feature]**: `/[url]/` - [Description]
+- **Families**: `/families/` - Family management interface
+- **Trips**: `/trips/` - Trip and resort management
+- **Notes**: `/notes/` - Note and category management
+- **Accounts**: `/accounts/` - User authentication and profiles
 
 ## Current Major Projects & Status
 
 ### 🚧 Active Development
-**[Current Feature/Project Name]** - Status: [In Progress/Planning/Review]  
-**Priority**: [High/Medium/Low]  
-**Description**: [What you're currently working on]
-**Key Files**: [List main files being modified]
-**Next Steps**: [What needs to be done next]
+**Phase 4: Activities** - Status: Planning
+**Priority**: High
+**Description**: Next phase - Activity creation with priority ordering and ratings
+**Key Features**: Activity management, distance tracking, priority ordering, post-trip ratings
+**Next Steps**: Create activities app, Activity model, priority ordering UI, ratings system
 
 ### 📋 Planned Features
-**[Planned Feature 1]** - [Brief description and timeline]  
-**[Planned Feature 2]** - [Brief description and timeline]  
-**[Planned Feature 3]** - [Brief description and timeline]
+**Phase 4**: Activities (Week 3-4) - Activity creation, priority ordering, ratings
+**Phase 5**: Itinerary (Week 4) - Daily schedule planning with calendar view
+**Phase 6**: Packing & Budget (Week 5) - Packing lists and budget tracking
+**Phase 7-10**: See docs/app_plan.md for full roadmap
 
-### ✅ Recently Completed  
-**[Recent Feature]** - [Date completed] - [Brief description]
-**[Recent Feature]** - [Date completed] - [Brief description]
+### ✅ Recently Completed
+**Phase 3: Notes System** - 2025-10-07 - Categorized notes system complete
+- Created notes app with NoteCategory and Note models
+- Implemented full-text search on note title and content (PostgreSQL)
+- Built category management (create/edit/delete with color coding)
+- Added note pinning feature for important notes
+- Created note CRUD views with proper permissions
+- Integrated notes with trip management
+- Added search and filtering capabilities
+
+**Phase 2: Core Trip Management** - 2025-10-07 - Trip planning system complete
+- Created trips app with Trip and Resort models
+- Built trip creation form with optional resort details
+- Implemented trip list views (all trips + family-specific)
+- Created trip detail page with resort information display
+- Added trip/resort editing with proper permissions
+- Integrated trips with family management
+- Duration calculation and date validation
+
+**Phase 1: Foundation** - 2025-10-07 - Family management system complete
+- Created families app with Family, FamilyMember, and FamilyInvitation models
+- Built family creation, invitation, and member management views
+- Implemented role-based permissions (owner/admin/member)
+- Created responsive templates with HaleWay color scheme
+- Added structured logging throughout
 
 ## Database Schema Context
 
 ### Core Models
 ```python
 # Key model relationships and constraints
-[ModelName]:
-  - Field descriptions
-  - Important relationships  
-  - Business rules/constraints
-  - Indexes and performance considerations
+
+Family:
+  - UUID primary key
+  - name: Family display name
+  - Relationships: Has many FamilyMembers, has many FamilyInvitations
+  - Business rules: Must have exactly one owner
+  - Methods: get_owner(), get_admins(), get_all_members()
+
+FamilyMember:
+  - UUID primary key
+  - Unique constraint: (family, user)
+  - role: owner/admin/member (only one owner per family)
+  - Indexes: (family, role)
+  - Business rules: Cannot remove family owner
+  - Methods: is_owner(), is_admin(), can_manage_members()
+
+FamilyInvitation:
+  - UUID primary key
+  - Unique token for accepting invitation
+  - status: pending/accepted/expired
+  - expires_at: Auto-set to 7 days from creation
+  - Indexes: (family, status), (email, status), (token)
+  - Methods: is_valid(), mark_accepted(), mark_expired()
+
+Trip:
+  - UUID primary key
+  - family: Foreign key to Family
+  - name, destination_name: Trip identification
+  - start_date, end_date: Trip dates
+  - status: planning/active/completed
+  - Indexes: (family, status), (start_date)
+  - Methods: duration_days(), is_upcoming(), is_active(), is_past()
+
+Resort:
+  - UUID primary key (one-to-one with Trip)
+  - Full address fields with optional lat/long
+  - general_notes: TextField for confirmation numbers, etc.
+
+NoteCategory:
+  - UUID primary key
+  - trip: Foreign key to Trip
+  - name: Category display name
+  - color_code: Hex color for UI organization
+  - order: Integer for sorting
+  - Unique constraint: (trip, name)
+  - Indexes: (trip, order)
+
+Note:
+  - UUID primary key
+  - trip: Foreign key to Trip
+  - category: Foreign key to NoteCategory (nullable)
+  - title, content: Note text
+  - is_pinned: Boolean for important notes
+  - search_vector: Full-text search field (PostgreSQL)
+  - Indexes: (trip, category), (trip, is_pinned), GIN index on search_vector
+  - Ordering: Pinned notes first, then by updated_at
 ```
 
 ### Important Relationships
-- [Model A] → [Model B]: [Description of relationship]
-- [Model C] ← [Model D]: [Description of relationship]
+- Family → FamilyMember: One-to-many (a family has many members)
+- User → FamilyMember: One-to-many (a user can be in multiple families)
+- Family → FamilyInvitation: One-to-many (a family can have many invitations)
+- User → FamilyInvitation: One-to-many via invited_by (a user can send many invitations)
+- Family → Trip: One-to-many (a family can have many trips)
+- Trip → Resort: One-to-one (a trip has one resort)
+- Trip → NoteCategory: One-to-many (a trip can have many categories)
+- Trip → Note: One-to-many (a trip can have many notes)
+- NoteCategory → Note: One-to-many (a category can have many notes)
 
 ## Custom CSS System
 

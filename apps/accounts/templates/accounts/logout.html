@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Logout - HaleWay{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="logout-container">
+        <div class="card" style="max-width: 500px; margin: 2rem auto;">
+            <div class="card-body" style="text-align: center; padding: var(--spacing-xxl);">
+                <h2>Come Back Soon!</h2>
+                <p style="margin: var(--spacing-lg) 0; color: var(--text-secondary);">
+                    You have been successfully logged out.
+                </p>
+
+                <div style="display: flex; flex-direction: column; gap: var(--spacing-md); margin-top: var(--spacing-xl);">
+                    <a href="{% url 'accounts:login' %}" class="btn btn-primary">
+                        Log Back In
+                    </a>
+                    <a href="{% url 'core:home' %}" class="btn btn-outline">
+                        Return to Homepage
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.logout-container {
+    min-height: 60vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,105 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="HaleWay - Plan vacations and preserve memories with your ohana">
+    <title>{% block title %}HaleWay{% endblock %}</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'img/icons/favicon-16x16.png' %}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'img/icons/favicon-32x32.png' %}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'img/icons/apple-touch-icon.png' %}">
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="{% static 'manifest.json' %}">
+    <meta name="theme-color" content="#2E86AB">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="HaleWay">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{% block og_url %}https://haleway.flyhomemnlab.com/{% endblock %}">
+    <meta property="og:title" content="{% block og_title %}HaleWay - Family Trip Planner{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}HaleWay helps families plan vacations and preserve memories in one place. Organize activities, create itineraries, track budgets, and rate experiences.{% endblock %}">
+    <meta property="og:image" content="{% block og_image %}{% static 'img/default-share.png' %}{% endblock %}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:site_name" content="HaleWay">
+    <meta property="og:locale" content="en_US">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="{% block twitter_url %}https://haleway.flyhomemnlab.com/{% endblock %}">
+    <meta name="twitter:title" content="{% block twitter_title %}HaleWay - Family Trip Planner{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}HaleWay helps families plan vacations and preserve memories in one place. Organize activities, create itineraries, track budgets, and rate experiences.{% endblock %}">
+    <meta name="twitter:image" content="{% block twitter_image %}{% static 'img/default-share.png' %}{% endblock %}">
+
+    <!-- Base CSS -->
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/components/buttons.css' %}">
+    <link rel="stylesheet" href="{% static 'css/components/forms.css' %}">
+    <link rel="stylesheet" href="{% static 'css/components/cards.css' %}">
+    <link rel="stylesheet" href="{% static 'css/components/navbar.css' %}">
+    <link rel="stylesheet" href="{% static 'css/components/alerts.css' %}">
+
+    <!-- Page-specific CSS -->
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-brand">
+                <a href="/" class="logo">
+                    <span class="logo-text">HaleWay</span>
+                </a>
+            </div>
+
+            <div class="navbar-menu">
+                {% if user.is_authenticated %}
+                    <a href="{% url 'families:family_list' %}" class="nav-link">Families</a>
+                    <a href="{% url 'trips:trip_list' %}" class="nav-link">Trips</a>
+                    <div class="navbar-user">
+                        <a href="{% url 'accounts:profile' %}" class="user-name-link">{{ user.get_short_name }}</a>
+                        <a href="{% url 'accounts:logout' %}" class="btn btn-sm btn-outline">Logout</a>
+                    </div>
+                {% else %}
+                    <a href="{% url 'accounts:login' %}" class="btn btn-sm btn-primary">Login</a>
+                    <a href="{% url 'accounts:register' %}" class="btn btn-sm btn-outline">Sign Up</a>
+                {% endif %}
+            </div>        </div>
+    </nav>
+
+    <!-- Messages -->
+    {% if messages %}
+        <div class="messages-container">
+            <div class="container">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p class="footer-text">&copy; 2025 HaleWay. Built for family.</p>
+        </div>
+    </footer>
+
+    <!-- Page-specific JavaScript -->
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

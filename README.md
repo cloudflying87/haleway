@@ -1,6 +1,6 @@
 # Haleway
 
-HaleWay helps families plan vacations and preserve memories in one place. Organize activities, create itineraries, track budgets, and rate experiences. Share trips with your ohana and build a searchable archive of your family's favorite adventures.
+HaleWay helps families plan vacations and preserve memories in one place. Organize activities, create itineraries, track budgets, and rate experiences. Share trips with your family and build a searchable archive of your family's favorite adventures.
 
 ## Quick Start
 

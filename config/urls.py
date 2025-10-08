@@ -11,6 +11,9 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('health/', include('health_check.urls')),
     path('accounts/', include('apps.accounts.urls')),
+    path('families/', include('apps.families.urls')),  # Family management
+    path('trips/', include('apps.trips.urls')),  # Trip management
+    path('notes/', include('apps.notes.urls')),  # Note management
 ]
 
 # Serve media files in development

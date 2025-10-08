@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}All Trips - HaleWay{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>All Trips</h1>
+    </div>
+
+    {% if trips %}
+        <div class="trips-grid">
+            {% for trip in trips %}
+                <div class="card trip-card">
+                    <div class="card-header">
+                        <h3>{{ trip.name }}</h3>
+                        <span class="badge badge-{{ trip.status }}">{{ trip.get_status_display }}</span>
+                    </div>
+                    <div class="card-body">
+                        <p class="destination">
+                            <strong>📍 {{ trip.destination_name }}</strong>
+                        </p>
+                        <p class="dates">
+                            {{ trip.start_date|date:"M d, Y" }} - {{ trip.end_date|date:"M d, Y" }}
+                            <span class="text-muted">({{ trip.duration_days }} days)</span>
+                        </p>
+                        <p class="family-name text-muted">
+                            {{ trip.family.name }}
+                        </p>
+                    </div>
+                    <div class="card-footer">
+                        <a href="{% url 'trips:trip_detail' trip.pk %}" class="btn btn-primary">
+                            View Trip
+                        </a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <h2>No Trips Yet</h2>
+            <p>Start planning your first family vacation!</p>
+            {% if user_families %}
+                <p class="text-muted">Choose a family to create a trip:</p>
+                <div class="family-links">
+                    {% for family in user_families %}
+                        <a href="{% url 'trips:family_trip_list' family.pk %}" class="btn btn-outline">
+                            {{ family.name }}
+                        </a>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <a href="{% url 'families:family_create' %}" class="btn btn-primary btn-lg">
+                    Create a Family First
+                </a>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+<style>
+.page-header {
+    margin-bottom: var(--spacing-xl);
+}
+
+.trips-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-xl);
+}
+
+@media (min-width: 768px) {
+    .trips-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 992px) {
+    .trips-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.trip-card {
+    transition: transform var(--transition-fast);
+}
+
+.trip-card:hover {
+    transform: translateY(-4px);
+}
+
+.destination {
+    font-size: 1.125rem;
+    margin: var(--spacing-sm) 0;
+}
+
+.dates {
+    color: var(--text-secondary);
+    margin: var(--spacing-sm) 0;
+}
+
+.family-name {
+    font-size: 0.875rem;
+}
+
+.badge-planning {
+    background-color: var(--warning-color);
+    color: #000;
+}
+
+.badge-active {
+    background-color: var(--success-color);
+    color: white;
+}
+
+.badge-completed {
+    background-color: var(--gray-600);
+    color: white;
+}
+
+.empty-state {
+    text-align: center;
+    padding: var(--spacing-xxl);
+}
+
+.family-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+    justify-content: center;
+    margin-top: var(--spacing-lg);
+}
+</style>
+{% endblock %}
