@@ -46,6 +46,8 @@
     <link rel="stylesheet" href="{% static 'css/components/cards.css' %}">
     <link rel="stylesheet" href="{% static 'css/components/navbar.css' %}">
     <link rel="stylesheet" href="{% static 'css/components/alerts.css' %}">
+    <link rel="stylesheet" href="{% static 'css/components/breadcrumbs.css' %}">
+    <link rel="stylesheet" href="{% static 'css/components/modals.css' %}">
 
     <!-- Page-specific CSS -->
     {% block extra_css %}{% endblock %}
@@ -63,7 +65,43 @@
         <div class="navbar-menu">
           {% if user.is_authenticated %}
             <a href="{% url 'core:dashboard' %}" class="nav-link">Dashboard</a>
-            <a href="{% url 'trips:trip_list' %}" class="nav-link">My Trips</a>
+
+            {% if current_trip %}
+              <!-- Current Trip Dropdown -->
+              <div class="navbar-dropdown">
+                <button class="nav-dropdown-toggle" onclick="toggleTripMenu(event)">
+                  {{ current_trip.name|truncatechars:20 }} ▾
+                </button>
+                <div class="nav-dropdown-menu" id="tripMenu">
+                  <div class="dropdown-header">Quick Links</div>
+                  <a href="{% url 'packing:trip_packing_lists' current_trip.pk %}" class="dropdown-item">
+                    🎒 Packing Lists
+                  </a>
+                  <a href="{% url 'itinerary:calendar' current_trip.pk %}" class="dropdown-item">
+                    📅 Itinerary
+                  </a>
+                  <a href="{% url 'activities:activity_list' current_trip.pk %}" class="dropdown-item">
+                    🎯 Activities
+                  </a>
+                  <a href="{% url 'budget:budget_overview' current_trip.pk %}" class="dropdown-item">
+                    💰 Budget
+                  </a>
+                  <a href="{% url 'notes:note_list' current_trip.pk %}" class="dropdown-item">
+                    📝 Notes
+                  </a>
+                  <div class="dropdown-divider"></div>
+                  <a href="{% url 'trips:trip_detail' current_trip.pk %}" class="dropdown-item">
+                    View Trip Details
+                  </a>
+                  <a href="#" onclick="openTripSwitcher(event)" class="dropdown-item">
+                    Switch Trip...
+                  </a>
+                </div>
+              </div>
+            {% else %}
+              <a href="{% url 'trips:trip_list' %}" class="nav-link">My Trips</a>
+            {% endif %}
+
             <div class="navbar-user">
               <div class="user-dropdown">
                 <button class="user-dropdown-toggle" onclick="toggleUserMenu()">
@@ -72,6 +110,7 @@
                 <div class="user-dropdown-menu" id="userMenu">
                   <a href="{% url 'accounts:profile' %}" class="dropdown-item">Profile</a>
                   <a href="{% url 'families:family_list' %}" class="dropdown-item">My Families</a>
+                  <a href="{% url 'trips:trip_list' %}" class="dropdown-item">All Trips</a>
                   <div class="dropdown-divider"></div>
                   <a href="{% url 'accounts:logout' %}" class="dropdown-item">Logout</a>
                 </div>
@@ -97,6 +136,9 @@
       </div>
     {% endif %}
 
+    <!-- Breadcrumbs -->
+    {% block breadcrumbs %}{% endblock %}
+
     <!-- Main Content -->
     <main class="main-content">
       {% block content %}{% endblock %}
@@ -109,23 +151,154 @@
       </div>
     </footer>
 
+    <!-- Trip Switcher Modal -->
+    {% if user.is_authenticated %}
+      <div id="tripSwitcherModal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+          <div class="modal-header">
+            <h3>Switch Trip</h3>
+            <button type="button" class="modal-close" onclick="closeTripSwitcher()">&times;</button>
+          </div>
+          <div class="modal-body" id="tripSwitcherBody">
+            <p>Loading trips...</p>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+
     <!-- Page-specific JavaScript -->
     {% block extra_js %}{% endblock %}
 
-    <!-- User Dropdown Script -->
+    <!-- Navigation Scripts -->
     <script>
       function toggleUserMenu() {
         const menu = document.getElementById('userMenu');
         menu.classList.toggle('show');
+        // Close trip menu if open
+        const tripMenu = document.getElementById('tripMenu');
+        if (tripMenu) tripMenu.classList.remove('show');
       }
 
-    // Close dropdown when clicking outside
+      function toggleTripMenu(event) {
+        event.stopPropagation();
+        const menu = document.getElementById('tripMenu');
+        menu.classList.toggle('show');
+        // Close user menu if open
+        const userMenu = document.getElementById('userMenu');
+        if (userMenu) userMenu.classList.remove('show');
+      }
+
+      // Close dropdowns when clicking outside
       window.addEventListener('click', function(e) {
-        if (!e.target.matches('.user-dropdown-toggle')) {
-          const menu = document.getElementById('userMenu');
-          if (menu && menu.classList.contains('show')) {
-            menu.classList.remove('show');
+        if (!e.target.matches('.user-dropdown-toggle') && !e.target.matches('.nav-dropdown-toggle')) {
+          const userMenu = document.getElementById('userMenu');
+          const tripMenu = document.getElementById('tripMenu');
+          if (userMenu && userMenu.classList.contains('show')) {
+            userMenu.classList.remove('show');
           }
+          if (tripMenu && tripMenu.classList.contains('show')) {
+            tripMenu.classList.remove('show');
+          }
+        }
+      });
+
+      // Trip Switcher Modal
+      function openTripSwitcher(event) {
+        event.preventDefault();
+        const modal = document.getElementById('tripSwitcherModal');
+        modal.classList.add('show');
+        document.body.style.overflow = 'hidden';
+
+        // Load trips
+        fetch('{% url "core:get_user_trips" %}')
+          .then(response => response.json())
+          .then(data => {
+            const body = document.getElementById('tripSwitcherBody');
+            if (data.trips.length === 0) {
+              body.innerHTML = '<p class="text-muted">You have no trips yet. <a href="{% url "trips:trip_list" %}">Go to trips page to create one!</a></p>';
+              return;
+            }
+
+            let html = '<div class="trip-list">';
+            data.trips.forEach(trip => {
+              const isCurrent = trip.is_current ? ' (current)' : '';
+              html += `
+                <div class="trip-list-item ${trip.is_current ? 'current' : ''}">
+                  <div class="trip-info">
+                    <h4>${trip.name}${isCurrent}</h4>
+                    <p class="trip-dates">${trip.destination} • ${trip.date_range}</p>
+                  </div>
+                  ${!trip.is_current ? `<button class="btn btn-sm btn-primary" onclick="switchToTrip('${trip.id}')">Switch</button>` : ''}
+                </div>
+              `;
+            });
+            html += '</div>';
+            body.innerHTML = html;
+          })
+          .catch(error => {
+            console.error('Error loading trips:', error);
+            document.getElementById('tripSwitcherBody').innerHTML = '<p class="text-danger">Error loading trips. Please try again.</p>';
+          });
+      }
+
+      function closeTripSwitcher() {
+        const modal = document.getElementById('tripSwitcherModal');
+        modal.classList.remove('show');
+        document.body.style.overflow = '';
+      }
+
+      function switchToTrip(tripId) {
+        fetch('{% url "core:set_current_trip" %}', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+          },
+          body: JSON.stringify({ trip_id: tripId })
+        })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              window.location.reload();
+            } else {
+              alert('Failed to switch trip: ' + data.error);
+            }
+          })
+          .catch(error => {
+            console.error('Error switching trip:', error);
+            alert('Failed to switch trip. Please try again.');
+          });
+      }
+
+      function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+          const cookies = document.cookie.split(';');
+          for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+              cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+              break;
+            }
+          }
+        }
+        return cookieValue;
+      }
+
+      // Close modal on escape key
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+          const modal = document.getElementById('tripSwitcherModal');
+          if (modal && modal.classList.contains('show')) {
+            closeTripSwitcher();
+          }
+        }
+      });
+
+      // Close modal when clicking outside
+      document.getElementById('tripSwitcherModal')?.addEventListener('click', function(e) {
+        if (e.target === this) {
+          closeTripSwitcher();
         }
       });
     </script>

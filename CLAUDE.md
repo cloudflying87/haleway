@@ -4,11 +4,11 @@
 
 ## Project Overview
 
-**Project Name**: haleway  
-**Description**: HaleWay helps families plan vacations and preserve memories in one place. Organize activities, create itineraries, track budgets, and rate experiences. Share trips with your ohana and build a searchable archive of your family's favorite adventures.  
-**Industry/Domain**: travel  
-**Target Users**: travel lovers  
-**Current Status**: Development  
+**Project Name**: haleway
+**Description**: HaleWay helps families plan vacations and preserve memories in one place. Organize activities, create itineraries, track budgets, and rate experiences. Share trips with your ohana and build a searchable archive of your family's favorite adventures.
+**Industry/Domain**: travel
+**Target Users**: travel lovers
+**Current Status**: Development
 
 ### Quick Summary
 HaleWay helps families plan vacations and preserve memories in one place. Organize activities, create itineraries, track budgets, and rate experiences. Share trips with your ohana and build a searchable archive of your family's favorite adventures.. Built for travel lovers in the travel industry.
@@ -22,7 +22,7 @@ HaleWay helps families plan vacations and preserve memories in one place. Organi
 - **Task Queue**: Celery (if needed)
 - **Authentication**: Django built-in (customize as needed)
 
-### Frontend Approach  
+### Frontend Approach
 - **Styling**: Custom CSS component system (NO Bootstrap/Tailwind)
 - **JavaScript**: Vanilla JS or minimal framework
 - **Design**: Mobile-first responsive design
@@ -93,6 +93,21 @@ apps/
 **Phase 8-10**: See docs/app_plan.md for full roadmap
 
 ### ✅ Recently Completed
+**Family Invitation Email System** - 2025-10-08 - Transactional email system complete
+- Configured email backend with Gmail (dev) and SendGrid migration plan (prod)
+- Created email utility module (apps/families/emails.py) for sending invitations
+- Built responsive HTML email template using HaleWay color scheme
+- Fixed accept_invitation view to handle unauthenticated users (redirect to login)
+- Implemented case-insensitive email matching for invitations
+- Enhanced form validation with user lookup (checks if email exists in database)
+- Added detailed user feedback (already invited, already a member, account exists)
+- Created comprehensive documentation in CLAUDE.md for Gmail and SendGrid setup
+- Email template includes expiration date, family info, and responsive design
+- Absolute URL generation for invitation links (works in dev and production)
+- Structured logging for all email operations (send success/failure)
+- Updated .env.example with full email configuration examples
+- Supports both existing users (login to accept) and new users (register first)
+
 **Budget Tracking** - 2025-10-08 - Trip expense tracking system complete
 - Created budget app with 2 models (BudgetCategory, BudgetItem)
 - Implemented budget category management with color coding
@@ -315,7 +330,7 @@ TripPackingItem:
 Based on questionnaire answers in `docs/STYLE_GUIDE.md`:
 
 - **Primary Color**: #2e86ab - [Usage description]
-- **Secondary Color**: #2e86ab - [Usage description]  
+- **Secondary Color**: #2e86ab - [Usage description]
 - **Accent Color**: #2e86ab - [Usage description]
 - **Design Style**: Friendly
 - **Border Radius**: 8px
@@ -361,7 +376,7 @@ python manage.py test
 # Full rebuild with backup
 ./build.sh -r -d $(date +%Y%m%d)
 
-# Soft rebuild (preserve database)  
+# Soft rebuild (preserve database)
 ./build.sh -s
 
 # Backup only
@@ -483,6 +498,167 @@ tail -f logs/django.log | jq .  # Pretty-print JSON
 grep "user_id.*12345" logs/django.log | jq .
 ```
 
+## Email Configuration & Family Invitations
+
+**This project sends transactional emails for family invitations. Email setup is required for invitations to work.**
+
+### Current Setup (Development - Gmail)
+
+The project is currently configured to use Gmail SMTP for development. To enable email sending:
+
+1. **Enable 2-Factor Authentication** on your Google account:
+   - Visit: https://myaccount.google.com/security
+   - Turn on 2-Step Verification
+
+2. **Create App Password**:
+   - Visit: https://myaccount.google.com/apppasswords
+   - Select "Mail" and "Other (custom name)"
+   - Enter "HaleWay Django" and click Generate
+   - Copy the 16-character password
+
+3. **Update `.env` file**:
+   ```bash
+   EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+   EMAIL_HOST=smtp.gmail.com
+   EMAIL_PORT=587
+   EMAIL_USE_TLS=True
+   EMAIL_HOST_USER=your.email@gmail.com
+   EMAIL_HOST_PASSWORD=your-app-password-here
+   DEFAULT_FROM_EMAIL=your.email@gmail.com
+   ```
+
+4. **Test email sending**:
+   ```bash
+   python manage.py shell
+   >>> from django.core.mail import send_mail
+   >>> send_mail('Test', 'It works!', 'your@gmail.com', ['recipient@email.com'])
+   ```
+
+**Gmail Limitations:**
+- **500 emails/day** for free Gmail accounts
+- **2000 emails/day** for Google Workspace accounts
+- Emails may be flagged as spam
+- Not suitable for production
+
+---
+
+### Production Setup (SendGrid - Recommended)
+
+For production, migrate to SendGrid for better deliverability and higher limits.
+
+**Why SendGrid?**
+- **100 emails/day free** (perfect for family app)
+- Excellent deliverability (won't go to spam)
+- Easy setup (15 minutes)
+- Analytics dashboard
+- Scales to $20/month for 50k emails
+
+**Migration Steps:**
+
+1. **Sign up for SendGrid**:
+   - Visit: https://sendgrid.com/
+   - Create free account
+   - Verify your email address
+
+2. **Create API Key**:
+   - Go to Settings → API Keys
+   - Click "Create API Key"
+   - Choose "Full Access"
+   - Copy the key (shown only once!)
+
+3. **Verify Sender Identity** (Required for production):
+   - Go to Settings → Sender Authentication
+   - Choose "Single Sender Verification" (easiest)
+   - Add: `noreply@haleway.flyhomemnlab.com`
+   - Click verification link in email
+
+4. **Update Production `.env`**:
+   ```bash
+   EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+   EMAIL_HOST=smtp.sendgrid.net
+   EMAIL_PORT=587
+   EMAIL_USE_TLS=True
+   EMAIL_HOST_USER=apikey
+   EMAIL_HOST_PASSWORD=SG.xxxxxxxxxxxxxxxxxx  # Your API key
+   DEFAULT_FROM_EMAIL=noreply@haleway.flyhomemnlab.com
+   ```
+
+5. **Test in Production**:
+   ```bash
+   # SSH into production server
+   docker compose exec web python manage.py shell
+   >>> from django.core.mail import send_mail
+   >>> send_mail('Test', 'Production email!', 'noreply@haleway.flyhomemnlab.com', ['your@email.com'])
+   ```
+
+6. **Monitor Delivery**:
+   - SendGrid Dashboard: https://app.sendgrid.com/
+   - View delivery stats, opens, clicks
+   - Check for bounces and spam reports
+
+**SendGrid Best Practices:**
+- Use `noreply@yourdomain.com` for transactional emails
+- Verify your domain (optional, for higher limits)
+- Enable click/open tracking in SendGrid settings
+- Monitor bounce rates (should be < 5%)
+- Add unsubscribe links if sending marketing emails
+
+---
+
+### How Family Invitations Work
+
+**Invitation Flow:**
+
+1. **Admin invites user** → `POST /families/{id}/invite/`
+   - Creates `FamilyInvitation` record with unique token
+   - Sends email with acceptance link
+   - Email contains: `/families/invitation/{token}/accept/`
+
+2. **User clicks link**:
+   - **If not logged in**: Redirect to login with `?next=` parameter
+   - **If logged in with wrong email**: Show error message
+   - **If logged in with correct email**: Accept invitation → Join family
+
+3. **User lookup logic**:
+   - System checks if email exists in database
+   - **User exists**: They just need to log in
+   - **User doesn't exist**: They need to create account first
+   - Both cases are handled seamlessly
+
+**Email Template:**
+- Location: `templates/families/emails/invitation_email.html`
+- Uses HaleWay color scheme (Ocean Blue #2E86AB, Palm Green #06A77D)
+- Responsive design for mobile/desktop
+- Includes expiration date (7 days from creation)
+- Plain text fallback for email clients
+
+**Email Utility:**
+- Location: `apps/families/emails.py`
+- Function: `send_family_invitation_email(invitation, request)`
+- Handles absolute URL generation
+- Logs all email sends and failures
+- Returns `True` if successful, `False` if failed
+
+**Testing Invitations:**
+```bash
+# 1. Start development server
+python manage.py runserver
+
+# 2. Create a family and invite a user
+# 3. Check console for email output (if using console backend)
+# 4. Copy the invitation URL from console
+# 5. Open in browser to test acceptance flow
+```
+
+**Troubleshooting:**
+- **Email not sending**: Check `EMAIL_BACKEND` in `.env`
+- **Console backend**: Emails print to console (development only)
+- **SMTP errors**: Verify Gmail app password or SendGrid API key
+- **Wrong email error**: User must log in with invited email address
+- **Expired invitation**: Create new invitation (7 day limit)
+
+---
+
 ## Health Checks & Monitoring
 
 ### Health Check Endpoints
@@ -585,14 +761,14 @@ async with httpx.AsyncClient() as client:
 ## Technical Decisions & Rationale
 
 ### Architecture Decisions
-**Decision**: [e.g., "Custom CSS instead of Bootstrap"]  
-**Rationale**: [Why this decision was made]  
-**Trade-offs**: [What was gained/lost]  
+**Decision**: [e.g., "Custom CSS instead of Bootstrap"]
+**Rationale**: [Why this decision was made]
+**Trade-offs**: [What was gained/lost]
 **Date**: [When decided]
 
-**Decision**: [e.g., "pyenv for development, Docker for production"]  
-**Rationale**: [Why this decision was made]  
-**Trade-offs**: [What was gained/lost]  
+**Decision**: [e.g., "pyenv for development, Docker for production"]
+**Rationale**: [Why this decision was made]
+**Trade-offs**: [What was gained/lost]
 **Date**: [When decided]
 
 ### Technology Choices
@@ -634,12 +810,12 @@ async with httpx.AsyncClient() as client:
 ## Integration Points
 
 ### External Services
-**Service**: [e.g., Email provider] - [How it's used]  
-**Service**: [e.g., Payment processor] - [How it's used]  
+**Service**: [e.g., Email provider] - [How it's used]
+**Service**: [e.g., Payment processor] - [How it's used]
 **Service**: [e.g., Maps API] - [How it's used]
 
 ### APIs
-**Internal API**: [Description of your API endpoints]  
+**Internal API**: [Description of your API endpoints]
 **External APIs**: [Third-party APIs you consume]
 
 ## Deployment & Infrastructure
@@ -671,7 +847,7 @@ DB_PASSWORD=secure-password
 
 ### Test Coverage
 - **Models**: [Coverage level and key test cases]
-- **Views**: [Coverage level and key test cases]  
+- **Views**: [Coverage level and key test cases]
 - **Forms**: [Coverage level and key test cases]
 - **Integration**: [Key user workflows tested]
 
@@ -683,17 +859,17 @@ DB_PASSWORD=secure-password
 ## Common Issues & Solutions
 
 ### Development Issues
-**Issue**: [Common problem]  
-**Solution**: [How to fix it]  
+**Issue**: [Common problem]
+**Solution**: [How to fix it]
 **Prevention**: [How to avoid it]
 
-**Issue**: [Common problem]  
-**Solution**: [How to fix it]  
+**Issue**: [Common problem]
+**Solution**: [How to fix it]
 **Prevention**: [How to avoid it]
 
-### Production Issues  
-**Issue**: [Common problem]  
-**Solution**: [How to fix it]  
+### Production Issues
+**Issue**: [Common problem]
+**Solution**: [How to fix it]
 **Monitoring**: [How to detect it early]
 
 ## Quick Reference Commands
@@ -779,8 +955,8 @@ project_name/
 ## Project History & Evolution
 
 ### Version History
-**v1.0** - 2025-10-07 - [Initial release with core features]  
-**v1.1** - 2025-10-07 - [Major feature additions]  
+**v1.0** - 2025-10-07 - [Initial release with core features]
+**v1.1** - 2025-10-07 - [Major feature additions]
 **v1.2** - 2025-10-07 - [Performance improvements, bug fixes]
 
 ### Major Milestones
@@ -792,13 +968,13 @@ project_name/
 ## Team & Contacts
 
 ### Key People
-**Developer**: [Name/Contact]  
-**Designer**: [Name/Contact] (if applicable)  
+**Developer**: [Name/Contact]
+**Designer**: [Name/Contact] (if applicable)
 **Product Owner**: [Name/Contact] (if applicable)
 
 ### External Contacts
-**Hosting Provider**: [Contact info]  
-**Domain Registrar**: [Contact info]  
+**Hosting Provider**: [Contact info]
+**Domain Registrar**: [Contact info]
 **Third-party Services**: [List with contacts]
 
 ---
@@ -811,14 +987,14 @@ project_name/
 - **Quarterly**: Full backup verification, security audit
 
 ### Update Log
-**2025-10-07**: [What was updated/changed]  
-**2025-10-07**: [What was updated/changed]  
+**2025-10-07**: [What was updated/changed]
+**2025-10-07**: [What was updated/changed]
 **2025-10-07**: [What was updated/changed]
 
 ---
 
-*Last Updated: 2025-10-07*  
-*Next Major Review: 2025-10-07*  
+*Last Updated: 2025-10-07*
+*Next Major Review: 2025-10-07*
 *Current Focus: [What you're working on]*
 
 ## Context for AI Assistants
@@ -835,7 +1011,7 @@ When working with this project, remember:
 8. **Security Requirements**: All family members can edit, only admins can delete
 
 ### Current Work Context
-**Active Feature**: [What's currently being developed]  
-**Blockers**: [Any current blockers or challenges]  
-**Recent Changes**: [What was recently modified]  
+**Active Feature**: [What's currently being developed]
+**Blockers**: [Any current blockers or challenges]
+**Recent Changes**: [What was recently modified]
 **Next Priorities**: [What's coming up next]

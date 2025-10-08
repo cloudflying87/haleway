@@ -59,6 +59,44 @@
     gap: var(--spacing-md);
 }
 
+/* Navbar Dropdown (for trips) */
+.navbar-dropdown {
+    position: relative;
+}
+
+.nav-dropdown-toggle {
+    background: none;
+    border: none;
+    color: var(--white);
+    font-weight: 500;
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: background-color var(--transition-fast);
+    font-size: 1rem;
+}
+
+.nav-dropdown-toggle:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.nav-dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    margin-top: 0.5rem;
+    background: var(--white);
+    border-radius: var(--border-radius);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    min-width: 220px;
+    display: none;
+    z-index: 1000;
+}
+
+.nav-dropdown-menu.show {
+    display: block;
+}
+
 /* User Dropdown */
 .user-dropdown {
     position: relative;
@@ -109,10 +147,58 @@
     background-color: var(--bg-secondary);
 }
 
+.dropdown-header {
+    padding: 0.5rem 1rem;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--text-secondary);
+    letter-spacing: 0.5px;
+}
+
 .dropdown-divider {
     height: 1px;
     background-color: var(--border-color);
     margin: 0.5rem 0;
+}
+
+/* Trip Switcher Modal */
+.trip-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.trip-list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-md);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    transition: border-color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.trip-list-item:hover {
+    border-color: var(--primary-color);
+    background-color: var(--bg-secondary);
+}
+
+.trip-list-item.current {
+    border-color: var(--primary-color);
+    background-color: rgba(46, 134, 171, 0.05);
+}
+
+.trip-info h4 {
+    margin: 0 0 0.25rem 0;
+    font-size: 1rem;
+    color: var(--text-primary);
+}
+
+.trip-dates {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
 }
 
 /* Override button styles for navbar - use !important to ensure visibility */

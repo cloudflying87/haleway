@@ -81,6 +81,8 @@ class DailyItinerary(models.Model):
 
     def get_absolute_url(self):
         """Return the URL for the day view containing this item."""
+        if not self.trip_id:
+            return ""
         return reverse(
             "itinerary:day_detail", kwargs={"trip_pk": self.trip.pk, "date": self.date.isoformat()}
         )

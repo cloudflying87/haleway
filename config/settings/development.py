@@ -50,7 +50,15 @@ if DEBUG:
         pass
 
 # Email backend for development
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+# To use Gmail:
+# 1. Enable 2-factor auth on your Google account
+# 2. Create App Password: https://myaccount.google.com/apppasswords
+# 3. Add to .env:
+#    EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+#    EMAIL_HOST_USER=your.email@gmail.com
+#    EMAIL_HOST_PASSWORD=your-app-password
+#    DEFAULT_FROM_EMAIL=your.email@gmail.com
+EMAIL_BACKEND = config("EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend")
 
 # Cache settings for development
 CACHES = {

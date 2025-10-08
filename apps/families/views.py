@@ -12,6 +12,7 @@ from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
 
+from .emails import send_family_invitation_email
 from .forms import FamilyForm, FamilyInvitationForm
 from .models import Family, FamilyInvitation, FamilyMember
 
@@ -148,14 +149,38 @@ def invite_member(request, pk):
 
         if form.is_valid():
             invitation = form.save()
-            logger.info(
-                "invitation_sent",
-                invitation_id=str(invitation.id),
-                family_id=str(family.id),
-                email=invitation.email,
-                invited_by_id=request.user.id,
-            )
-            messages.success(request, _("Invitation sent to {}!").format(invitation.email))
+
+            # Send invitation email
+            email_sent = send_family_invitation_email(invitation, request)
+
+            if email_sent:
+                logger.info(
+                    "invitation_sent",
+                    invitation_id=str(invitation.id),
+                    family_id=str(family.id),
+                    email=invitation.email,
+                    invited_by_id=request.user.id,
+                )
+                messages.success(
+                    request,
+                    _(
+                        "Invitation sent to {}! They will receive an email with a link to join."
+                    ).format(invitation.email),
+                )
+            else:
+                logger.warning(
+                    "invitation_created_but_email_failed",
+                    invitation_id=str(invitation.id),
+                    family_id=str(family.id),
+                    email=invitation.email,
+                )
+                messages.warning(
+                    request,
+                    _(
+                        "Invitation created for {} but email delivery failed. Please ask them to check their spam folder or contact support."
+                    ).format(invitation.email),
+                )
+
             return redirect("families:family_detail", pk=family.pk)
         else:
             messages.error(request, _("Failed to send invitation. Please check the form."))
@@ -163,13 +188,34 @@ def invite_member(request, pk):
     return redirect("families:family_detail", pk=family.pk)
 
 
-@login_required
 def accept_invitation(request, token):
     """Accept a family invitation."""
-    invitation = get_object_or_404(FamilyInvitation, token=token, email=request.user.email)
+    # Get invitation by token (don't filter by email yet)
+    invitation = get_object_or_404(FamilyInvitation, token=token)
 
+    # Check if invitation is valid
     if not invitation.is_valid():
         messages.error(request, _("This invitation has expired or is no longer valid."))
+        return (
+            redirect("families:family_list")
+            if request.user.is_authenticated
+            else redirect("core:home")
+        )
+
+    # If user is not authenticated, redirect to login with next parameter
+    if not request.user.is_authenticated:
+        from django.contrib.auth.views import redirect_to_login
+
+        return redirect_to_login(request.get_full_path())
+
+    # Check if user's email matches the invitation (case-insensitive)
+    if request.user.email.lower() != invitation.email.lower():
+        messages.error(
+            request,
+            _(
+                "This invitation was sent to {}. You are logged in as {}. Please log in with the correct account."
+            ).format(invitation.email, request.user.email),
+        )
         return redirect("families:family_list")
 
     # Check if user is already a member
@@ -190,6 +236,7 @@ def accept_invitation(request, token):
             invitation_id=str(invitation.id),
             family_id=str(invitation.family.id),
             user_id=request.user.id,
+            user_email=request.user.email,
         )
 
         messages.success(request, _("Welcome to {}!").format(invitation.family.name))

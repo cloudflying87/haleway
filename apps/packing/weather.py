@@ -41,7 +41,7 @@ class WeatherService:
             params = {
                 "latitude": latitude,
                 "longitude": longitude,
-                "daily": "temperature_2m_max,temperature_2m_min,weathercode",
+                "daily": "temperature_2m_max,temperature_2m_min,weathercode,precipitation_probability_max",
                 "start_date": start_date.strftime("%Y-%m-%d"),
                 "end_date": end_date.strftime("%Y-%m-%d"),
                 "timezone": timezone,
@@ -68,6 +68,7 @@ class WeatherService:
             max_temps = daily.get("temperature_2m_max", [])
             min_temps = daily.get("temperature_2m_min", [])
             weather_codes = daily.get("weathercode", [])
+            precipitation_probs = daily.get("precipitation_probability_max", [])
 
             for i, forecast_date in enumerate(dates):
                 # Convert string date to date object for Django template filter
@@ -77,16 +78,18 @@ class WeatherService:
                     else forecast_date
                 )
 
+                weather_code = weather_codes[i] if i < len(weather_codes) else None
+                precip_prob = precipitation_probs[i] if i < len(precipitation_probs) else None
+
                 forecasts.append(
                     {
                         "date": date_obj,
                         "date_str": forecast_date,  # Keep string version for display
                         "high": round(max_temps[i]) if i < len(max_temps) else None,
                         "low": round(min_temps[i]) if i < len(min_temps) else None,
-                        "weather_code": weather_codes[i] if i < len(weather_codes) else None,
-                        "weather_icon": cls._get_weather_icon(
-                            weather_codes[i] if i < len(weather_codes) else None
-                        ),
+                        "weather_code": weather_code,
+                        "weather_icon": cls._get_weather_icon(weather_code, precip_prob),
+                        "precipitation_chance": precip_prob,
                     }
                 )
 
@@ -115,9 +118,9 @@ class WeatherService:
             return None
 
     @staticmethod
-    def _get_weather_icon(weather_code: int | None) -> str:
+    def _get_weather_icon(weather_code: int | None, precipitation_prob: int | None = None) -> str:
         """
-        Get emoji icon for WMO weather code.
+        Get emoji icon for WMO weather code, considering precipitation probability.
 
         WMO Weather interpretation codes (WW):
         0: Clear sky
@@ -129,23 +132,44 @@ class WeatherService:
         80-82: Rain showers
         85-86: Snow showers
         95-99: Thunderstorm
+
+        Logic: If precipitation probability is low (<30%), prefer sunny/cloudy icons
+        even if weather code suggests rain, since there's a low chance of it occurring.
         """
         if weather_code is None:
             return "❓"
 
+        # Fog always shows fog icon (weather type, not precipitation)
+        if 45 <= weather_code <= 48:
+            return "🌫️"
+
+        # Snow - always show if code indicates snow (winter weather)
+        if 71 <= weather_code <= 77 or 85 <= weather_code <= 86:
+            return "❄️" if precipitation_prob is None or precipitation_prob >= 30 else "🌨️"
+
+        # Thunderstorm - always show if code indicates thunderstorm (severe weather)
+        if weather_code >= 95:
+            return "⛈️"
+
+        # Rain/drizzle - consider precipitation probability
+        if 51 <= weather_code <= 67 or 80 <= weather_code <= 82:
+            # If low chance of rain, show partly cloudy instead
+            if precipitation_prob is not None and precipitation_prob < 30:
+                return "🌤️"
+            # Moderate chance - show sun behind rain cloud
+            elif precipitation_prob is not None and precipitation_prob < 60:
+                return "🌦️"
+            # High chance - show rain cloud
+            else:
+                return "🌧️"
+
+        # Clear sky
         if weather_code == 0:
             return "☀️"
-        elif weather_code <= 3:
+
+        # Partly cloudy/overcast
+        if weather_code <= 3:
             return "🌤️"
-        elif weather_code <= 48:
-            return "🌫️"
-        elif weather_code <= 57 or weather_code <= 67:
-            return "🌧️"
-        elif weather_code <= 77:
-            return "❄️"
-        elif weather_code <= 82:
-            return "🌦️"
-        elif weather_code <= 86:
-            return "🌨️"
-        else:
-            return "⛈️"
+
+        # Default fallback
+        return "❓"

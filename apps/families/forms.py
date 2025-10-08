@@ -66,23 +66,36 @@ class FamilyInvitationForm(forms.ModelForm):
         if not self.family:
             raise ValidationError(_("Invalid family."))
 
-        # Check if user is already a family member
+        # Normalize email
+        email = email.lower().strip()
+
+        # Check if user with this email exists and is already a family member
         from apps.accounts.models import User
 
         try:
-            user = User.objects.get(email=email)
+            user = User.objects.get(email__iexact=email)
             if self.family.members.filter(user=user).exists():
-                raise ValidationError(_("This email is already a member of your family."))
+                raise ValidationError(
+                    _(
+                        "{} is already a member of your family. They have an account and are already added!"
+                    ).format(email)
+                )
+            # User exists but not a member - they can be invited and will just need to log in
         except User.DoesNotExist:
+            # User doesn't exist - they'll need to create an account when they accept
             pass
 
         # Check if there's already a pending invitation
         pending_invitation = FamilyInvitation.objects.filter(
-            family=self.family, email=email, status="pending"
+            family=self.family, email__iexact=email, status="pending"
         ).first()
 
         if pending_invitation and pending_invitation.is_valid():
-            raise ValidationError(_("An invitation has already been sent to this email."))
+            raise ValidationError(
+                _("An invitation has already been sent to {}. It expires on {}.").format(
+                    email, pending_invitation.expires_at.strftime("%B %d, %Y at %I:%M %p")
+                )
+            )
 
         return email
 

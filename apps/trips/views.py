@@ -30,9 +30,8 @@ class TripListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         """Return trips for families the user belongs to."""
-        user_families = Family.objects.filter(members__user=self.request.user)
         return (
-            Trip.objects.filter(family__in=user_families)
+            Trip.objects.filter(family__members__user=self.request.user)
             .select_related("family", "created_by")
             .prefetch_related("resort")
             .order_by("-start_date")
@@ -89,12 +88,29 @@ class TripDetailView(LoginRequiredMixin, DetailView):
 
     def get_queryset(self):
         """Ensure user can only view trips from their families."""
-        user_families = Family.objects.filter(members__user=self.request.user)
         return (
-            Trip.objects.filter(family__in=user_families)
+            Trip.objects.filter(family__members__user=self.request.user)
             .select_related("family", "created_by")
             .prefetch_related("resort")
         )
+
+    def get(self, request, *args, **kwargs):
+        """Override to set this trip as the current trip in session."""
+        response = super().get(request, *args, **kwargs)
+
+        # Automatically set this trip as the current trip
+        trip = self.object
+        request.session["current_trip_id"] = str(trip.pk)
+
+        logger.info(
+            "trip_detail_viewed",
+            user_id=request.user.id,
+            trip_id=str(trip.pk),
+            trip_name=trip.name,
+            auto_set_current=True,
+        )
+
+        return response
 
     def get_context_data(self, **kwargs):
         """Add permissions context."""
@@ -130,6 +146,21 @@ class TripDetailView(LoginRequiredMixin, DetailView):
                     end_date=trip.end_date,
                 )
                 context["weather_forecast"] = weather_forecast
+
+                # Build Weather Underground URL
+                if resort.city and resort.state:
+                    city_clean = resort.city.lower().replace(" ", "-")
+                    state_clean = resort.state.lower()
+                    country_clean = (resort.country or "us").lower()
+                    context["wunderground_url"] = (
+                        f"https://www.wunderground.com/weather/{country_clean}/"
+                        f"{state_clean}/{city_clean}"
+                    )
+                else:
+                    context["wunderground_url"] = (
+                        f"https://www.wunderground.com/weather/{resort.latitude},{resort.longitude}"
+                    )
+
                 if weather_forecast:
                     # Calculate temperature range
                     highs = [day["high"] for day in weather_forecast if day["high"] is not None]
@@ -318,8 +349,7 @@ class TripUpdateView(LoginRequiredMixin, UpdateView):
 
     def get_queryset(self):
         """Ensure user can only edit trips they have permission for."""
-        user_families = Family.objects.filter(members__user=self.request.user)
-        return Trip.objects.filter(family__in=user_families)
+        return Trip.objects.filter(family__members__user=self.request.user)
 
     def get_context_data(self, **kwargs):
         """Add context."""
@@ -343,8 +373,7 @@ class TripUpdateView(LoginRequiredMixin, UpdateView):
 def edit_resort(request, trip_pk):
     """Edit or create resort details for a trip."""
     # Get the trip and verify permissions
-    user_families = Family.objects.filter(members__user=request.user)
-    trip = get_object_or_404(Trip, pk=trip_pk, family__in=user_families)
+    trip = get_object_or_404(Trip, pk=trip_pk, family__members__user=request.user)
 
     # Get or create resort
     try:
@@ -393,10 +422,10 @@ class TripDeleteView(LoginRequiredMixin, DeleteView):
 
     def get_queryset(self):
         """Ensure only admins can delete trips."""
-        admin_families = Family.objects.filter(
-            members__user=self.request.user, members__role__in=["owner", "admin"]
+        return Trip.objects.filter(
+            family__members__user=self.request.user,
+            family__members__role__in=["owner", "admin"],
         )
-        return Trip.objects.filter(family__in=admin_families)
 
     def get_success_url(self):
         """Redirect to family's trip list."""
@@ -416,12 +445,12 @@ class TripDeleteView(LoginRequiredMixin, DeleteView):
 def trip_weather(request, pk):
     """Display detailed weather forecast for a trip."""
     # Get the trip and verify permissions
-    user_families = Family.objects.filter(members__user=request.user)
-    trip = get_object_or_404(Trip, pk=pk, family__in=user_families)
+    trip = get_object_or_404(Trip, pk=pk, family__members__user=request.user)
 
     # Get weather forecast if resort has coordinates
     weather_forecast = None
     temp_range = None
+    wunderground_url = None
 
     if hasattr(trip, "resort") and trip.resort:
         resort = trip.resort
@@ -432,6 +461,23 @@ def trip_weather(request, pk):
                 start_date=trip.start_date,
                 end_date=trip.end_date,
             )
+
+            # Build Weather Underground URL
+            # Try to use city/state if available, otherwise use coordinates
+            if resort.city and resort.state:
+                # Clean city name for URL (replace spaces with hyphens, lowercase)
+                city_clean = resort.city.lower().replace(" ", "-")
+                state_clean = resort.state.lower()
+                country_clean = (resort.country or "us").lower()
+                wunderground_url = (
+                    f"https://www.wunderground.com/weather/{country_clean}/"
+                    f"{state_clean}/{city_clean}"
+                )
+            else:
+                # Use coordinates as fallback
+                wunderground_url = (
+                    f"https://www.wunderground.com/weather/{resort.latitude},{resort.longitude}"
+                )
 
             if weather_forecast:
                 # Calculate temperature range
@@ -457,5 +503,6 @@ def trip_weather(request, pk):
             "resort": trip.resort if hasattr(trip, "resort") else None,
             "weather_forecast": weather_forecast,
             "temp_range": temp_range,
+            "wunderground_url": wunderground_url,
         },
     )
