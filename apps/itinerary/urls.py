@@ -20,7 +20,7 @@ urlpatterns = [
 
     # Quick-add event
     path('trip/<uuid:trip_pk>/quick-add/', views.quick_add_event, name='quick_add_event'),
-    path('trip/<uuid:trip_pk>/quick-add/<str:date>/', views.quick_add_event, name='quick_add_event_date'),
+    path('trip/<uuid:trip_pk>/quick-add/<str:date_str>/', views.quick_add_event, name='quick_add_event_date'),
 
     # Assign activity to day
     path('trip/<uuid:trip_pk>/assign-activity/<uuid:activity_pk>/', views.assign_activity, name='assign_activity'),

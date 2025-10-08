@@ -268,6 +268,85 @@
             {% endif %}
         </div>
 
+        <!-- Budget Section -->
+        <div class="section">
+            <div class="section-header">
+                <h2>💰 Budget{% if budget_item_count %} ({{ budget_item_count }}){% endif %}</h2>
+                <div class="header-actions">
+                    {% if budget_item_count > 0 %}
+                        <a href="{% url 'budget:budget_overview' trip.pk %}" class="btn btn-sm btn-outline">
+                            View Full Budget
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Budget Summary -->
+            <div class="budget-summary-inline">
+                <div class="budget-stat">
+                    <span class="stat-label">Estimated:</span>
+                    <span class="stat-value">${{ budget_total_estimated|floatformat:2 }}</span>
+                </div>
+                <div class="budget-stat">
+                    <span class="stat-label">Actual:</span>
+                    <span class="stat-value">${{ budget_total_actual|floatformat:2 }}</span>
+                </div>
+                <div class="budget-stat {% if budget_variance < 0 %}over-budget{% else %}under-budget{% endif %}">
+                    <span class="stat-label">Variance:</span>
+                    <span class="stat-value">{% if budget_variance >= 0 %}+{% endif %}${{ budget_variance|floatformat:2 }}</span>
+                </div>
+            </div>
+
+            {% if recent_budget_items %}
+                <div class="budget-items-list">
+                    {% for item in recent_budget_items %}
+                        <div class="budget-item-card">
+                            <div class="budget-item-header">
+                                <h4 class="budget-item-title">{{ item.description }}</h4>
+                                {% if item.category %}
+                                    <span class="category-badge" style="background-color: {{ item.category.color_code }}20; color: {{ item.category.color_code }};">
+                                        {{ item.category.name }}
+                                    </span>
+                                {% endif %}
+                            </div>
+
+                            <div class="budget-item-amounts">
+                                <div class="amount-row">
+                                    <span class="amount-label">Estimated:</span>
+                                    <span class="amount-value">${{ item.estimated_amount|floatformat:2 }}</span>
+                                </div>
+                                {% if item.actual_amount %}
+                                    <div class="amount-row paid">
+                                        <span class="amount-label">Paid:</span>
+                                        <span class="amount-value">${{ item.actual_amount|floatformat:2 }}</span>
+                                    </div>
+                                    {% if item.paid_by %}
+                                        <div class="paid-by-info">
+                                            by {{ item.paid_by.get_full_name|default:item.paid_by.username }}
+                                        </div>
+                                    {% endif %}
+                                {% else %}
+                                    <div class="amount-row unpaid">
+                                        <span class="unpaid-label">Not paid yet</span>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                {% if budget_item_count > 5 %}
+                    <div style="text-align: center; margin-top: var(--spacing-md);">
+                        <a href="{% url 'budget:budget_overview' trip.pk %}" class="btn btn-outline">
+                            View All Budget Items ({{ budget_item_count }})
+                        </a>
+                    </div>
+                {% endif %}
+            {% else %}
+                <p class="text-muted">No budget items yet. <a href="{% url 'budget:budget_overview' trip.pk %}">Start tracking your trip expenses</a>!</p>
+            {% endif %}
+        </div>
+
         <!-- Notes Section -->
         <div class="section">
             <div class="section-header">
@@ -845,6 +924,117 @@ const notesData = {
     margin-top: var(--spacing-sm);
     padding-top: var(--spacing-sm);
     border-top: 1px solid var(--border-color);
+}
+
+/* Budget Section */
+.budget-summary-inline {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+    padding: var(--spacing-md);
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius);
+}
+
+.budget-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stat-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.budget-stat.over-budget .stat-value {
+    color: #E74C3C;
+}
+
+.budget-stat.under-budget .stat-value {
+    color: #06A77D;
+}
+
+.budget-items-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.budget-item-card {
+    padding: var(--spacing-md);
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius);
+    border-left: 3px solid #F4A261; /* Budget accent color */
+}
+
+.budget-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+}
+
+.budget-item-title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    flex: 1;
+}
+
+.category-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.budget-item-amounts {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.amount-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.875rem;
+}
+
+.amount-label {
+    color: var(--text-secondary);
+}
+
+.amount-value {
+    font-weight: 600;
+}
+
+.amount-row.paid .amount-value {
+    color: #06A77D;
+}
+
+.amount-row.unpaid {
+    font-style: italic;
+    color: var(--text-muted);
+}
+
+.paid-by-info {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-left: auto;
+    text-align: right;
 }
 
 /* Itinerary Section */
@@ -1743,5 +1933,259 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 {% endif %}
 </script>
+
+<!-- Weather Forecast Modal -->
+{% if weather_forecast %}
+<div id="weatherModal" class="modal" style="display: none;">
+    <div class="modal-content modal-large">
+        <div class="modal-header">
+            <h2>🌤️ Weather Forecast - {{ trip.destination_name }}</h2>
+            <button class="modal-close" onclick="closeWeatherModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            {% if temp_range %}
+                <div class="weather-stats-grid">
+                    <div class="weather-stat-card">
+                        <div class="stat-label">Expected High</div>
+                        <div class="stat-value high">{{ temp_range.high }}°F</div>
+                    </div>
+                    <div class="weather-stat-card">
+                        <div class="stat-label">Expected Low</div>
+                        <div class="stat-value low">{{ temp_range.low }}°F</div>
+                    </div>
+                </div>
+            {% endif %}
+
+            <div class="modal-forecast-grid">
+                {% for day in weather_forecast %}
+                    <div class="modal-forecast-day">
+                        <div class="forecast-day-name">{{ day.date|date:"l" }}</div>
+                        <div class="forecast-day-date">{{ day.date|date:"M j, Y" }}</div>
+                        <div class="forecast-day-icon">{{ day.weather_icon }}</div>
+                        <div class="forecast-day-temps">
+                            <span class="temp-high">{{ day.high }}°</span>
+                            <span class="temp-separator">/</span>
+                            <span class="temp-low">{{ day.low }}°</span>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <div class="weather-attribution-modal">
+                <p>Weather data provided by <a href="https://open-meteo.com/" target="_blank">Open-Meteo</a></p>
+                <p class="coordinates-info">📍 Using resort coordinates: {{ resort.latitude }}, {{ resort.longitude }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function openWeatherModal() {
+    document.getElementById('weatherModal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeWeatherModal() {
+    document.getElementById('weatherModal').style.display = 'none';
+    document.body.style.overflow = 'auto';
+}
+
+// Close modal when clicking outside
+document.getElementById('weatherModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeWeatherModal();
+    }
+});
+
+// Close modal on Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && document.getElementById('weatherModal').style.display === 'flex') {
+        closeWeatherModal();
+    }
+});
+</script>
+
+<style>
+/* Weather Mini Forecast Styles */
+.weather-summary-inline {
+    margin-bottom: var(--spacing-md);
+}
+
+.temp-range-text {
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.weather-mini-forecast {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: var(--spacing-sm);
+}
+
+.weather-mini-day {
+    text-align: center;
+    padding: var(--spacing-sm);
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius);
+}
+
+.mini-date {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.25rem;
+}
+
+.mini-icon {
+    font-size: 1.5rem;
+    margin: 0.25rem 0;
+}
+
+.mini-temps {
+    display: flex;
+    justify-content: center;
+    gap: 0.25rem;
+    font-size: 0.875rem;
+}
+
+.mini-high {
+    color: #e74c3c;
+    font-weight: 600;
+}
+
+.mini-low {
+    color: #3498db;
+    font-weight: 600;
+}
+
+/* Weather Modal Styles */
+.modal-large {
+    max-width: 900px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.weather-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+.weather-stat-card {
+    background: var(--bg-secondary);
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius);
+    text-align: center;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-xs);
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--text-primary);
+}
+
+.stat-value.high {
+    color: #e74c3c;
+}
+
+.stat-value.low {
+    color: #3498db;
+}
+
+.modal-forecast-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+.modal-forecast-day {
+    background: var(--bg-secondary);
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius);
+    text-align: center;
+}
+
+.forecast-day-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.forecast-day-date {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.forecast-day-icon {
+    font-size: 2.5rem;
+    margin: var(--spacing-sm) 0;
+}
+
+.forecast-day-temps {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.25rem;
+}
+
+.temp-high {
+    color: #e74c3c;
+    font-weight: 600;
+}
+
+.temp-low {
+    color: #3498db;
+    font-weight: 600;
+}
+
+.temp-separator {
+    color: var(--text-secondary);
+}
+
+.weather-attribution-modal {
+    text-align: center;
+    padding-top: var(--spacing-md);
+    border-top: 1px solid var(--border-color);
+}
+
+.weather-attribution-modal p {
+    margin: 0.25rem 0;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.weather-attribution-modal a {
+    color: var(--color-primary);
+    text-decoration: none;
+}
+
+.weather-attribution-modal a:hover {
+    text-decoration: underline;
+}
+
+.coordinates-info {
+    font-size: 0.75rem;
+}
+
+@media (max-width: 768px) {
+    .weather-mini-forecast {
+        grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+    }
+
+    .modal-forecast-grid {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    }
+}
+</style>
+{% endif %}
 
 {% endblock %}

@@ -270,7 +270,7 @@ class ItineraryItemDeleteView(LoginRequiredMixin, DeleteView):
 
 
 @login_required
-def quick_add_event(request, trip_pk, date=None):
+def quick_add_event(request, trip_pk, date_str=None):
     """Quick-add a standalone event (not linked to activity)."""
     # Get trip and verify permissions
     trip = get_object_or_404(
@@ -281,8 +281,8 @@ def quick_add_event(request, trip_pk, date=None):
 
     # Parse date if provided
     event_date = None
-    if date:
-        event_date = date if isinstance(date, date) else date.fromisoformat(date)
+    if date_str:
+        event_date = date.fromisoformat(date_str) if isinstance(date_str, str) else date_str
 
     if request.method == 'POST':
         form = QuickAddEventForm(request.POST, trip=trip, date=event_date)

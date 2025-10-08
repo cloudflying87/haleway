@@ -169,6 +169,26 @@ class TripDetailView(LoginRequiredMixin, DetailView):
         ).order_by('pre_trip_priority', '-created_at')[:5]
         context['activity_count'] = Activity.objects.filter(trip=trip).count()
 
+        # Get budget summary for this trip
+        from apps.budget.models import BudgetCategory, BudgetItem
+        from decimal import Decimal
+        from django.db.models import Sum
+        budget_items = BudgetItem.objects.filter(trip=trip).select_related(
+            'category', 'paid_by', 'created_by'
+        )[:5]
+        context['recent_budget_items'] = budget_items
+        context['budget_item_count'] = BudgetItem.objects.filter(trip=trip).count()
+
+        # Calculate budget totals
+        all_budget_items = BudgetItem.objects.filter(trip=trip)
+        context['budget_total_estimated'] = all_budget_items.aggregate(
+            total=Sum('estimated_amount')
+        )['total'] or Decimal('0.00')
+        context['budget_total_actual'] = all_budget_items.aggregate(
+            total=Sum('actual_amount')
+        )['total'] or Decimal('0.00')
+        context['budget_variance'] = context['budget_total_estimated'] - context['budget_total_actual']
+
         # Get upcoming itinerary items for this trip (up to 5, ordered by date)
         from django.utils import timezone
         from apps.itinerary.models import DailyItinerary

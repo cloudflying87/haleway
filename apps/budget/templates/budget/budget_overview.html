@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+
+{% block title %}Budget - {{ trip.name }} - HaleWay{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <nav class="breadcrumb">
+            <a href="{% url 'trips:trip_detail' trip.pk %}">{{ trip.name }}</a>
+            <span>/</span>
+            <span>Budget</span>
+        </nav>
+        <div class="header-content">
+            <h1>Budget Tracker</h1>
+            <div class="header-actions">
+                {% if can_create %}
+                    <a href="{% url 'budget:item_create' trip.pk %}" class="btn btn-primary">Add Expense</a>
+                    <a href="{% url 'budget:category_create' trip.pk %}" class="btn btn-outline">Add Category</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Budget Summary -->
+    <div class="budget-summary">
+        <div class="summary-card">
+            <div class="summary-label">Estimated Total</div>
+            <div class="summary-value">${{ total_estimated|floatformat:2 }}</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-label">Actual Total</div>
+            <div class="summary-value">${{ total_actual|floatformat:2 }}</div>
+        </div>
+        <div class="summary-card {% if total_variance < 0 %}over-budget{% else %}under-budget{% endif %}">
+            <div class="summary-label">Variance</div>
+            <div class="summary-value">
+                {% if total_variance >= 0 %}+{% endif %}${{ total_variance|floatformat:2 }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Budget Items by Category -->
+    {% if categories %}
+        {% for category in categories %}
+            <div class="card">
+                <div class="card-header" style="border-left: 4px solid {{ category.color_code }};">
+                    <h3>{{ category.name }}</h3>
+                    <div class="category-totals">
+                        <span>Est: ${{ category.get_total_estimated|floatformat:2 }}</span>
+                        <span>Actual: ${{ category.get_total_actual|floatformat:2 }}</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% with items=budget_items|dictsort:"category.name" %}
+                        {% for item in items %}
+                            {% if item.category.id == category.id %}
+                                <div class="budget-item">
+                                    <div class="item-info">
+                                        <strong>{{ item.description }}</strong>
+                                        {% if item.notes %}
+                                            <p class="item-notes">{{ item.notes }}</p>
+                                        {% endif %}
+                                    </div>
+                                    <div class="item-amounts">
+                                        <div>Est: ${{ item.estimated_amount|floatformat:2 }}</div>
+                                        {% if item.actual_amount %}
+                                            <div class="paid">Paid: ${{ item.actual_amount|floatformat:2 }}</div>
+                                            {% if item.paid_by %}
+                                                <div class="paid-by">by {{ item.paid_by.get_full_name|default:item.paid_by.username }}</div>
+                                            {% endif %}
+                                        {% else %}
+                                            <div class="unpaid">Not paid yet</div>
+                                        {% endif %}
+                                    </div>
+                                    {% if can_edit %}
+                                        <div class="item-actions">
+                                            <a href="{% url 'budget:item_update' item.pk %}" class="btn btn-sm btn-outline">Edit</a>
+                                            {% if can_delete %}
+                                                <a href="{% url 'budget:item_delete' item.pk %}" class="btn btn-sm btn-danger">Delete</a>
+                                            {% endif %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    {% endwith %}
+                </div>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Uncategorized Items -->
+    {% with uncategorized=budget_items|dictsort:"description" %}
+        {% if uncategorized %}
+            <div class="card">
+                <div class="card-header">
+                    <h3>Uncategorized</h3>
+                </div>
+                <div class="card-body">
+                    {% for item in uncategorized %}
+                        {% if not item.category %}
+                            <div class="budget-item">
+                                <div class="item-info">
+                                    <strong>{{ item.description }}</strong>
+                                    {% if item.notes %}
+                                        <p class="item-notes">{{ item.notes }}</p>
+                                    {% endif %}
+                                </div>
+                                <div class="item-amounts">
+                                    <div>Est: ${{ item.estimated_amount|floatformat:2 }}</div>
+                                    {% if item.actual_amount %}
+                                        <div class="paid">Paid: ${{ item.actual_amount|floatformat:2 }}</div>
+                                        {% if item.paid_by %}
+                                            <div class="paid-by">by {{ item.paid_by.get_full_name|default:item.paid_by.username }}</div>
+                                        {% endif %}
+                                    {% else %}
+                                        <div class="unpaid">Not paid yet</div>
+                                    {% endif %}
+                                </div>
+                                {% if can_edit %}
+                                    <div class="item-actions">
+                                        <a href="{% url 'budget:item_update' item.pk %}" class="btn btn-sm btn-outline">Edit</a>
+                                        {% if can_delete %}
+                                            <a href="{% url 'budget:item_delete' item.pk %}" class="btn btn-sm btn-danger">Delete</a>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    {% if not budget_items %}
+        <div class="empty-state">
+            <p>No budget items yet. Start tracking your trip expenses!</p>
+            {% if can_create %}
+                <a href="{% url 'budget:item_create' trip.pk %}" class="btn btn-primary">Add First Expense</a>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+<style>
+.budget-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-xl);
+}
+
+.summary-card {
+    background: var(--white);
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    text-align: center;
+}
+
+.summary-label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-xs);
+}
+
+.summary-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.over-budget .summary-value {
+    color: var(--danger-color);
+}
+
+.under-budget .summary-value {
+    color: var(--success-color);
+}
+
+.category-totals {
+    display: flex;
+    gap: var(--spacing-md);
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.budget-item {
+    display: grid;
+    grid-template-columns: 2fr 1fr auto;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+    border-bottom: 1px solid var(--gray-200);
+    align-items: center;
+}
+
+.budget-item:last-child {
+    border-bottom: none;
+}
+
+.item-notes {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-top: var(--spacing-xs);
+}
+
+.item-amounts {
+    text-align: right;
+}
+
+.paid {
+    color: var(--success-color);
+    font-weight: 600;
+}
+
+.unpaid {
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+.paid-by {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.item-actions {
+    display: flex;
+    gap: var(--spacing-xs);
+}
+
+@media (max-width: 768px) {
+    .budget-item {
+        grid-template-columns: 1fr;
+    }
+
+    .item-amounts {
+        text-align: left;
+    }
+}
+</style>
+{% endblock %}

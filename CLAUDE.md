@@ -46,7 +46,9 @@ apps/
 ├── notes/          # Note and category management with search
 ├── activities/     # Activity management with priority ordering
 ├── itinerary/      # Daily itinerary and schedule planning
-└── packing/        # Packing list templates and trip packing lists
+├── packing/        # Packing list templates and trip packing lists
+├── budget/         # Budget tracking and expense management
+└── memories/       # Photos and journal entries (planned)
 ```
 
 ### Key Models
@@ -64,6 +66,8 @@ apps/
 - **PackingListTemplateItem** (packing): Items within packing templates
 - **TripPackingList** (packing): Trip-specific packing lists (can be assigned to people)
 - **TripPackingItem** (packing): Individual packing items with checkbox tracking
+- **BudgetCategory** (budget): Category for organizing budget items with color coding
+- **BudgetItem** (budget): Individual expenses with estimated/actual amounts and payment tracking
 
 ### Important URLs
 - **Admin**: `/admin/` - Django admin interface
@@ -73,22 +77,36 @@ apps/
 - **Activities**: `/activities/` - Activity management and planning
 - **Itinerary**: `/itinerary/` - Daily schedule and itinerary planning
 - **Packing**: `/packing/` - Packing list templates and trip packing lists
+- **Budget**: `/budget/` - Budget tracking and expense management
 - **Accounts**: `/accounts/` - User authentication and profiles
 
 ## Current Major Projects & Status
 
 ### 🚧 Active Development
-**Phase 7-10: Advanced Features** - Status: Pending
+**Phase 7-10: Advanced Features** - Status: In Progress
 **Priority**: Medium
-**Description**: Post-trip features, memories, sharing, and budget tracking
+**Description**: Post-trip features, memories, and sharing functionality
 **Next Steps**: See docs/app_plan.md for full roadmap
 
 ### 📋 Planned Features
 **Phase 7**: Post-Trip Features - Trip photos, daily journals, memory preservation
 **Phase 8-10**: See docs/app_plan.md for full roadmap
-**Budget Tracking**: Not yet implemented (originally part of Phase 6)
 
 ### ✅ Recently Completed
+**Budget Tracking** - 2025-10-08 - Trip expense tracking system complete
+- Created budget app with 2 models (BudgetCategory, BudgetItem)
+- Implemented budget category management with color coding
+- Built budget item CRUD with estimated/actual amount tracking
+- Created budget overview page with category grouping
+- Developed automatic variance calculation (estimated vs actual)
+- Implemented payment tracking (who paid, when, payment date)
+- Added budget summary to trip detail page (inline preview)
+- Built filtering by category and payment status
+- Created comprehensive admin interface with variance display
+- Database indexes for performance (trip, category, paid_by, payment_date)
+- Structured logging for all budget operations
+- Full permissions system (all members edit, admins delete)
+
 **Phase 6: Packing Lists** - 2025-10-07 - Packing list management system complete
 - Created packing app with 4 models (PackingListTemplate, PackingListTemplateItem, TripPackingList, TripPackingItem)
 - Implemented reusable template system with 4 default templates (Beach, Mountains, Summer, Winter)
@@ -368,6 +386,38 @@ pytest --cov=apps
 # Run all pre-commit hooks manually
 pre-commit run --all-files
 ```
+
+### File Encoding Standards
+
+**CRITICAL: All files MUST be UTF-8 encoded**
+
+This project requires UTF-8 encoding for all files, especially templates. Failure to use UTF-8 will cause `UnicodeDecodeError` when Django tries to render templates.
+
+**Best Practices:**
+- ✅ **Always use UTF-8 encoding** when creating new files
+- ✅ **Avoid emojis in template files** - Use HTML entities or Font Awesome icons instead
+- ✅ **If using emojis, ensure file is saved as UTF-8**
+- ❌ **Never use ISO-8859-1, Windows-1252, or other encodings**
+
+**How to Check File Encoding:**
+```bash
+# Check a file's encoding
+file -b --mime-encoding path/to/file.html
+
+# Convert a file from ISO-8859-1 to UTF-8
+iconv -f ISO-8859-1 -t UTF-8 input.html > output.html
+```
+
+**Common Error:**
+```
+UnicodeDecodeError: 'utf-8' codec can't decode byte 0xb0 in position X
+```
+This means a file is not UTF-8 encoded. Use the commands above to check and fix.
+
+**Editor Configuration:**
+- VS Code: Add to settings.json: `"files.encoding": "utf8"`
+- PyCharm: Settings → Editor → File Encodings → set to UTF-8
+- Vim: Add to .vimrc: `set encoding=utf-8 fileencoding=utf-8`
 
 ## Logging Best Practices
 
@@ -775,14 +825,14 @@ project_name/
 
 When working with this project, remember:
 
-1. **Custom CSS System**: Never suggest Bootstrap/Tailwind - we have a complete custom system
-2. **Mobile-First**: All UI decisions should start with mobile
-3. **pyenv Development**: Local development uses pyenv, not Docker
-4. **build.sh Deployment**: Production uses the build.sh script for all operations
-5. **Domain Context**: [Add specific domain knowledge that AI should remember]
-6. **Architecture Patterns**: [Key patterns to follow]
-7. **Performance Requirements**: [Specific performance constraints]
-8. **Security Requirements**: [Specific security considerations]
+1. **UTF-8 Encoding REQUIRED**: All files MUST be UTF-8 encoded. Never create files with ISO-8859-1 or other encodings. Avoid emojis in templates or ensure UTF-8 encoding if used.
+2. **Custom CSS System**: Never suggest Bootstrap/Tailwind - we have a complete custom system
+3. **Mobile-First**: All UI decisions should start with mobile
+4. **pyenv Development**: Local development uses pyenv, not Docker
+5. **build.sh Deployment**: Production uses the build.sh script for all operations
+6. **Structured Logging**: Always use structlog with key-value pairs, never string formatting
+7. **Architecture Patterns**: Follow existing patterns in similar apps (notes, activities, etc.)
+8. **Security Requirements**: All family members can edit, only admins can delete
 
 ### Current Work Context
 **Active Feature**: [What's currently being developed]  
