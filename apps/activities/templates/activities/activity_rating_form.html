@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block title %}Rate {{ activity.name }} - HaleWay{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <nav class="breadcrumb">
+            <a href="{% url 'trips:trip_detail' activity.trip.pk %}">{{ activity.trip.name }}</a>
+            <span>/</span>
+            <a href="{% url 'activities:activity_list' activity.trip.pk %}">Activities</a>
+            <span>/</span>
+            <a href="{% url 'activities:activity_detail' activity.pk %}">{{ activity.name }}</a>
+            <span>/</span>
+            <span>Rate</span>
+        </nav>
+        <h1>Rate Activity</h1>
+    </div>
+
+    <div class="form-container">
+        <div class="activity-summary">
+            <h2>{{ activity.name }}</h2>
+            {% if activity.description %}
+                <p class="text-muted">{{ activity.description }}</p>
+            {% endif %}
+        </div>
+
+        <form method="post" class="rating-form">
+            {% csrf_token %}
+
+            {% if form.errors %}
+                <div class="alert alert-error">
+                    <h4>Please correct the following errors:</h4>
+                    {{ form.errors }}
+                </div>
+            {% endif %}
+
+            <div class="form-section">
+                <div class="form-group">
+                    <label>{{ form.post_trip_rating.label }}</label>
+                    <div class="rating-options">
+                        {{ form.post_trip_rating }}
+                    </div>
+                    {% if form.post_trip_rating.help_text %}
+                        <small class="form-text">{{ form.post_trip_rating.help_text }}</small>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        {{ form.is_favorite }}
+                        <label for="{{ form.is_favorite.id_for_label }}">{{ form.is_favorite.label }}</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.post_trip_notes.id_for_label }}">{{ form.post_trip_notes.label }}</label>
+                    {{ form.post_trip_notes }}
+                    {% if form.post_trip_notes.help_text %}
+                        <small class="form-text">{{ form.post_trip_notes.help_text }}</small>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Save Rating</button>
+                <a href="{% url 'activities:activity_detail' activity.pk %}" class="btn btn-outline">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.page-header {
+    margin-bottom: var(--spacing-xl);
+}
+
+.breadcrumb {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.breadcrumb a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.breadcrumb a:hover {
+    text-decoration: underline;
+}
+
+.form-container {
+    max-width: 600px;
+}
+
+.activity-summary {
+    background: white;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.activity-summary h2 {
+    margin-top: 0;
+    margin-bottom: var(--spacing-sm);
+}
+
+.form-section {
+    background: white;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.rating-options {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.rating-options input[type="radio"] {
+    margin-right: var(--spacing-sm);
+}
+
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.checkbox-group input[type="checkbox"] {
+    width: auto;
+    margin: 0;
+}
+
+.form-actions {
+    display: flex;
+    gap: var(--spacing-md);
+}
+
+.alert-error {
+    background-color: #fee;
+    border: 1px solid #fcc;
+    border-radius: var(--border-radius);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+.alert-error h4 {
+    margin-top: 0;
+    color: #c33;
+}
+</style>
+{% endblock %}

@@ -43,7 +43,8 @@ apps/
 ├── accounts/       # Custom user authentication and profiles
 ├── families/       # Family management, invitations, and member roles
 ├── trips/          # Trip and resort management
-└── notes/          # Note and category management with search
+├── notes/          # Note and category management with search
+└── activities/     # Activity management with priority ordering
 ```
 
 ### Key Models
@@ -55,30 +56,44 @@ apps/
 - **Resort** (trips): Lodging details with address and coordinates
 - **NoteCategory** (notes): Category for organizing notes with color coding
 - **Note** (notes): Trip notes with full-text search, pinning, and categorization
+- **Activity** (activities): Trip activities with priority ordering and post-trip ratings
 
 ### Important URLs
 - **Admin**: `/admin/` - Django admin interface
 - **Families**: `/families/` - Family management interface
 - **Trips**: `/trips/` - Trip and resort management
 - **Notes**: `/notes/` - Note and category management
+- **Activities**: `/activities/` - Activity management and planning
 - **Accounts**: `/accounts/` - User authentication and profiles
 
 ## Current Major Projects & Status
 
 ### 🚧 Active Development
-**Phase 4: Activities** - Status: Planning
+**Phase 5: Itinerary** - Status: Pending
 **Priority**: High
-**Description**: Next phase - Activity creation with priority ordering and ratings
-**Key Features**: Activity management, distance tracking, priority ordering, post-trip ratings
-**Next Steps**: Create activities app, Activity model, priority ordering UI, ratings system
+**Description**: Next phase - Daily itinerary planning with calendar view
+**Key Features**: Daily schedule planning, activity assignment to days/times
+**Next Steps**: Create itinerary app, DailyItinerary model, calendar view UI
 
 ### 📋 Planned Features
-**Phase 4**: Activities (Week 3-4) - Activity creation, priority ordering, ratings
 **Phase 5**: Itinerary (Week 4) - Daily schedule planning with calendar view
 **Phase 6**: Packing & Budget (Week 5) - Packing lists and budget tracking
 **Phase 7-10**: See docs/app_plan.md for full roadmap
 
 ### ✅ Recently Completed
+**Phase 4: Activities** - 2025-10-07 - Activity management system complete
+- Created activities app with Activity model
+- Implemented activity CRUD views with proper permissions
+- Built activity list view with multiple sorting options (priority, name, distance, cost, rating, favorites)
+- Created activity detail view with full information display
+- Developed activity rating system for post-trip evaluation (1-5 stars, favorite flagging)
+- Added manual distance entry field for activities
+- Implemented drag-and-drop priority ordering UI with vanilla JavaScript
+- Created responsive activity templates with mobile-first design
+- Integrated activities with trip detail page
+- Added indexes for performance optimization (trip + priority, trip + rating, trip + favorite)
+- Structured logging for all activity operations
+
 **Phase 3: Notes System** - 2025-10-07 - Categorized notes system complete
 - Created notes app with NoteCategory and Note models
 - Implemented full-text search on note title and content (PostgreSQL)
@@ -165,6 +180,21 @@ Note:
   - search_vector: Full-text search field (PostgreSQL)
   - Indexes: (trip, category), (trip, is_pinned), GIN index on search_vector
   - Ordering: Pinned notes first, then by updated_at
+
+Activity:
+  - UUID primary key
+  - trip: Foreign key to Trip
+  - name, description: Activity identification
+  - Full address fields with optional lat/long
+  - distance_from_resort: Decimal (manual entry, miles)
+  - estimated_cost, estimated_duration: Planning fields
+  - pre_trip_priority: Integer for ranking (0 = unranked, lower = higher priority)
+  - post_trip_rating: Integer 1-5 (nullable, for post-trip evaluation)
+  - post_trip_notes: TextField (nullable)
+  - is_favorite: Boolean flag for "would do again"
+  - Indexes: (trip, pre_trip_priority), (trip, post_trip_rating), (trip, is_favorite)
+  - Ordering: By pre_trip_priority, then created_at
+  - Methods: has_rating(), get_duration_display(), get_full_address()
 ```
 
 ### Important Relationships
@@ -177,6 +207,8 @@ Note:
 - Trip → NoteCategory: One-to-many (a trip can have many categories)
 - Trip → Note: One-to-many (a trip can have many notes)
 - NoteCategory → Note: One-to-many (a category can have many notes)
+- Trip → Activity: One-to-many (a trip can have many activities)
+- User → Activity: One-to-many via created_by (a user can create many activities)
 
 ## Custom CSS System
 

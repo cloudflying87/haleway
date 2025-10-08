@@ -106,6 +106,21 @@ class Resort(models.Model):
     )
     name = models.CharField(_('resort name'), max_length=200)
     website_url = models.URLField(_('website'), blank=True)
+    phone_number = models.CharField(_('phone number'), max_length=20, blank=True)
+
+    # Check-in/Check-out times
+    check_in_time = models.TimeField(
+        _('check-in time'),
+        null=True,
+        blank=True,
+        help_text=_('Typical check-in time (e.g., 3:00 PM)')
+    )
+    check_out_time = models.TimeField(
+        _('check-out time'),
+        null=True,
+        blank=True,
+        help_text=_('Typical check-out time (e.g., 11:00 AM)')
+    )
 
     # Address fields
     address_line1 = models.CharField(_('address line 1'), max_length=200, blank=True)

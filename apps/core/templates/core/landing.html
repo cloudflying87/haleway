@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}HaleWay - Plan Vacations, Preserve Memories{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="hero">
+    <div class="container">
+        <div class="hero-content">
+            <h1 class="hero-title">Welcome to HaleWay</h1>
+            <p class="hero-subtitle">Plan vacations and preserve memories with your ohana</p>
+            <p class="hero-description">
+                Organize activities, create itineraries, track budgets, and rate experiences.
+                Share trips with your family and build a searchable archive of your favorite adventures.
+            </p>
+
+            {% if not user.is_authenticated %}
+                <div class="hero-actions">
+                    <a href="{% url 'accounts:register' %}" class="btn btn-primary btn-lg">
+                        Get Started
+                    </a>
+                    <a href="{% url 'accounts:login' %}" class="btn btn-outline btn-lg">
+                        Login
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Features Section -->
+<div class="features">
+    <div class="container">
+        <h2 class="section-title">Everything You Need for Family Vacations</h2>
+
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">👨‍👩‍👧‍👦</div>
+                <h3>Family Management</h3>
+                <p>Create your family group, invite members, and plan trips together with your ohana.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🏖️</div>
+                <h3>Trip Planning</h3>
+                <p>Organize destinations, dates, resort details, and everything you need for the perfect vacation.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">📝</div>
+                <h3>Notes & Ideas</h3>
+                <p>Keep track of activities, restaurants, and must-see spots with categorized notes.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">📅</div>
+                <h3>Itineraries</h3>
+                <p>Build day-by-day schedules with activities, reservations, and travel plans.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">💰</div>
+                <h3>Budget Tracking</h3>
+                <p>Track estimated and actual costs to stay on budget and plan future trips better.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">⭐</div>
+                <h3>Memories</h3>
+                <p>Rate experiences, save favorites, and build a searchable archive of your best adventures.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CTA Section -->
+{% if not user.is_authenticated %}
+<div class="cta-section">
+    <div class="container">
+        <h2>Ready to Start Planning?</h2>
+        <p>Create your account and start organizing your next family adventure today.</p>
+        <a href="{% url 'accounts:register' %}" class="btn btn-primary btn-lg">
+            Create Free Account
+        </a>
+    </div>
+</div>
+{% endif %}
+
+<style>
+/* Hero Section */
+.hero {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+    color: white;
+    padding: var(--spacing-xxl) 0;
+    margin-top: calc(-1 * var(--spacing-xl));
+}
+
+.hero-content {
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.hero-title {
+    font-size: 2.5rem;
+    margin-bottom: var(--spacing-md);
+    color: white;
+}
+
+.hero-subtitle {
+    font-size: 1.5rem;
+    margin-bottom: var(--spacing-lg);
+    opacity: 0.95;
+}
+
+.hero-description {
+    font-size: 1.125rem;
+    margin-bottom: var(--spacing-xl);
+    opacity: 0.9;
+    line-height: 1.6;
+}
+
+.hero-actions {
+    display: flex;
+    gap: var(--spacing-md);
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.hero .btn-outline {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-color: white;
+    color: white;
+}
+
+.hero .btn-outline:hover {
+    background-color: white;
+    color: var(--primary-color);
+}
+
+/* Features Section */
+.features {
+    padding: var(--spacing-xxl) 0;
+    background-color: var(--bg-secondary);
+}
+
+.section-title {
+    text-align: center;
+    font-size: 2rem;
+    margin-bottom: var(--spacing-xl);
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--spacing-lg);
+    margin-top: var(--spacing-xl);
+}
+
+@media (min-width: 768px) {
+    .features-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .hero-title {
+        font-size: 3rem;
+    }
+}
+
+@media (min-width: 992px) {
+    .features-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.feature-card {
+    background: white;
+    padding: var(--spacing-xl);
+    border-radius: var(--border-radius);
+    text-align: center;
+    box-shadow: var(--shadow-sm);
+    transition: transform var(--transition-fast);
+}
+
+.feature-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+}
+
+.feature-icon {
+    font-size: 3rem;
+    margin-bottom: var(--spacing-md);
+}
+
+.feature-card h3 {
+    margin-bottom: var(--spacing-sm);
+    color: var(--primary-color);
+}
+
+.feature-card p {
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+/* CTA Section */
+.cta-section {
+    background: var(--primary-color);
+    color: white;
+    padding: var(--spacing-xxl) 0;
+    text-align: center;
+}
+
+.cta-section h2 {
+    font-size: 2rem;
+    margin-bottom: var(--spacing-md);
+    color: white;
+}
+
+.cta-section p {
+    font-size: 1.125rem;
+    margin-bottom: var(--spacing-xl);
+    opacity: 0.95;
+}
+
+.cta-section .btn {
+    background-color: white;
+    color: var(--primary-color);
+    border-color: white;
+}
+
+.cta-section .btn:hover {
+    background-color: var(--tertiary-color);
+}
+</style>
+{% endblock %}

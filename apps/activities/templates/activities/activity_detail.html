@@ -1,0 +1,285 @@
+{% extends "base.html" %}
+
+{% block title %}{{ activity.name }} - HaleWay{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <nav class="breadcrumb">
+            <a href="{% url 'trips:trip_detail' activity.trip.pk %}">{{ activity.trip.name }}</a>
+            <span>/</span>
+            <a href="{% url 'activities:activity_list' activity.trip.pk %}">Activities</a>
+            <span>/</span>
+            <span>{{ activity.name }}</span>
+        </nav>
+        <div class="header-content">
+            <h1>{{ activity.name }}</h1>
+            <div class="header-actions">
+                {% if can_edit %}
+                    <a href="{% url 'activities:activity_edit' activity.pk %}" class="btn btn-outline">
+                        Edit
+                    </a>
+                {% endif %}
+                {% if can_delete %}
+                    <a href="{% url 'activities:activity_delete' activity.pk %}" class="btn btn-danger">
+                        Delete
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="detail-grid">
+        <!-- Main Information -->
+        <div class="detail-section">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Details</h2>
+                    {% if activity.is_favorite %}
+                        <span class="badge badge-favorite">⭐ Favorite</span>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% if activity.description %}
+                        <div class="detail-item">
+                            <label>Description:</label>
+                            <p>{{ activity.description }}</p>
+                        </div>
+                    {% endif %}
+
+                    {% if activity.website_url %}
+                        <div class="detail-item">
+                            <label>Website:</label>
+                            <p><a href="{{ activity.website_url }}" target="_blank" rel="noopener">{{ activity.website_url }}</a></p>
+                        </div>
+                    {% endif %}
+
+                    {% if activity.get_full_address %}
+                        <div class="detail-item">
+                            <label>Address:</label>
+                            <p>{{ activity.get_full_address }}</p>
+                        </div>
+                    {% endif %}
+
+                    {% if activity.distance_from_resort %}
+                        <div class="detail-item">
+                            <label>Distance from Resort:</label>
+                            <p>{{ activity.distance_from_resort }} miles</p>
+                        </div>
+                    {% endif %}
+
+                    {% if activity.estimated_cost %}
+                        <div class="detail-item">
+                            <label>Estimated Cost:</label>
+                            <p>${{ activity.estimated_cost|floatformat:2 }} per person</p>
+                        </div>
+                    {% endif %}
+
+                    {% if activity.estimated_duration %}
+                        <div class="detail-item">
+                            <label>Estimated Duration:</label>
+                            <p>{{ activity.get_duration_display }}</p>
+                        </div>
+                    {% endif %}
+
+                    {% if activity.pre_trip_priority > 0 %}
+                        <div class="detail-item">
+                            <label>Priority:</label>
+                            <p>
+                                <span class="badge badge-priority">Priority #{{ activity.pre_trip_priority }}</span>
+                            </p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Post-Trip Evaluation -->
+        <div class="detail-section">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Post-Trip Evaluation</h2>
+                    {% if can_rate and not activity.has_rating %}
+                        <a href="{% url 'activities:activity_rate' activity.pk %}" class="btn btn-sm btn-primary">
+                            Rate Activity
+                        </a>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% if activity.post_trip_rating %}
+                        <div class="detail-item">
+                            <label>Rating:</label>
+                            <div class="rating-display">
+                                {% for i in "12345" %}
+                                    {% if forloop.counter <= activity.post_trip_rating %}
+                                        <span class="star filled">⭐</span>
+                                    {% else %}
+                                        <span class="star">☆</span>
+                                    {% endif %}
+                                {% endfor %}
+                                <span class="rating-text">{{ activity.post_trip_rating }}/5</span>
+                            </div>
+                        </div>
+
+                        <div class="detail-item">
+                            <label>Would Do Again:</label>
+                            <p>{% if activity.is_favorite %}Yes ⭐{% else %}No{% endif %}</p>
+                        </div>
+
+                        {% if activity.post_trip_notes %}
+                            <div class="detail-item">
+                                <label>Notes:</label>
+                                <p>{{ activity.post_trip_notes }}</p>
+                            </div>
+                        {% endif %}
+
+                        {% if can_rate %}
+                            <a href="{% url 'activities:activity_rate' activity.pk %}" class="btn btn-sm btn-outline">
+                                Update Rating
+                            </a>
+                        {% endif %}
+                    {% else %}
+                        <p class="text-muted">No rating yet. Rate this activity after your trip!</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Metadata -->
+    <div class="metadata">
+        <p class="text-muted">
+            Created by {{ activity.created_by.get_full_name|default:activity.created_by.email }}
+            on {{ activity.created_at|date:"M d, Y" }}
+        </p>
+        {% if activity.updated_at != activity.created_at %}
+            <p class="text-muted">
+                Last updated {{ activity.updated_at|date:"M d, Y" }}
+            </p>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.page-header {
+    margin-bottom: var(--spacing-xl);
+}
+
+.breadcrumb {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.breadcrumb a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.breadcrumb a:hover {
+    text-decoration: underline;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.header-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-xl);
+}
+
+@media (min-width: 768px) {
+    .detail-grid {
+        grid-template-columns: 2fr 1fr;
+    }
+}
+
+.detail-item {
+    margin-bottom: var(--spacing-md);
+}
+
+.detail-item:last-child {
+    margin-bottom: 0;
+}
+
+.detail-item label {
+    display: block;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-xs);
+    font-size: 0.875rem;
+    text-transform: uppercase;
+}
+
+.detail-item p {
+    margin: 0;
+}
+
+.rating-display {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.star {
+    font-size: 1.5rem;
+    color: var(--gray-300);
+}
+
+.star.filled {
+    color: var(--warning-color);
+}
+
+.rating-text {
+    margin-left: var(--spacing-sm);
+    font-weight: 600;
+}
+
+.badge-priority {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.badge-favorite {
+    background-color: var(--warning-color);
+    color: #000;
+}
+
+.metadata {
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--gray-200);
+}
+
+.metadata p {
+    font-size: 0.875rem;
+    margin-bottom: var(--spacing-xs);
+}
+
+@media (max-width: 768px) {
+    .header-content {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .header-actions {
+        width: 100%;
+        flex-direction: column;
+    }
+
+    .header-actions .btn {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}

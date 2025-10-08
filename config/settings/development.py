@@ -25,13 +25,14 @@ INSTALLED_APPS += [
 
 # Development middleware
 if DEBUG:
-    # Browser reload (only if installed)
-    try:
-        import django_browser_reload
-        INSTALLED_APPS += ['django_browser_reload']
-        MIDDLEWARE = ['django_browser_reload.middleware.BrowserReloadMiddleware'] + MIDDLEWARE
-    except ImportError:
-        pass
+    # Browser reload (only if installed) - DISABLED
+    # try:
+    #     import django_browser_reload
+    #     INSTALLED_APPS += ['django_browser_reload']
+    #     MIDDLEWARE = ['django_browser_reload.middleware.BrowserReloadMiddleware'] + MIDDLEWARE
+    # except ImportError:
+    #     pass
+    pass
 
     # Debug toolbar (only if installed)
     try:

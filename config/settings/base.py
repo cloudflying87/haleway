@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'apps.families',  # Family management
     'apps.trips',  # Trip and resort management
     'apps.notes',  # Note and category management
+    'apps.activities',  # Activity management
 ]
 
 # Custom User Model
@@ -257,3 +258,7 @@ SIMPLE_JWT = {
 # CORS Settings
 CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default='http://localhost:3000,http://localhost:8000', cast=Csv())
 CORS_ALLOW_CREDENTIALS = True
+
+# Mapbox Configuration
+# Get your free API key at: https://account.mapbox.com/
+MAPBOX_ACCESS_TOKEN = config('MAPBOX_ACCESS_TOKEN', default='')

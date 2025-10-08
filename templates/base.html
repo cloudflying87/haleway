@@ -54,18 +54,27 @@
     <nav class="navbar">
         <div class="container">
             <div class="navbar-brand">
-                <a href="/" class="logo">
+                <a href="{% if user.is_authenticated %}{% url 'core:dashboard' %}{% else %}{% url 'core:home' %}{% endif %}" class="logo">
                     <span class="logo-text">HaleWay</span>
                 </a>
             </div>
 
             <div class="navbar-menu">
                 {% if user.is_authenticated %}
-                    <a href="{% url 'families:family_list' %}" class="nav-link">Families</a>
-                    <a href="{% url 'trips:trip_list' %}" class="nav-link">Trips</a>
+                    <a href="{% url 'core:dashboard' %}" class="nav-link">Dashboard</a>
+                    <a href="{% url 'trips:trip_list' %}" class="nav-link">My Trips</a>
                     <div class="navbar-user">
-                        <a href="{% url 'accounts:profile' %}" class="user-name-link">{{ user.get_short_name }}</a>
-                        <a href="{% url 'accounts:logout' %}" class="btn btn-sm btn-outline">Logout</a>
+                        <div class="user-dropdown">
+                            <button class="user-dropdown-toggle" onclick="toggleUserMenu()">
+                                {{ user.get_short_name }} ▾
+                            </button>
+                            <div class="user-dropdown-menu" id="userMenu">
+                                <a href="{% url 'accounts:profile' %}" class="dropdown-item">Profile</a>
+                                <a href="{% url 'families:family_list' %}" class="dropdown-item">My Families</a>
+                                <div class="dropdown-divider"></div>
+                                <a href="{% url 'accounts:logout' %}" class="dropdown-item">Logout</a>
+                            </div>
+                        </div>
                     </div>
                 {% else %}
                     <a href="{% url 'accounts:login' %}" class="btn btn-sm btn-primary">Login</a>
@@ -101,5 +110,23 @@
 
     <!-- Page-specific JavaScript -->
     {% block extra_js %}{% endblock %}
+
+    <!-- User Dropdown Script -->
+    <script>
+    function toggleUserMenu() {
+        const menu = document.getElementById('userMenu');
+        menu.classList.toggle('show');
+    }
+
+    // Close dropdown when clicking outside
+    window.addEventListener('click', function(e) {
+        if (!e.target.matches('.user-dropdown-toggle')) {
+            const menu = document.getElementById('userMenu');
+            if (menu && menu.classList.contains('show')) {
+                menu.classList.remove('show');
+            }
+        }
+    });
+    </script>
 </body>
 </html>

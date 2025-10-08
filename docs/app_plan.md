@@ -228,7 +228,7 @@
 - ✅ Phase 1: Foundation - COMPLETED (2025-10-07)
 - ✅ Phase 2: Core Trip Management - COMPLETED (2025-10-07)
 - ✅ Phase 3: Notes System - COMPLETED (2025-10-07)
-- ⏳ Phase 4: Activities - Pending
+- ✅ Phase 4: Activities - COMPLETED (2025-10-07)
 - ⏳ Phase 5: Itinerary - Pending
 - ⏳ Phase 6: Packing & Budget - Pending
 - ⏳ Phase 7-10: Advanced Features - Pending
@@ -307,7 +307,7 @@
 
 ---
 
-### Phase 4: Activities (Week 3-4)
+### Phase 4: Activities (Week 3-4) ✅ COMPLETED
 1. Create Activity model
 2. Activity creation form (all fields except distance calculation)
 3. Manual distance entry field
@@ -315,6 +315,34 @@
 5. Activity list view with sorting options
 
 **Deliverable**: Add and prioritize activities
+
+**✅ What Was Built:**
+- Created activities app with Activity model (UUID primary key)
+- Implemented all activity fields: name, description, website, full address, lat/long
+- Added manual distance_from_resort field (decimal, miles)
+- Created estimated_cost and estimated_duration fields for planning
+- Built pre_trip_priority ordering system (0 = unranked, lower = higher priority)
+- Implemented post-trip evaluation: post_trip_rating (1-5 stars), is_favorite flag, post_trip_notes
+- Created ActivityForm for creation/editing with all planning fields
+- Created ActivityRatingForm for post-trip evaluation
+- Built TripActivityListView with multiple sorting options:
+  - Priority (drag-and-drop reordering)
+  - Name (alphabetical)
+  - Distance (from resort)
+  - Cost (estimated)
+  - Rating (post-trip)
+  - Favorites (flagged activities)
+- Implemented ActivityDetailView with full information display
+- Created ActivityCreateView, ActivityUpdateView, ActivityDeleteView with permissions
+- Added rate_activity view for post-trip ratings
+- Implemented AJAX update_priority endpoint for drag-and-drop
+- Created drag-and-drop priority ordering UI with vanilla JavaScript
+- Built responsive activity templates (list, detail, form, rating, delete)
+- Integrated activities section into trip detail page
+- Added database indexes: (trip, pre_trip_priority), (trip, post_trip_rating), (trip, is_favorite)
+- Implemented role-based permissions (all members create, admins/creators edit/delete)
+- Added structured logging for all activity operations
+- Created Django admin interface with organized fieldsets
 
 ---
 

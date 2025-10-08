@@ -1,0 +1,455 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Dashboard - HaleWay{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <div class="container">
+        <!-- Welcome Header -->
+        <div class="dashboard-header">
+            <h1>Welcome back, {{ user.first_name|default:user.username }}!</h1>
+            <div class="quick-stats">
+                <div class="stat-card">
+                    <div class="stat-number">{{ total_trips }}</div>
+                    <div class="stat-label">Total Trips</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ upcoming_trips|length }}</div>
+                    <div class="stat-label">Upcoming</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ families_count }}</div>
+                    <div class="stat-label">Familie{{ families_count|pluralize }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Trip Section -->
+        {% if active_trip %}
+        <div class="current-trip-section">
+            <div class="section-header">
+                <h2>🎉 Current Trip</h2>
+                <a href="{% url 'trips:trip_detail' active_trip.pk %}" class="btn btn-primary">View Details →</a>
+            </div>
+
+            <div class="trip-card featured">
+                <div class="trip-card-header">
+                    <div>
+                        <h3 class="trip-name">{{ active_trip.name }}</h3>
+                        <p class="trip-destination">📍 {{ active_trip.destination_name }}</p>
+                    </div>
+                </div>
+
+                <div class="trip-dates">
+                    <div class="date-item">
+                        <span class="date-label">Started</span>
+                        <span class="date-value">{{ active_trip.start_date|date:"M d, Y" }}</span>
+                    </div>
+                    <div class="date-separator">→</div>
+                    <div class="date-item">
+                        <span class="date-label">Ends</span>
+                        <span class="date-value">{{ active_trip.end_date|date:"M d, Y" }}</span>
+                    </div>
+                    <div class="trip-duration">
+                        {{ active_trip.duration_days }} day{{ active_trip.duration_days|pluralize }}
+                    </div>
+                </div>
+
+                {% if active_resort %}
+                <div class="resort-info-compact">
+                    <h4>{{ active_resort.name }}</h4>
+                    <div class="resort-details-compact">
+                        {% if active_resort.phone_number %}
+                            <a href="tel:{{ active_resort.phone_number }}" class="detail-link">
+                                📞 {{ active_resort.phone_number }}
+                            </a>
+                        {% endif %}
+                        {% if active_resort.check_in_time or active_resort.check_out_time %}
+                            <span class="detail-text">
+                                🕐 {% if active_resort.check_in_time %}In: {{ active_resort.check_in_time|time:"g:i A" }}{% endif %}
+                                {% if active_resort.check_in_time and active_resort.check_out_time %} • {% endif %}
+                                {% if active_resort.check_out_time %}Out: {{ active_resort.check_out_time|time:"g:i A" }}{% endif %}
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Upcoming Trips Section -->
+        <div class="trips-section">
+            <div class="section-header">
+                <h2>✈️ Upcoming Trips</h2>
+                <a href="{% url 'trips:trip_list' %}" class="btn btn-outline">View All Trips</a>
+            </div>
+
+            {% if upcoming_trips %}
+                <div class="trips-grid">
+                    {% for trip in upcoming_trips %}
+                        <a href="{% url 'trips:trip_detail' trip.pk %}" class="trip-card">
+                            <div class="trip-card-header">
+                                <h3 class="trip-name">{{ trip.name }}</h3>
+                                <span class="trip-family">{{ trip.family.name }}</span>
+                            </div>
+                            <p class="trip-destination">📍 {{ trip.destination_name }}</p>
+                            <div class="trip-info">
+                                <span class="trip-date">{{ trip.start_date|date:"M d, Y" }}</span>
+                                <span class="trip-duration-badge">{{ trip.duration_days }} day{{ trip.duration_days|pluralize }}</span>
+                            </div>
+                        </a>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon">✈️</div>
+                    <h3>No Upcoming Trips</h3>
+                    <p>Start planning your next adventure!</p>
+                    <a href="{% url 'trips:trip_list' %}" class="btn btn-primary">Create a Trip</a>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Recent Trips Section -->
+        {% if past_trips %}
+        <div class="trips-section">
+            <div class="section-header">
+                <h2>📅 Recent Trips</h2>
+            </div>
+
+            <div class="trips-list">
+                {% for trip in past_trips %}
+                    <a href="{% url 'trips:trip_detail' trip.pk %}" class="trip-list-item">
+                        <div class="trip-info-compact">
+                            <h4>{{ trip.name }}</h4>
+                            <p class="trip-destination-small">{{ trip.destination_name }}</p>
+                        </div>
+                        <div class="trip-meta">
+                            <span class="trip-date-small">{{ trip.end_date|date:"M d, Y" }}</span>
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.dashboard {
+    padding: var(--spacing-xl) 0;
+}
+
+.dashboard-header {
+    margin-bottom: var(--spacing-xxl);
+}
+
+.dashboard-header h1 {
+    font-size: 2rem;
+    margin-bottom: var(--spacing-lg);
+    color: var(--text-primary);
+}
+
+.quick-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: var(--spacing-md);
+    max-width: 600px;
+}
+
+.stat-card {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    color: white;
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius);
+    text-align: center;
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: var(--spacing-xs);
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    opacity: 0.9;
+}
+
+.current-trip-section {
+    margin-bottom: var(--spacing-xxl);
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-lg);
+}
+
+.section-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+.trip-card {
+    background: white;
+    border-radius: 12px;
+    padding: var(--spacing-lg);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: all var(--transition-fast);
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.trip-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.trip-card.featured {
+    background: linear-gradient(135deg, rgba(46, 134, 171, 0.05) 0%, rgba(162, 59, 114, 0.05) 100%);
+    border: 2px solid var(--primary-color);
+}
+
+.trip-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: var(--spacing-md);
+}
+
+.trip-name {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.trip-family {
+    padding: 0.25rem 0.75rem;
+    background: var(--gray-200);
+    border-radius: 1rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.trip-destination {
+    margin: 0 0 var(--spacing-md);
+    color: var(--text-secondary);
+}
+
+.trip-dates {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+    background: white;
+    border-radius: var(--border-radius);
+    margin-bottom: var(--spacing-md);
+    flex-wrap: wrap;
+}
+
+.date-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.date-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.date-value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.date-separator {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+}
+
+.trip-duration {
+    margin-left: auto;
+    padding: 0.5rem 1rem;
+    background: var(--primary-color);
+    color: white;
+    border-radius: var(--border-radius);
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.resort-info-compact {
+    padding: var(--spacing-md);
+    background: white;
+    border-radius: var(--border-radius);
+    border-left: 3px solid var(--secondary-color);
+}
+
+.resort-info-compact h4 {
+    margin: 0 0 var(--spacing-sm);
+    color: var(--text-primary);
+}
+
+.resort-details-compact {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    font-size: 0.875rem;
+}
+
+.detail-link {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.detail-link:hover {
+    text-decoration: underline;
+}
+
+.detail-text {
+    color: var(--text-secondary);
+}
+
+.trips-section {
+    margin-bottom: var(--spacing-xxl);
+}
+
+.trips-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--spacing-lg);
+}
+
+.trip-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: var(--spacing-sm);
+}
+
+.trip-date {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.trip-duration-badge {
+    padding: 0.25rem 0.75rem;
+    background: var(--gray-200);
+    border-radius: 1rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.trips-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.trip-list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-md);
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    text-decoration: none;
+    color: inherit;
+    transition: all var(--transition-fast);
+}
+
+.trip-list-item:hover {
+    transform: translateX(4px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.trip-info-compact h4 {
+    margin: 0 0 0.25rem;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.trip-destination-small {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.trip-date-small {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.empty-state {
+    text-align: center;
+    padding: var(--spacing-xxl);
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius);
+}
+
+.empty-icon {
+    font-size: 4rem;
+    margin-bottom: var(--spacing-md);
+}
+
+.empty-state h3 {
+    margin: 0 0 var(--spacing-sm);
+}
+
+.empty-state p {
+    margin: 0 0 var(--spacing-lg);
+    color: var(--text-secondary);
+}
+
+@media (max-width: 768px) {
+    .dashboard-header h1 {
+        font-size: 1.5rem;
+    }
+
+    .quick-stats {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .stat-number {
+        font-size: 2rem;
+    }
+
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-sm);
+    }
+
+    .section-header .btn {
+        width: 100%;
+    }
+
+    .trips-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .trip-dates {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .date-separator {
+        display: none;
+    }
+
+    .trip-duration {
+        margin-left: 0;
+    }
+}
+</style>
+{% endblock %}

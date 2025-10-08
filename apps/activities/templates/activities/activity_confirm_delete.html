@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Delete Activity - HaleWay{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>Delete Activity</h1>
+    </div>
+
+    <div class="delete-confirmation">
+        <div class="alert alert-warning">
+            <h2>⚠️ Are you sure?</h2>
+            <p>You are about to delete the activity:</p>
+            <p class="activity-name"><strong>{{ object.name }}</strong></p>
+            <p>This action cannot be undone.</p>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-actions">
+                <button type="submit" class="btn btn-danger">Yes, Delete Activity</button>
+                <a href="{% url 'activities:activity_detail' object.pk %}" class="btn btn-outline">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.delete-confirmation {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.alert-warning {
+    background-color: #fff3cd;
+    border: 1px solid #ffc107;
+    border-radius: var(--border-radius);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.alert-warning h2 {
+    margin-top: 0;
+    color: #856404;
+}
+
+.activity-name {
+    font-size: 1.25rem;
+    margin: var(--spacing-md) 0;
+}
+
+.form-actions {
+    display: flex;
+    gap: var(--spacing-md);
+}
+</style>
+{% endblock %}

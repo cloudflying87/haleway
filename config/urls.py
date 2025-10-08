@@ -14,6 +14,7 @@ urlpatterns = [
     path('families/', include('apps.families.urls')),  # Family management
     path('trips/', include('apps.trips.urls')),  # Trip management
     path('notes/', include('apps.notes.urls')),  # Note management
+    path('activities/', include('apps.activities.urls')),  # Activity management
 ]
 
 # Serve media files in development

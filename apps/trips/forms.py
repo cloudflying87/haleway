@@ -56,7 +56,8 @@ class ResortForm(forms.ModelForm):
     class Meta:
         model = Resort
         fields = [
-            'name', 'website_url',
+            'name', 'website_url', 'phone_number',
+            'check_in_time', 'check_out_time',
             'address_line1', 'address_line2',
             'city', 'state', 'zip_code', 'country',
             'latitude', 'longitude',
@@ -70,6 +71,18 @@ class ResortForm(forms.ModelForm):
             'website_url': forms.URLInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'https://www.resort-website.com',
+            }),
+            'phone_number': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': '(555) 123-4567',
+            }),
+            'check_in_time': forms.TimeInput(attrs={
+                'class': 'form-control',
+                'type': 'time',
+            }),
+            'check_out_time': forms.TimeInput(attrs={
+                'class': 'form-control',
+                'type': 'time',
             }),
             'address_line1': forms.TextInput(attrs={
                 'class': 'form-control',
