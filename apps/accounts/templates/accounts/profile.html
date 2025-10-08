@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}Profile{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <div class="card-header">
+            <h2>My Profile</h2>
+        </div>
+        <div class="card-body">
+            <p><strong>Name:</strong> {{ user.get_full_name }}</p>
+            <p><strong>Email:</strong> {{ user.email }}</p>
+            <p><strong>Joined:</strong> {{ user.date_joined|date:"F d, Y" }}</p>
+
+            <div style="margin-top: 2rem;">
+                <a href="{% url 'password_change' %}" class="btn btn-outline">Change Password</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

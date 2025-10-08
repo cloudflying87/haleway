@@ -1,0 +1,26 @@
+-r base.txt
+# Development & debugging
+django-debug-toolbar>=4.2.0
+django-extensions>=3.2.0
+django-browser-reload>=1.12.0
+
+# Code quality (modern tooling)
+ruff>=0.6.0
+mypy>=1.11.0
+django-stubs>=5.0.0
+bandit>=1.7.9
+django-migration-linter>=5.1.0
+
+# Template formatting (Django-aware HTML formatter)
+djhtml>=3.0.6
+
+# Testing
+pytest>=7.4.0
+pytest-django>=4.7.0
+pytest-cov>=4.1.0
+pytest-xdist>=3.6.0
+factory-boy>=3.3.0
+faker>=30.0.0
+
+# Pre-commit hooks
+pre-commit>=3.8.0

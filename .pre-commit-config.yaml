@@ -1,0 +1,92 @@
+# Modern pre-commit configuration using ruff (replaces black, isort, flake8)
+# Install: pip install pre-commit && pre-commit install
+# Run manually: pre-commit run --all-files
+
+repos:
+  # Ruff - extremely fast Python linter and formatter (replaces black, isort, flake8)
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.9
+    hooks:
+      # Run the linter
+      - id: ruff
+        args: [--fix]
+        types: [python]  # Explicitly only Python files
+        exclude: ^(templates/|.*\.html$|.*\.jinja$|.*\.jinja2$)
+      # Run the formatter
+      - id: ruff-format
+        types: [python]  # Explicitly only Python files
+        exclude: ^(templates/|.*\.html$|.*\.jinja$|.*\.jinja2$)
+
+  # Type checking with mypy
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.11.2
+    hooks:
+      - id: mypy
+        additional_dependencies:
+          - django-stubs
+          - types-requests
+        args: [--ignore-missing-imports, --explicit-package-bases]
+        exclude: ^(migrations/|tests/)
+
+  # Django-specific checks
+  - repo: https://github.com/adamchainz/django-upgrade
+    rev: 1.21.0
+    hooks:
+      - id: django-upgrade
+        args: [--target-version, "5.0"]
+
+  # Django migration linting (catch unsafe migrations)
+  - repo: https://github.com/3YOURMIND/django-migration-linter
+    rev: v5.1.0
+    hooks:
+      - id: django-migration-linter
+        args: [--ignore-name-contains, migration, --database, default]
+
+  # Security checks
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.7.9
+    hooks:
+      - id: bandit
+        args: [-c, pyproject.toml]
+        additional_dependencies: ["bandit[toml]"]
+        exclude: ^tests/
+
+  # General pre-commit hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+        args: [--maxkb=1000]
+      - id: check-json
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: debug-statements
+      - id: detect-private-key
+
+  # Django template formatting (ONLY tool that should touch .html files!)
+  - repo: https://github.com/rtts/djhtml
+    rev: 3.0.6
+    hooks:
+      - id: djhtml
+        args: [--tabwidth, "2"]
+        files: \.(html|jinja|jinja2)$
+        types: [html]
+
+  # YAML formatting
+  - repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
+    rev: v2.14.0
+    hooks:
+      - id: pretty-format-yaml
+        args: [--autofix, --indent, "2"]
+
+  # Dockerfile linting
+  - repo: https://github.com/hadolint/hadolint
+    rev: v2.12.0
+    hooks:
+      - id: hadolint-docker
+        args: [--ignore, DL3008, --ignore, DL3009]
+
+# Configure ruff, mypy, and other tools in pyproject.toml

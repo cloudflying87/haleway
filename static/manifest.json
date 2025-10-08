@@ -1,0 +1,16 @@
+{
+  "name": "Haleway",
+  "short_name": "Haleway",
+  "description": "HaleWay helps families plan vacations and preserve memories in one place. Organize activities, create itineraries, track budgets, and rate experiences. Share trips with your ohana and build a searchable archive of your family's favorite adventures.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#2e86ab",
+  "theme_color": "#2e86ab",
+  "icons": [
+    {
+      "src": "/static/img/default-share.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

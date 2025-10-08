@@ -1,0 +1,19 @@
+Django>=5.0,<5.1
+psycopg2-binary>=2.9.5
+python-decouple>=3.8
+Pillow>=10.0.0
+whitenoise>=6.6.0
+gunicorn[gevent]>=21.2.0
+
+# Modern tooling
+structlog>=24.1.0
+django-health-check>=3.18.0
+httpx>=0.27.0
+
+# Authentication & API
+djangorestframework>=3.14.0
+djangorestframework-simplejwt>=5.3.0
+django-cors-headers>=4.3.0
+drf-spectacular>=0.27.0
+django-otp>=1.3.0
+qrcode>=7.4.2
