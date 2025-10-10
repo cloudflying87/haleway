@@ -1,0 +1,694 @@
+{% extends "base.html" %}
+
+{% block title %}{{ grocery_list.name }} - HaleWay{% endblock %}
+
+{% block extra_css %}
+<!-- Select2 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+  <style>
+/* Custom Select2 Styling for Modal */
+    .select2-container--default .select2-selection--single {
+      height: 54px !important;
+      padding: 1rem 1.25rem !important;
+      background-color: var(--bg-secondary);
+      border: 2px solid transparent !important;
+      border-radius: var(--border-radius-lg) !important;
+      transition: all var(--transition-base);
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+
+    .select2-container--default .select2-selection--single:hover {
+      background-color: var(--white);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    }
+
+    .select2-container--default.select2-container--focus .select2-selection--single,
+    .select2-container--default.select2-container--open .select2-selection--single {
+      background-color: var(--white) !important;
+      border-color: var(--primary-color) !important;
+      box-shadow: 0 0 0 4px rgba(46, 134, 171, 0.15), 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+      line-height: 32px !important;
+      padding-left: 0 !important;
+      padding-right: 0 !important;
+      color: var(--text-primary);
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+      height: 54px !important;
+      right: 12px !important;
+    }
+
+    .select2-dropdown {
+      border: 2px solid var(--primary-color) !important;
+      border-radius: var(--border-radius-lg) !important;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15) !important;
+      margin-top: 4px;
+    }
+
+    .select2-container--default .select2-results__option {
+      padding: 12px 16px;
+    }
+
+    .select2-container--default .select2-results__option--highlighted[aria-selected] {
+      background-color: var(--primary-color) !important;
+    }
+
+    .select2-container--default .select2-search--dropdown .select2-search__field {
+      border: 2px solid var(--gray-300);
+      border-radius: var(--border-radius);
+      padding: 12px;
+      font-size: 1rem;
+    }
+
+    .select2-container--default .select2-search--dropdown .select2-search__field:focus {
+      border-color: var(--primary-color);
+      outline: none;
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+  <div class="container">
+    <div class="page-header">
+      <div class="header-content">
+        <div>
+          <nav class="breadcrumb">
+            <a href="{% url 'trips:trip_detail' grocery_list.trip.pk %}">{{ grocery_list.trip.name }}</a>
+            <span>/</span>
+            <a href="{% url 'grocery:trip_grocery_lists' grocery_list.trip.pk %}">Grocery Lists</a>
+            <span>/</span>
+            <span>{{ grocery_list.name }}</span>
+          </nav>
+          <h1>{{ grocery_list.name }}</h1>
+          {% if grocery_list.assigned_to %}
+            <p class="subtitle">Assigned to: {{ grocery_list.assigned_to.get_full_name|default:grocery_list.assigned_to.username }}</p>
+          {% endif %}
+          {% if grocery_list.shopping_date %}
+            <p class="subtitle">Shopping Date: {{ grocery_list.shopping_date }}</p>
+          {% endif %}
+          {% if grocery_list.store_name %}
+            <p class="subtitle">Store: {{ grocery_list.store_name }}</p>
+          {% endif %}
+        </div>
+        {% if can_edit %}
+          <div class="header-actions">
+            <a href="{% url 'grocery:bulk_add_items' grocery_list.pk %}" class="btn btn-primary">
+              ⚡ Quick Add
+            </a>
+            <button type="button" onclick="openAddItemModal()" class="btn btn-outline">
+              + Add Item
+            </button>
+            <a href="{% url 'grocery:list_print' grocery_list.pk %}" class="btn btn-outline" target="_blank">
+              🖨️ Print
+            </a>
+            <a href="{% url 'grocery:save_as_template' grocery_list.pk %}" class="btn btn-outline">
+              💾 Save as Template
+            </a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="progress-section">
+      <div class="progress-bar-container">
+        <div class="progress-bar" id="progress-bar" style="width: {{ purchased_percentage }}%"></div>
+      </div>
+      <p class="progress-text" id="progress-text">
+        <span id="purchased-count">{{ purchased_count }}</span> / <span id="total-count">{{ total_count }}</span> items purchased
+        (<span id="percentage">{{ purchased_percentage }}</span>%)
+      </p>
+    </div>
+
+    <!-- Grocery Items by Category -->
+    {% if items_by_category %}
+      {% for category, items in items_by_category.items %}
+        <div class="category-section">
+          <div class="category-header">
+            <h2 class="category-title">{{ category }}</h2>
+            {% if can_edit %}
+              <div class="category-actions">
+                <button type="button"
+                        onclick="openAddItemModal('{{ category|escapejs }}')"
+                        class="btn-category-action"
+                        title="Add item to {{ category }}">
+                  + Add Item
+                </button>
+              </div>
+            {% endif %}
+          </div>
+          <div class="items-list">
+            {% for item in items %}
+              <div class="grocery-item {% if item.is_purchased %}purchased{% endif %}" id="item-{{ item.id }}">
+                <label class="checkbox-container">
+                  <input type="checkbox"
+                         class="item-checkbox"
+                         data-item-id="{{ item.id }}"
+                         {% if item.is_purchased %}checked{% endif %}
+                         {% if not can_edit %}disabled{% endif %}>
+                  <span class="checkmark"></span>
+                  <span class="item-details">
+                    <span class="item-name">{{ item.item_name }}</span>
+                    {% if item.quantity %}
+                      <span class="item-quantity">{{ item.quantity }}</span>
+                    {% endif %}
+                    {% if item.notes %}
+                      <span class="item-notes">{{ item.notes }}</span>
+                    {% endif %}
+                  </span>
+                </label>
+                {% if can_edit %}
+                  <div class="item-actions">
+                    <a href="{% url 'grocery:edit_item' item.pk %}" class="btn-icon" title="Edit">✏️</a>
+                    <a href="{% url 'grocery:delete_item' item.pk %}" class="btn-icon" title="Delete">🗑️</a>
+                  </div>
+                {% endif %}
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty-state">
+        <p>No items in this grocery list yet.</p>
+        {% if can_edit %}
+          <div style="display: flex; gap: var(--spacing-md); justify-content: center; flex-wrap: wrap;">
+            <a href="{% url 'grocery:bulk_add_items' grocery_list.pk %}" class="btn btn-primary">
+              ⚡ Quick Add Items
+            </a>
+            <button type="button" onclick="openAddItemModal()" class="btn btn-outline">
+              + Add Single Item
+            </button>
+          </div>
+        {% endif %}
+      </div>
+    {% endif %}
+
+    <!-- Edit/Delete Buttons -->
+    {% if can_edit %}
+      <div class="danger-zone">
+        <a href="{% url 'grocery:list_edit' grocery_list.pk %}" class="btn btn-secondary">
+          Edit List Details
+        </a>
+        <a href="{% url 'grocery:list_delete' grocery_list.pk %}" class="btn btn-danger">
+          Delete List
+        </a>
+      </div>
+    {% endif %}
+
+    <!-- Add Item Modal -->
+    <div id="addItemModal" class="modal">
+      <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header">
+          <h3>Add Grocery Item</h3>
+          <button type="button" class="modal-close" onclick="closeAddItemModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <form id="addItemForm" method="post">
+            {% csrf_token %}
+            <input type="hidden" id="modal_category_hidden" name="category">
+            <div class="form-group" id="category_form_group">
+              <label for="modal_category">Category <span style="color: #e74c3c;">*</span></label>
+              <select id="modal_category" class="form-control category-select-modal" required>
+                <option value=""></option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="modal_item_name">Item Name <span style="color: #e74c3c;">*</span></label>
+              <input type="text" id="modal_item_name" name="item_name" class="form-control" placeholder="e.g., Bananas, Milk, Chips" maxlength="200" required>
+            </div>
+            <div class="form-group">
+              <label for="modal_quantity">Quantity <span style="color: var(--text-muted); font-weight: 400;">(optional)</span></label>
+              <input type="text" id="modal_quantity" name="quantity" class="form-control" placeholder="e.g., 2 lbs, 1 gallon, 6 pack">
+            </div>
+            <div class="form-group">
+              <label for="modal_notes">Notes <span style="color: var(--text-muted); font-weight: 400;">(optional)</span></label>
+              <textarea id="modal_notes" name="notes" class="form-control" rows="2" placeholder="Optional notes about this item"></textarea>
+            </div>
+            <div style="display: flex; gap: var(--spacing-md); margin-top: var(--spacing-lg);">
+              <button type="button" onclick="closeAddItemModal()" class="btn btn-outline" style="flex: 1;">Cancel</button>
+              <button type="submit" class="btn btn-primary" style="flex: 1;">Add Item</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+/* Reuse packing list styles but for grocery */
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: var(--spacing-lg);
+    }
+
+    .header-actions {
+      display: flex;
+      gap: var(--spacing-sm);
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    @media (max-width: 768px) {
+      .header-content {
+        flex-direction: column;
+      }
+
+      .header-actions {
+        width: 100%;
+        flex-direction: column;
+      }
+
+      .header-actions .btn {
+        width: 100%;
+      }
+    }
+
+    .progress-section {
+      background: white;
+      padding: 1rem;
+      border-radius: 8px;
+      margin: 1rem 0;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .progress-bar-container {
+      width: 100%;
+      height: 10px;
+      background: #e0e0e0;
+      border-radius: 5px;
+      overflow: hidden;
+      margin-bottom: 0.5rem;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #06A77D, #2E86AB);
+      transition: width 0.3s ease;
+    }
+
+    .progress-text {
+      text-align: center;
+      font-size: 0.9rem;
+      color: #666;
+      margin: 0;
+    }
+
+    .category-section {
+      background: white;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .category-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 2px solid #e0e0e0;
+      gap: var(--spacing-md);
+    }
+
+    .category-title {
+      font-size: 1.1rem;
+      color: #2E86AB;
+      margin: 0;
+    }
+
+    .category-actions {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .btn-category-action {
+      background: linear-gradient(135deg, var(--primary-color) 0%, #236b8a 100%);
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: var(--border-radius-lg);
+      font-size: 0.875rem;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all var(--transition-base);
+      box-shadow: 0 2px 8px rgba(46, 134, 171, 0.2);
+      white-space: nowrap;
+    }
+
+    .btn-category-action:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(46, 134, 171, 0.3);
+    }
+
+    .btn-category-action:active {
+      transform: translateY(0);
+    }
+
+    @media (max-width: 768px) {
+      .category-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .category-actions {
+        width: 100%;
+      }
+
+      .btn-category-action {
+        width: 100%;
+        text-align: center;
+      }
+    }
+
+    .items-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .grocery-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.5rem;
+      border-radius: 6px;
+      transition: background 0.2s ease;
+    }
+
+    .grocery-item:hover {
+      background: #f8f9fa;
+    }
+
+    .grocery-item.purchased {
+      opacity: 0.6;
+    }
+
+    .grocery-item.purchased .item-name {
+      text-decoration: line-through;
+      color: #888;
+    }
+
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      flex: 1;
+    }
+
+    .checkbox-container input {
+      position: absolute;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .checkmark {
+      width: 24px;
+      height: 24px;
+      border: 2px solid #ccc;
+      border-radius: 4px;
+      margin-right: 1rem;
+      display: inline-block;
+      position: relative;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .checkbox-container input:checked ~ .checkmark {
+      background: #06A77D;
+      border-color: #06A77D;
+    }
+
+    .checkbox-container input:checked ~ .checkmark:after {
+      content: '✓';
+      position: absolute;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .item-details {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .item-name {
+      font-weight: 500;
+      color: #2c3e50;
+    }
+
+    .item-quantity {
+      color: #06A77D;
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+
+    .item-notes {
+      color: #888;
+      font-size: 0.875rem;
+    }
+
+    .item-actions {
+      display: flex;
+      gap: 0.5rem;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .grocery-item:hover .item-actions {
+      opacity: 1;
+    }
+
+    .btn-icon {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1.25rem;
+      padding: 0.25rem;
+      text-decoration: none;
+    }
+
+    .btn-icon:hover {
+      transform: scale(1.1);
+    }
+
+    .danger-zone {
+      margin-top: 2rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid #e0e0e0;
+      text-align: center;
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+    }
+  </style>
+
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+  <script>
+// Category suggestions for modal
+    const categoryList = [
+      {% for category in items_by_category.keys %}
+        "{{ category|escapejs }}",
+      {% endfor %}
+      "Groceries",
+      "Produce",
+      "Dairy",
+      "Meat",
+      "Snacks",
+      "Beverages",
+      "Breakfast",
+      "Lunch/Dinner",
+      "Household",
+      "Health",
+      "Frozen"
+    ];
+
+// Remove duplicates
+    const uniqueCategories = [...new Set(categoryList)];
+
+// Initialize Select2 on page load
+    $(document).ready(function() {
+    // Populate category dropdown
+      const $categorySelect = $('.category-select-modal');
+      uniqueCategories.forEach(cat => {
+        if (cat) {
+          $categorySelect.append(new Option(cat, cat));
+        }
+      });
+
+    // Initialize Select2
+      $categorySelect.select2({
+        tags: true,
+        placeholder: 'Select or type a category...',
+        allowClear: false,
+        width: '100%',
+        dropdownParent: $('#addItemModal'),
+        createTag: function (params) {
+          var term = $.trim(params.term);
+          if (term === '') {
+            return null;
+          }
+          return {
+            id: term,
+            text: term + ' (create new)',
+            newTag: true
+          }
+        },
+        templateResult: function(data) {
+          if (data.newTag) {
+            return $('<span style="color: var(--accent-color); font-weight: 600;">+ ' + data.text + '</span>');
+          }
+          return data.text;
+        }
+      });
+    });
+
+// Open modal
+    function openAddItemModal(category = '') {
+      const modal = document.getElementById('addItemModal');
+      modal.classList.add('show');
+      document.body.style.overflow = 'hidden';
+
+    // Reset form
+      document.getElementById('addItemForm').reset();
+
+      const categoryFormGroup = document.getElementById('category_form_group');
+      const categoryHidden = document.getElementById('modal_category_hidden');
+      const categorySelect = document.getElementById('modal_category');
+
+    // Set category if provided
+      if (category) {
+        // Hide the category dropdown and show category in hidden input
+        categoryFormGroup.style.display = 'none';
+        categoryHidden.value = category;
+        categorySelect.removeAttribute('required');
+
+        // Focus on item name field
+        setTimeout(() => {
+          document.getElementById('modal_item_name').focus();
+        }, 100);
+      } else {
+        // Show the category dropdown
+        categoryFormGroup.style.display = 'block';
+        categoryHidden.value = '';
+        categorySelect.setAttribute('required', 'required');
+        $('.category-select-modal').val(null).trigger('change');
+
+        // Focus on category field
+        setTimeout(() => {
+          $('.category-select-modal').select2('open');
+        }, 300);
+      }
+    }
+
+// Close modal
+    function closeAddItemModal() {
+      const modal = document.getElementById('addItemModal');
+      modal.classList.remove('show');
+      document.body.style.overflow = '';
+    }
+
+// Handle form submission
+    document.getElementById('addItemForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+    // If category dropdown is visible, sync its value to the hidden input
+      const categoryFormGroup = document.getElementById('category_form_group');
+      if (categoryFormGroup.style.display !== 'none') {
+        const categoryValue = $('.category-select-modal').val();
+        document.getElementById('modal_category_hidden').value = categoryValue;
+      }
+
+      const formData = new FormData(this);
+
+      fetch('{% url "grocery:add_item" grocery_list.pk %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'X-CSRFToken': '{{ csrf_token }}'
+        }
+      })
+        .then(response => {
+          if (response.ok) {
+            // Reload page to show new item
+            window.location.reload();
+          } else {
+            alert('Error adding item. Please try again.');
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Error adding item. Please try again.');
+        });
+    });
+
+// Close modal on escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        const modal = document.getElementById('addItemModal');
+        if (modal && modal.classList.contains('show')) {
+          closeAddItemModal();
+        }
+      }
+    });
+
+// Close modal when clicking outside
+    document.getElementById('addItemModal')?.addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeAddItemModal();
+      }
+    });
+
+// Toggle purchased status via AJAX
+    document.querySelectorAll('.item-checkbox').forEach(checkbox => {
+      checkbox.addEventListener('change', function() {
+        const itemId = this.dataset.itemId;
+        const isChecked = this.checked;
+
+        fetch(`/grocery/item/${itemId}/toggle/`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+          }
+        })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+                // Update progress bar
+              document.getElementById('purchased-count').textContent = data.purchased_count;
+              document.getElementById('total-count').textContent = data.total_count;
+              document.getElementById('percentage').textContent = data.percentage;
+              document.getElementById('progress-bar').style.width = data.percentage + '%';
+
+                // Toggle purchased class
+              const itemElement = document.getElementById(`item-${itemId}`);
+              if (data.is_purchased) {
+                itemElement.classList.add('purchased');
+              } else {
+                itemElement.classList.remove('purchased');
+              }
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+            // Revert checkbox if error
+            this.checked = !isChecked;
+          });
+      });
+    });
+  </script>
+{% endblock %}

@@ -5,7 +5,7 @@ Forms for packing list management.
 from django import forms
 from django.utils.translation import gettext_lazy as _
 
-from .models import PackingListTemplate, TripPackingItem, TripPackingList
+from .models import PackingListTemplate, TripPackingItem
 
 
 class PackingListTemplateForm(forms.ModelForm):
@@ -28,20 +28,6 @@ class PackingListTemplateForm(forms.ModelForm):
         }
 
 
-class TripPackingListForm(forms.ModelForm):
-    """Form for creating/editing trip packing lists."""
-
-    class Meta:
-        model = TripPackingList
-        fields = ["name", "assigned_to"]
-        widgets = {
-            "name": forms.TextInput(
-                attrs={"class": "form-input", "placeholder": "e.g., David's List, Beach Gear"}
-            ),
-            "assigned_to": forms.Select(attrs={"class": "form-select"}),
-        }
-
-
 class PackingItemForm(forms.ModelForm):
     """Form for adding/editing packing items."""
 
@@ -51,34 +37,88 @@ class PackingItemForm(forms.ModelForm):
         widgets = {
             "category": forms.TextInput(
                 attrs={
-                    "class": "form-input",
-                    "placeholder": "e.g., Clothing, Electronics, Toiletries",
-                    "list": "category-suggestions",
+                    "class": "form-control",
+                    "placeholder": "Select or type category",
+                    "list": "category-datalist",
                 }
             ),
             "item_name": forms.TextInput(
-                attrs={"class": "form-input", "placeholder": "e.g., Sunscreen, Hiking boots"}
+                attrs={"class": "form-control", "placeholder": "e.g., Sunscreen, Hiking boots"}
             ),
-            "quantity": forms.NumberInput(attrs={"class": "form-input", "min": 1, "value": 1}),
+            "quantity": forms.NumberInput(attrs={"class": "form-control", "min": 1, "value": 1}),
             "notes": forms.Textarea(
                 attrs={
-                    "class": "form-textarea",
+                    "class": "form-control",
                     "rows": 2,
                     "placeholder": "Optional notes about this item",
                 }
             ),
         }
 
+    def __init__(self, *args, **kwargs):
+        """Initialize form with category suggestions from packing list."""
+        packing_list = kwargs.pop("packing_list", None)
+        super().__init__(*args, **kwargs)
+
+        # Store category suggestions in form for template rendering
+        if packing_list:
+            # Get distinct categories from this packing list
+            existing_categories = list(
+                TripPackingItem.objects.filter(packing_list=packing_list)
+                .values_list("category", flat=True)
+                .distinct()
+                .order_by("category")
+            )
+
+            # Add common category suggestions
+            common_categories = [
+                "Clothing",
+                "Electronics",
+                "Toiletries",
+                "Documents",
+                "Medications",
+                "Beach Gear",
+                "Outdoor Gear",
+                "Sports Equipment",
+                "Entertainment",
+                "Food & Snacks",
+            ]
+
+            # Combine existing + common (deduplicated)
+            all_categories = existing_categories.copy()
+            for cat in common_categories:
+                if cat not in all_categories:
+                    all_categories.append(cat)
+
+            # Store for template access
+            self.category_suggestions = all_categories
+        else:
+            self.category_suggestions = []
+
 
 class OutfitCalculatorForm(forms.Form):
     """Form for calculating outfit items based on number of outfits."""
+
+    category = forms.CharField(
+        label=_("Category"),
+        max_length=100,
+        initial="Clothing",
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-control",
+                "placeholder": "e.g., Clothing, Norah's Clothes, David's Clothes",
+                "list": "category-suggestions",
+            }
+        ),
+        help_text=_("Choose which category these outfit items should be added to"),
+    )
 
     num_outfits = forms.IntegerField(
         label=_("Number of outfits"),
         min_value=1,
         max_value=30,
         initial=5,
-        widget=forms.NumberInput(attrs={"class": "form-input", "placeholder": "e.g., 5"}),
+        widget=forms.NumberInput(attrs={"class": "form-control", "placeholder": "e.g., 5"}),
         help_text=_("We'll calculate shirts, pants, underwear, and socks based on this number."),
     )
 

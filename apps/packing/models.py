@@ -51,22 +51,18 @@ class PackingListTemplate(models.Model):
         """Return the URL for this template's detail page."""
         return reverse("packing:template_detail", kwargs={"pk": self.pk})
 
-    def duplicate_for_trip(self, trip, assigned_to=None, list_name=None):
+    def duplicate_for_trip(self, trip):
         """
         Create a trip-specific packing list from this template.
 
         Args:
             trip: The Trip instance to create the list for
-            assigned_to: Optional User to assign the list to
-            list_name: Optional custom name for the list
 
         Returns:
             TripPackingList instance
         """
         # Create the trip packing list
-        packing_list = TripPackingList.objects.create(
-            trip=trip, name=list_name or self.name, based_on_template=self, assigned_to=assigned_to
-        )
+        packing_list = TripPackingList.objects.create(trip=trip, based_on_template=self)
 
         # Copy all template items
         for template_item in self.items.all():
@@ -128,18 +124,13 @@ class PackingListTemplateItem(models.Model):
 
 class TripPackingList(models.Model):
     """
-    Packing list instance for a specific trip.
-    Can be assigned to a specific person or be a general list.
+    Packing list for a specific trip.
+    One packing list per trip with items organized by categories.
     """
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    trip = models.ForeignKey(
-        "trips.Trip", on_delete=models.CASCADE, related_name="packing_lists", verbose_name=_("trip")
-    )
-    name = models.CharField(
-        _("list name"),
-        max_length=200,
-        help_text=_("e.g., 'David's List', 'Kids' List', 'Beach Gear'"),
+    trip = models.OneToOneField(
+        "trips.Trip", on_delete=models.CASCADE, related_name="packing_list", verbose_name=_("trip")
     )
     based_on_template = models.ForeignKey(
         PackingListTemplate,
@@ -150,15 +141,6 @@ class TripPackingList(models.Model):
         verbose_name=_("based on template"),
         help_text=_("Template this list was created from (if any)"),
     )
-    assigned_to = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="assigned_packing_lists",
-        verbose_name=_("assigned to"),
-        help_text=_("Person responsible for this list"),
-    )
     created_at = models.DateTimeField(_("created at"), auto_now_add=True)
     updated_at = models.DateTimeField(_("updated at"), auto_now=True)
 
@@ -166,16 +148,10 @@ class TripPackingList(models.Model):
         verbose_name = _("trip packing list")
         verbose_name_plural = _("trip packing lists")
         db_table = "trip_packing_lists"
-        ordering = ["name"]
-        indexes = [
-            models.Index(fields=["trip"]),
-            models.Index(fields=["assigned_to"]),
-        ]
+        ordering = ["created_at"]
 
     def __str__(self):
-        if self.assigned_to:
-            return f"{self.name} - {self.trip.name} ({self.assigned_to.get_full_name() or self.assigned_to.username})"
-        return f"{self.name} - {self.trip.name}"
+        return f"Packing List - {self.trip.name}"
 
     def get_absolute_url(self):
         """Return the URL for this packing list's detail page."""
@@ -197,13 +173,14 @@ class TripPackingList(models.Model):
         """Return total count of items."""
         return self.items.count()
 
-    def save_as_template(self, template_name, description=""):
+    def save_as_template(self, template_name, description="", created_by=None):
         """
         Save this packing list as a new reusable template.
 
         Args:
             template_name: Name for the new template
             description: Optional description
+            created_by: User creating the template
 
         Returns:
             PackingListTemplate instance
@@ -213,7 +190,7 @@ class TripPackingList(models.Model):
             name=template_name,
             description=description,
             is_system_template=False,
-            created_by=self.assigned_to or self.trip.created_by,
+            created_by=created_by,
         )
 
         # Copy all items

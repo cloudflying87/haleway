@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+
+{% block title %}Resorts - HaleWay{% endblock %}
+
+{% block content %}
+  <div class="container">
+    <div class="page-header">
+      <h1>All Resorts</h1>
+    </div>
+
+    <div class="trip-navigation">
+      <a href="{% url 'trips:trip_list' %}" class="nav-link">All Trips</a>
+      <a href="{% url 'trips:dream_trip_list' %}" class="nav-link">Dream Trips</a>
+      <a href="{% url 'trips:resort_list' %}" class="nav-link active">Resorts</a>
+    </div>
+
+    <p class="page-description">
+      Browse all the resorts and accommodations from your trips.
+    </p>
+
+    {% if resorts %}
+      <div class="resorts-grid">
+        {% for resort in resorts %}
+          <div class="card resort-card">
+            <div class="card-header">
+              <h3>{{ resort.name }}</h3>
+              <span class="badge badge-{{ resort.trip.status }}">{{ resort.trip.get_status_display }}</span>
+            </div>
+            <div class="card-body">
+              <p class="trip-name">
+                <strong>Trip:</strong> {{ resort.trip.name }}
+              </p>
+              {% if resort.city or resort.state %}
+                <p class="location">
+                  {{ resort.city }}{% if resort.city and resort.state %}, {% endif %}{{ resort.state }}
+                  {% if resort.country and resort.country != "USA" %}
+                    <br>{{ resort.country }}
+                  {% endif %}
+                </p>
+              {% endif %}
+              <p class="dates text-muted">
+                {{ resort.trip.start_date|date:"M d, Y" }} - {{ resort.trip.end_date|date:"M d, Y" }}
+              </p>
+              {% if resort.website_url %}
+                <p class="website">
+                  <a href="{{ resort.website_url }}" target="_blank" rel="noopener noreferrer">
+                    Visit Website
+                  </a>
+                </p>
+              {% endif %}
+              <p class="family-name text-muted">
+                {{ resort.trip.family.name }}
+              </p>
+            </div>
+            <div class="card-footer">
+              <a href="{% url 'trips:trip_detail' resort.trip.pk %}" class="btn btn-primary">
+                View Trip
+              </a>
+              <a href="{% url 'trips:resort_edit' resort.trip.pk %}" class="btn btn-outline">
+                Edit Resort
+              </a>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <h2>No Resorts Yet</h2>
+        <p>You haven't added any resorts to your trips yet.</p>
+        <a href="{% url 'trips:trip_list' %}" class="btn btn-primary">
+          View Trips
+        </a>
+      </div>
+    {% endif %}
+  </div>
+
+  <style>
+    .page-header {
+      margin-bottom: var(--spacing-md);
+    }
+
+    .trip-navigation {
+      display: flex;
+      gap: var(--spacing-sm);
+      margin-bottom: var(--spacing-lg);
+      border-bottom: 2px solid var(--gray-200);
+      padding-bottom: 0;
+    }
+
+    .trip-navigation .nav-link {
+      padding: var(--spacing-sm) var(--spacing-md);
+      text-decoration: none;
+      color: var(--text-secondary);
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      transition: all var(--transition-fast);
+    }
+
+    .trip-navigation .nav-link:hover {
+      color: var(--primary-color);
+    }
+
+    .trip-navigation .nav-link.active {
+      color: var(--primary-color);
+      border-bottom-color: var(--primary-color);
+      font-weight: 600;
+    }
+
+    .page-description {
+      color: var(--text-secondary);
+      margin-bottom: var(--spacing-xl);
+    }
+
+    .resorts-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: var(--spacing-lg);
+      margin-bottom: var(--spacing-xl);
+    }
+
+    @media (min-width: 768px) {
+      .resorts-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (min-width: 992px) {
+      .resorts-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    .resort-card {
+      transition: transform var(--transition-fast);
+    }
+
+    .resort-card:hover {
+      transform: translateY(-4px);
+    }
+
+    .trip-name {
+      font-size: 0.95rem;
+      margin: var(--spacing-sm) 0;
+    }
+
+    .location {
+      font-size: 1.125rem;
+      color: var(--text-secondary);
+      margin: var(--spacing-sm) 0;
+    }
+
+    .dates {
+      margin: var(--spacing-sm) 0;
+    }
+
+    .website {
+      margin: var(--spacing-sm) 0;
+    }
+
+    .website a {
+      color: var(--primary-color);
+      text-decoration: none;
+    }
+
+    .website a:hover {
+      text-decoration: underline;
+    }
+
+    .family-name {
+      font-size: 0.875rem;
+    }
+
+    .card-footer {
+      display: flex;
+      gap: var(--spacing-sm);
+      flex-wrap: wrap;
+    }
+
+    .badge-dream {
+      background-color: var(--accent-color);
+      color: white;
+    }
+
+    .badge-planning {
+      background-color: var(--warning-color);
+      color: #000;
+    }
+
+    .badge-active {
+      background-color: var(--success-color);
+      color: white;
+    }
+
+    .badge-completed {
+      background-color: var(--gray-600);
+      color: white;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: var(--spacing-xxl);
+    }
+  </style>
+{% endblock %}

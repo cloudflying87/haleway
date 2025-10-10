@@ -20,6 +20,7 @@ urlpatterns = [
     path("packing/", include("apps.packing.urls")),  # Packing list management
     path("budget/", include("apps.budget.urls")),  # Budget tracking
     path("memories/", include("apps.memories.urls")),  # Photos and journal
+    path("grocery/", include("apps.grocery.urls")),  # Grocery list management
 ]
 
 # Serve media files in development

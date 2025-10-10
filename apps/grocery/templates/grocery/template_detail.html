@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}{{ template.name }} - HaleWay{% endblock %}
+
+{% block content %}
+  <div class="container">
+    <h1>{{ template.name }}</h1>
+    {% if template.description %}<p>{{ template.description }}</p>{% endif %}
+
+    <h2>Items ({{ items_by_category|length }} categories)</h2>
+    {% for category, items in items_by_category.items %}
+      <div class="category-section">
+        <h3>{{ category }}</h3>
+        <ul>
+          {% for item in items %}
+            <li>{{ item.quantity }} {{ item.item_name }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endfor %}
+
+    <div class="actions">
+      <a href="{% url 'grocery:template_list' %}" class="btn btn-secondary">Back to Templates</a>
+      {% if not template.is_system_template %}
+        <a href="{% url 'grocery:template_edit' template.pk %}" class="btn btn-primary">Edit</a>
+        <a href="{% url 'grocery:template_delete' template.pk %}" class="btn btn-danger">Delete</a>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}

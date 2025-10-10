@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}Grocery Templates - HaleWay{% endblock %}
+
+{% block content %}
+  <div class="container">
+    <div class="page-header">
+      <h1>Grocery List Templates</h1>
+      {% if trip %}
+        <p class="subtitle">Select a template for {{ trip.name }}</p>
+      {% else %}
+        <a href="{% url 'grocery:template_create' %}" class="btn btn-primary">Create Custom Template</a>
+      {% endif %}
+    </div>
+
+    {% if templates %}
+      <div class="templates-grid">
+        {% for template in templates %}
+          <div class="template-card {% if template.is_system_template %}system{% endif %}">
+            <h3>{{ template.name }}</h3>
+            {% if template.is_system_template %}
+              <span class="badge">System Template</span>
+            {% endif %}
+            <p>{{ template.item_count }} items</p>
+            {% if template.description %}
+              <p class="description">{{ template.description }}</p>
+            {% endif %}
+            <div class="template-actions">
+              {% if trip %}
+                <a href="{% url 'grocery:list_create_from_template' trip.pk template.pk %}" class="btn btn-primary btn-sm">
+                  Use This Template
+                </a>
+              {% else %}
+                <a href="{% url 'grocery:template_detail' template.pk %}" class="btn btn-outline btn-sm">
+                  View Details
+                </a>
+              {% endif %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    {% if trip %}
+      <div style="margin-top: 2rem; text-align: center;">
+        <a href="{% url 'grocery:list_create_blank' trip.pk %}" class="btn btn-outline">
+          Or Create Blank List
+        </a>
+      </div>
+    {% endif %}
+  </div>
+
+  <style>
+    .templates-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    .template-card {
+      background: white;
+      padding: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .template-card.system {
+      border-left: 4px solid #2E86AB;
+    }
+    .badge {
+      display: inline-block;
+      background: #2E86AB;
+      color: white;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+    }
+    .description {
+      font-size: 0.875rem;
+      color: #666;
+    }
+    .template-actions {
+      margin-top: 1rem;
+    }
+    .subtitle {
+      color: #666;
+      margin-top: 0.5rem;
+    }
+  </style>
+{% endblock %}

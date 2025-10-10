@@ -1073,3 +1073,408 @@ family_vacation_planner/
 - Search and discovery features will unlock existing data
 - Collaboration features will increase family engagement
 - Analytics will provide valuable insights
+
+---
+
+## Phase 11: UX Enhancements & New Features (2025-10-09) 🚀
+
+### UI Compression & Mobile Optimization ✅ COMPLETED (2025-10-09)
+
+**Problem**: Dashboard and packing list pages used too much vertical space, making mobile viewing difficult
+
+**Solution Implemented**:
+- **Reduced Global CSS Spacing Variables**:
+  - `--spacing-sm`: 8px → 6px (25% reduction)
+  - `--spacing-md`: 16px → 12px (25% reduction)
+  - `--spacing-lg`: 24px → 16px (33% reduction)
+  - `--spacing-xl`: 32px → 24px (25% reduction)
+  - `--spacing-xxl`: 48px → 40px (17% reduction)
+
+- **Compressed Packing List Specific Spacing**:
+  - Progress section padding: 1.5rem → 1rem
+  - Progress bar height: 12px → 10px
+  - Category section padding: 1.5rem → 1rem
+  - Category header font size: 1.25rem → 1.1rem
+  - Items list gap: 0.75rem → 0.5rem
+  - Packing item padding: 0.75rem → 0.5rem
+  - Removed weather widget (redundant with trip detail page)
+
+**Impact**: 20-30% more content visible on mobile screens, cleaner interface
+
+---
+
+### Grocery List Feature (PLANNED - Priority: HIGH)
+
+**Goal**: Add grocery/shopping list functionality for trip planning
+
+**Models**:
+
+#### GroceryListTemplate
+- id (UUID Primary Key)
+- family_id (Foreign Key → Family) - Family-level templates
+- name (e.g., "Beach Trip Groceries", "Camping Essentials")
+- description (TextField, optional)
+- is_system_template (boolean - built-in templates)
+- created_by (Foreign Key → User)
+- created_at
+- updated_at
+
+#### GroceryListTemplateItem
+- id (UUID Primary Key)
+- template_id (Foreign Key → GroceryListTemplate)
+- category (e.g., "Produce", "Snacks", "Beverages", "Breakfast", "Lunch", "Dinner")
+- item_name
+- quantity (CharField - e.g., "2 lbs", "1 gallon", "6 pack")
+- notes (TextField, nullable)
+- order (integer for sorting within category)
+
+#### TripGroceryList
+- id (UUID Primary Key)
+- trip_id (Foreign Key → Trip)
+- name (e.g., "Week 1 Groceries", "Pre-Trip Shopping")
+- based_on_template (Foreign Key → GroceryListTemplate, nullable)
+- assigned_to (Foreign Key → User, nullable - who's shopping)
+- shopping_date (DateField, nullable)
+- store_name (CharField, nullable - where to shop)
+- created_at
+- updated_at
+
+#### TripGroceryItem
+- id (UUID Primary Key)
+- grocery_list (Foreign Key → TripGroceryList)
+- category (CharField - for grouping)
+- item_name
+- quantity (CharField)
+- notes (TextField, nullable)
+- is_purchased (boolean - checkbox state)
+- order (integer for custom sorting)
+- created_at
+- updated_at
+
+**Features**:
+1. **Template System**:
+   - Built-in system templates (Beach Trip, Road Trip, Camping, International)
+   - Family-specific custom templates
+   - Duplicate template to create trip grocery list
+   - Save trip list as template for reuse
+
+2. **Trip Grocery Lists**:
+   - Multiple lists per trip (e.g., pre-trip, week 1, week 2)
+   - Assign lists to family members
+   - Track shopping date and store name
+   - Real-time checkbox toggling (AJAX)
+   - Progress tracking (X/Y items purchased)
+
+3. **List History & Search**:
+   - View past grocery lists from previous trips
+   - Search grocery items across all past trips
+   - "Copy from previous trip" feature
+   - Frequently purchased items dashboard
+
+4. **Category Organization**:
+   - Pre-defined categories: Produce, Dairy, Meat, Snacks, Beverages, Breakfast, Lunch, Dinner, Household
+   - Color-coded categories for visual organization
+   - Sort items by category, aisle, or custom order
+
+5. **Integration**:
+   - Link to trip detail page (new "Grocery Lists" section)
+   - Mobile-optimized for in-store use
+   - Print-friendly view for physical shopping
+   - Share list with family members via email
+
+**Database Indexes**:
+- `(trip_id)` on TripGroceryList
+- `(grocery_list, category)` on TripGroceryItem
+- `(grocery_list, is_purchased)` on TripGroceryItem
+- `(family_id, is_system_template)` on GroceryListTemplate
+
+**URLs**:
+- `/grocery/templates/` - List all grocery templates
+- `/grocery/templates/<id>/` - Template detail
+- `/grocery/templates/create/` - Create template
+- `/grocery/<trip_id>/lists/` - Trip grocery lists
+- `/grocery/list/<id>/` - Grocery list detail with checkboxes
+- `/grocery/list/<id>/item/<item_id>/toggle/` - AJAX toggle purchased
+- `/grocery/list/<id>/print/` - Print-friendly view
+
+**Technical Notes**:
+- Similar architecture to packing lists (proven pattern)
+- Reuse checkbox/AJAX patterns from packing
+- Use same permission system (all members edit, admins delete)
+- Structured logging for all grocery operations
+
+---
+
+### User Section Preferences (PLANNED - Priority: MEDIUM)
+
+**Goal**: Allow users to permanently hide sections they don't use
+
+**Model**:
+
+#### UserTripPreferences
+- id (UUID Primary Key)
+- user_id (Foreign Key → User)
+- trip_id (Foreign Key → Trip)
+- hidden_sections (JSONField - array of section names)
+- created_at
+- updated_at
+- Unique constraint: (user, trip)
+
+**Hidden Sections**:
+- `journal` - Daily journal entries
+- `photos` - Trip photo gallery
+- `packing` - Packing lists
+- `budget` - Budget tracking
+- `activities` - Activities
+- `itinerary` - Daily itinerary
+- `notes` - Trip notes
+- `weather` - Weather forecast
+
+**Features**:
+1. **UI Controls**:
+   - "Hide Section" button on each collapsible section header
+   - Settings page: "Manage Hidden Sections" with checkboxes
+   - "Show All Sections" button to reset preferences
+
+2. **Behavior**:
+   - Hidden sections don't render at all (not just collapsed)
+   - Quick navigation bar hides links to hidden sections
+   - User can unhide sections from settings page
+   - Preferences are per-trip (different trips can have different hidden sections)
+   - Defaults: All sections visible
+
+3. **Storage**:
+   - JSONField stores array: `["journal", "photos"]`
+   - Lazy-loading: Only query preferences when trip detail page loads
+   - Cache preferences in session for performance
+
+4. **API**:
+   - `POST /trips/<id>/preferences/hide/<section>/` - Hide section
+   - `POST /trips/<id>/preferences/show/<section>/` - Show section
+   - `POST /trips/<id>/preferences/reset/` - Show all sections
+
+**Technical Implementation**:
+- Context processor adds `hidden_sections` to template context
+- Template conditionals: `{% if 'journal' not in hidden_sections %}`
+- AJAX updates for instant hide/show without page reload
+- Fallback: If no preferences exist, show all sections
+
+---
+
+### Dream Trips & Resort Wishlist (PLANNED - Priority: HIGH)
+
+**Goal**: Support trip ideas and resort discovery before committing to dates
+
+#### Trip Model Updates
+
+Add `trip_type` field to existing Trip model:
+- trip_type (CharField, choices: 'dream', 'planning', 'active', 'completed')
+- Default: 'planning'
+
+**Migration Strategy**:
+```python
+# Migration: Add trip_type field
+trip_type = models.CharField(
+    max_length=20,
+    choices=[
+        ('dream', 'Dream Trip'),
+        ('planning', 'Planning'),
+        ('active', 'Active'),
+        ('completed', 'Completed'),
+    ],
+    default='planning'
+)
+```
+
+#### TripResortOption Model (NEW)
+
+For dream trips that have multiple resort possibilities:
+
+- id (UUID Primary Key)
+- trip_id (Foreign Key → Trip) - Only for trip_type='dream'
+- name
+- website_url
+- address_line1, address_line2, city, state, zip_code, country
+- latitude, longitude
+- general_notes (TextField)
+- estimated_cost_per_night (DecimalField, nullable)
+- pros (TextField - what's good about this resort)
+- cons (TextField - concerns or drawbacks)
+- rating (IntegerField 1-5, nullable - user's preliminary rating)
+- is_preferred (boolean - flag favorite option)
+- order (integer for ranking options)
+- created_at
+- updated_at
+
+**Indexes**:
+- `(trip_id, order)` for ranking
+- `(trip_id, is_preferred)` for favorites
+
+#### ResortWishlist Model (NEW)
+
+Family-level wishlist of resorts to consider for future trips:
+
+- id (UUID Primary Key)
+- family_id (Foreign Key → Family)
+- name
+- destination (CharField - e.g., "Maui", "Paris", "Tokyo")
+- website_url
+- address_line1, address_line2, city, state, zip_code, country
+- latitude, longitude
+- description (TextField - why we want to visit)
+- estimated_cost_per_night (DecimalField, nullable)
+- tags (ArrayField - ["beach", "luxury", "family-friendly", "all-inclusive"])
+- notes (TextField - research notes, recommendations)
+- added_by (Foreign Key → User)
+- is_favorite (boolean - family favorites)
+- visited (boolean - if we've stayed here)
+- visited_trip (Foreign Key → Trip, nullable - link to past trip)
+- created_at
+- updated_at
+
+**Indexes**:
+- `(family_id, is_favorite)` for favorites
+- `(family_id, visited)` for filtering
+- `(family_id, destination)` for location search
+- Full-text search on `name`, `destination`, `description`, `notes`
+
+**Features**:
+
+1. **Dream Trips**:
+   - Create trip with type='dream'
+   - No start/end dates required (can be nullable)
+   - Add multiple resort options (TripResortOption)
+   - Compare pros/cons side-by-side
+   - Rate and rank resort options
+   - Add activities and notes (research phase)
+   - **Hidden sections**: Itinerary, Packing, Budget, Memories (not applicable for dream trips)
+   - **Convert to Planning Trip**:
+     - Select one resort option → becomes main Resort
+     - Set start/end dates
+     - Change trip_type to 'planning'
+     - Unhide all sections
+
+2. **Resort Wishlist**:
+   - Family-wide list of resorts to visit someday
+   - Add resorts from web research, recommendations, ads
+   - Tag-based organization (beach, mountain, city, luxury, budget, family-friendly)
+   - Search and filter by destination, tags, cost
+   - Mark as favorite
+   - Link to trip if visited
+   - "Create Dream Trip from Wishlist" - converts wishlist item to dream trip
+   - "Add to Existing Dream Trip" - adds wishlist item as resort option
+
+3. **Workflows**:
+   - **Wishlist → Dream Trip → Planning Trip → Active Trip → Completed Trip**
+   - Browse wishlist → Pick resort → Create dream trip → Add resort options → Compare → Choose one → Set dates → Start planning
+
+**URLs**:
+- `/trips/create/?type=dream` - Create dream trip
+- `/trips/<id>/resorts/` - Manage resort options (dream trips only)
+- `/trips/<id>/resorts/add/` - Add resort option
+- `/trips/<id>/resorts/<resort_id>/` - Resort option detail
+- `/trips/<id>/convert-to-planning/` - Convert dream trip to planning
+- `/wishlist/` - Family resort wishlist
+- `/wishlist/create/` - Add resort to wishlist
+- `/wishlist/<id>/` - Wishlist item detail
+- `/wishlist/<id>/create-trip/` - Convert to dream trip
+- `/wishlist/<id>/add-to-trip/<trip_id>/` - Add to existing dream trip
+
+**UI/UX**:
+- Dream trips shown with different badge/color
+- Trip list filtered by type (Dream, Planning, Active, Completed)
+- Resort option cards with comparison view
+- Side-by-side comparison table for dream trip resorts
+- Wishlist grid with destination thumbnails
+- Tag filters on wishlist (click tag to see all with that tag)
+
+**Database Indexes**:
+- `(family_id, trip_type, start_date)` on Trip for filtering
+- `(trip_id, order)` on TripResortOption for ranking
+- `(family_id, destination)` on ResortWishlist for location search
+- Full-text search index on ResortWishlist
+
+---
+
+## Updated Progress Tracker (2025-10-09)
+
+- ✅ Phase 1-7: Core Features - COMPLETED
+- ✅ Budget Tracking - COMPLETED (2025-10-08)
+- ✅ Navigation & UX Improvements - COMPLETED (2025-10-08)
+- ✅ UI Compression & Mobile Optimization - COMPLETED (2025-10-09)
+- 🎯 **Phase 11: UX Enhancements** - IN PROGRESS (2025-10-09)
+  - ✅ UI Compression - COMPLETED
+  - 🔨 Grocery Lists - NEXT UP
+  - 🔨 User Section Preferences - PLANNED
+  - 🔨 Dream Trips & Resort Wishlist - PLANNED
+- 🔍 Phase 8: Search & Discovery - FUTURE (Priority: HIGH)
+- 🤝 Phase 9: Sharing & Collaboration - FUTURE (Priority: MEDIUM)
+- 🚀 Phase 10: Advanced Features - FUTURE (Priority: LOW)
+
+---
+
+## Recommended Implementation Order (Phase 11)
+
+### Week 1: Grocery Lists
+1. Create grocery app with 4 models
+2. Seed 3-4 system templates
+3. Build template CRUD views
+4. Create trip grocery list views with checkbox UI
+5. Implement AJAX toggle for purchased items
+6. Add progress tracking
+7. Integrate with trip detail page
+8. Add print-friendly view
+
+### Week 2: User Section Preferences
+1. Create UserTripPreferences model and migration
+2. Add "Hide Section" buttons to trip detail page
+3. Create settings page for managing hidden sections
+4. Implement AJAX hide/show endpoints
+5. Update template conditionals to respect preferences
+6. Test with various section combinations
+7. Add "Show All" reset button
+
+### Week 3-4: Dream Trips & Resort Wishlist
+1. Add trip_type field to Trip model (migration)
+2. Create TripResortOption model
+3. Create ResortWishlist model
+4. Build dream trip creation flow (no dates required)
+5. Implement resort option management (add, edit, delete, rank)
+6. Create resort comparison view (side-by-side)
+7. Build convert-to-planning functionality
+8. Create resort wishlist CRUD views
+9. Implement wishlist search and filtering
+10. Add tag-based organization
+11. Build "Create Dream Trip from Wishlist" flow
+12. Update trip list to show trip types with badges
+13. Hide non-applicable sections for dream trips
+
+### Testing & Polish
+1. Test all new features with multiple users
+2. Verify permissions (family members vs. admins)
+3. Test mobile responsiveness (especially grocery lists)
+4. Add structured logging to all new operations
+5. Create Django admin interfaces for new models
+6. Add database indexes for performance
+7. Test conversion workflows (wishlist → dream → planning)
+
+---
+
+## Key Benefits of Phase 11 Features
+
+### Grocery Lists
+- **Problem**: Families often forget essential items or overspend at stores
+- **Solution**: Organized, templated grocery lists with history
+- **Value**: Save time, reduce waste, reference past successful trips
+
+### User Section Preferences
+- **Problem**: Not every family uses every feature (e.g., some don't journal)
+- **Solution**: Customizable dashboard - hide what you don't use
+- **Value**: Cleaner UI, faster navigation, personalized experience
+
+### Dream Trips & Resort Wishlist
+- **Problem**: Research phase is messy - links scattered across bookmarks/notes
+- **Solution**: Structured research with comparison and conversion to real trip
+- **Value**: Better decisions, preserve research, smooth planning workflow
+
+---

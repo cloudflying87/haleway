@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>{{ grocery_list.name }} - Print</title>
+    <style>
+      @media print {
+        .no-print { display: none; }
+      }
+      body { font-family: Arial, sans-serif; margin: 2rem; }
+      h1 { font-size: 24px; margin-bottom: 0.5rem; }
+      h2 { font-size: 18px; color: #2E86AB; margin-top: 1.5rem; margin-bottom: 0.5rem; }
+      ul { list-style: none; padding: 0; }
+      li { margin: 0.5rem 0; padding-left: 2rem; position: relative; }
+      li:before { content: '☐'; position: absolute; left: 0; font-size: 18px; }
+    </style>
+  </head>
+  <body>
+    <button class="no-print" onclick="window.print()">Print</button>
+    <h1>{{ grocery_list.name }}</h1>
+    <p>Trip: {{ grocery_list.trip.name }}</p>
+    {% if grocery_list.shopping_date %}<p>Date: {{ grocery_list.shopping_date }}</p>{% endif %}
+    {% if grocery_list.store_name %}<p>Store: {{ grocery_list.store_name }}</p>{% endif %}
+
+    {% for category, items in items_by_category.items %}
+      <h2>{{ category }}</h2>
+      <ul>
+        {% for item in items %}
+          <li>{{ item.quantity }} {{ item.item_name }}</li>
+        {% endfor %}
+      </ul>
+    {% endfor %}
+  </body>
+</html>

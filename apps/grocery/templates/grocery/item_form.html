@@ -1,0 +1,447 @@
+{% extends "base.html" %}
+
+{% block title %}{% if item %}Edit{% else %}Add{% endif %} Item - Grocery List - HaleWay{% endblock %}
+
+{% block extra_css %}
+<!-- Select2 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+  <style>
+    /* Page Layout */
+    .add-item-container {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: var(--spacing-xl) var(--spacing-md);
+    }
+
+    /* Header Styling */
+    .page-header {
+      text-align: center;
+      margin-bottom: var(--spacing-xxl);
+    }
+
+    .page-icon {
+      font-size: 3rem;
+      margin-bottom: var(--spacing-md);
+      display: block;
+    }
+
+    .page-header h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .page-subtitle {
+      color: var(--text-secondary);
+      font-size: 1rem;
+      margin-bottom: var(--spacing-md);
+    }
+
+    /* Breadcrumb Styling */
+    .breadcrumb {
+      justify-content: center;
+      margin-bottom: var(--spacing-lg);
+    }
+
+    /* Form Card */
+    .modern-form-card {
+      background: var(--white);
+      border-radius: var(--border-radius-lg);
+      padding: var(--spacing-xxl);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 10px 15px rgba(0, 0, 0, 0.1);
+      border: 1px solid rgba(46, 134, 171, 0.1);
+    }
+
+    /* Form Groups */
+    .form-group {
+      margin-bottom: var(--spacing-xl);
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: var(--text-primary);
+      margin-bottom: var(--spacing-sm);
+      letter-spacing: 0.01em;
+    }
+
+    .form-group label .required {
+      color: #e74c3c;
+      margin-left: 2px;
+    }
+
+    /* Input Fields */
+    .form-control {
+      display: block;
+      width: 100%;
+      padding: 1rem 1.25rem;
+      font-size: 1rem;
+      font-weight: 400;
+      line-height: 1.5;
+      color: var(--text-primary);
+      background-color: var(--bg-secondary);
+      border: 2px solid transparent;
+      border-radius: var(--border-radius-lg);
+      transition: all var(--transition-base);
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+
+    .form-control:hover {
+      background-color: var(--white);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    }
+
+    .form-control:focus {
+      background-color: var(--white);
+      border-color: var(--primary-color);
+      outline: 0;
+      box-shadow: 0 0 0 4px rgba(46, 134, 171, 0.15), 0 4px 12px rgba(0, 0, 0, 0.1);
+      transform: translateY(-1px);
+    }
+
+    /* Textarea */
+    textarea.form-control {
+      min-height: 120px;
+      resize: vertical;
+      line-height: 1.6;
+      font-family: inherit;
+    }
+
+    /* Help Text */
+    .form-help {
+      display: block;
+      margin-top: var(--spacing-sm);
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    .form-help-icon {
+      display: inline-block;
+      margin-right: 4px;
+    }
+
+    /* Custom Select2 Styling */
+    .select2-container--default .select2-selection--single {
+      height: 54px !important;
+      padding: 1rem 1.25rem !important;
+      background-color: var(--bg-secondary);
+      border: 2px solid transparent !important;
+      border-radius: var(--border-radius-lg) !important;
+      transition: all var(--transition-base);
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+
+    .select2-container--default .select2-selection--single:hover {
+      background-color: var(--white);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    }
+
+    .select2-container--default.select2-container--focus .select2-selection--single,
+    .select2-container--default.select2-container--open .select2-selection--single {
+      background-color: var(--white) !important;
+      border-color: var(--primary-color) !important;
+      box-shadow: 0 0 0 4px rgba(46, 134, 171, 0.15), 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+      line-height: 32px !important;
+      padding-left: 0 !important;
+      padding-right: 0 !important;
+      color: var(--text-primary);
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__placeholder {
+      color: var(--text-muted);
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+      height: 54px !important;
+      right: 12px !important;
+    }
+
+    .select2-dropdown {
+      border: 2px solid var(--primary-color) !important;
+      border-radius: var(--border-radius-lg) !important;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15) !important;
+      margin-top: 4px;
+    }
+
+    .select2-container--default .select2-results__option {
+      padding: 12px 16px;
+    }
+
+    .select2-container--default .select2-results__option--highlighted[aria-selected] {
+      background-color: var(--primary-color) !important;
+    }
+
+    .select2-container--default .select2-search--dropdown .select2-search__field {
+      border: 2px solid var(--gray-300);
+      border-radius: var(--border-radius);
+      padding: 12px;
+      font-size: 1rem;
+    }
+
+    .select2-container--default .select2-search--dropdown .select2-search__field:focus {
+      border-color: var(--primary-color);
+      outline: none;
+    }
+
+    /* Form Actions */
+    .form-actions {
+      display: flex;
+      gap: var(--spacing-md);
+      margin-top: var(--spacing-xxl);
+      padding-top: var(--spacing-xl);
+      border-top: 1px solid var(--gray-200);
+    }
+
+    .form-actions .btn {
+      flex: 1;
+      padding: 1rem 2rem;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: var(--border-radius-lg);
+      transition: all var(--transition-base);
+    }
+
+    .form-actions .btn-primary {
+      background: linear-gradient(135deg, var(--primary-color) 0%, #236b8a 100%);
+      border: none;
+      box-shadow: 0 4px 12px rgba(46, 134, 171, 0.3);
+    }
+
+    .form-actions .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(46, 134, 171, 0.4);
+    }
+
+    .form-actions .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    .form-actions .btn-outline {
+      background: transparent;
+      border: 2px solid var(--gray-300);
+      color: var(--text-secondary);
+    }
+
+    .form-actions .btn-outline:hover {
+      border-color: var(--gray-400);
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+    }
+
+    /* Quick Tips Box */
+    .quick-tips {
+      background: linear-gradient(135deg, rgba(46, 134, 171, 0.05) 0%, rgba(6, 167, 125, 0.05) 100%);
+      border-left: 4px solid var(--primary-color);
+      border-radius: var(--border-radius);
+      padding: var(--spacing-lg);
+      margin-bottom: var(--spacing-xl);
+    }
+
+    .quick-tips h3 {
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: var(--primary-color);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin: 0 0 var(--spacing-sm) 0;
+    }
+
+    .quick-tips ul {
+      margin: 0;
+      padding-left: var(--spacing-lg);
+      list-style: none;
+    }
+
+    .quick-tips li {
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+      line-height: 1.6;
+      margin-bottom: var(--spacing-xs);
+      position: relative;
+    }
+
+    .quick-tips li:before {
+      content: "→";
+      position: absolute;
+      left: -20px;
+      color: var(--accent-color);
+      font-weight: bold;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .add-item-container {
+        padding: var(--spacing-lg) var(--spacing-md);
+      }
+
+      .modern-form-card {
+        padding: var(--spacing-lg);
+      }
+
+      .page-header h1 {
+        font-size: 1.5rem;
+      }
+
+      .form-actions {
+        flex-direction: column-reverse;
+      }
+
+      .form-actions .btn {
+        width: 100%;
+      }
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+  <div class="add-item-container">
+    <div class="page-header">
+      <nav class="breadcrumb">
+        {% if item %}
+          <a href="{% url 'trips:trip_detail' item.grocery_list.trip.pk %}">{{ item.grocery_list.trip.name }}</a>
+          <span>/</span>
+          <a href="{% url 'grocery:list_detail' item.grocery_list.pk %}">{{ item.grocery_list.name }}</a>
+        {% else %}
+          <a href="{% url 'trips:trip_detail' grocery_list.trip.pk %}">{{ grocery_list.trip.name }}</a>
+          <span>/</span>
+          <a href="{% url 'grocery:list_detail' grocery_list.pk %}">{{ grocery_list.name }}</a>
+        {% endif %}
+        <span>/</span>
+        <span>{% if item %}Edit{% else %}Add{% endif %} Item</span>
+      </nav>
+      <span class="page-icon">🛒</span>
+      <h1>{% if item %}Edit{% else %}Add{% endif %} Grocery Item</h1>
+      <p class="page-subtitle">{% if item %}Update the details of your grocery item{% else %}Add a new item to your grocery list{% endif %}</p>
+    </div>
+
+    <div class="modern-form-card">
+      <div class="quick-tips">
+        <h3>💡 Quick Tips</h3>
+        <ul>
+          <li>Use categories to organize your items (e.g., Produce, Dairy, Snacks)</li>
+          <li>You can create a new category by typing it in the dropdown</li>
+          <li>Include quantity for easy shopping (e.g., 2 lbs, 1 gallon, 6 pack)</li>
+        </ul>
+      </div>
+
+      <form method="post">
+        {% csrf_token %}
+
+        <div class="form-group">
+          <label for="{{ form.category.id_for_label }}">
+            Category <span class="required">*</span>
+          </label>
+          <select name="{{ form.category.name }}"
+                  id="{{ form.category.id_for_label }}"
+                  class="form-control category-select"
+                  required>
+            <option value=""></option>
+            {% if form.category_suggestions %}
+              {% for category in form.category_suggestions %}
+                <option value="{{ category }}" {% if category == form.category.value %}selected{% endif %}>{{ category }}</option>
+              {% endfor %}
+            {% endif %}
+          </select>
+          <small class="form-help">
+            <span class="form-help-icon">ℹ️</span>
+            Select an existing category or type to create a new one
+          </small>
+        </div>
+
+        <div class="form-group">
+          <label for="{{ form.item_name.id_for_label }}">
+            Item Name <span class="required">*</span>
+          </label>
+          {{ form.item_name }}
+          <small class="form-help">
+            <span class="form-help-icon">ℹ️</span>
+            What do you need to buy? (e.g., Bananas, Milk, Chips)
+          </small>
+        </div>
+
+        <div class="form-group">
+          <label for="{{ form.quantity.id_for_label }}">
+            Quantity <span style="color: var(--text-muted); font-weight: 400;">(optional)</span>
+          </label>
+          {{ form.quantity }}
+          <small class="form-help">
+            <span class="form-help-icon">ℹ️</span>
+            How much do you need? (e.g., 2 lbs, 1 gallon, 6 pack)
+          </small>
+        </div>
+
+        <div class="form-group">
+          <label for="{{ form.notes.id_for_label }}">
+            Notes <span style="color: var(--text-muted); font-weight: 400;">(optional)</span>
+          </label>
+          {{ form.notes }}
+          <small class="form-help">
+            <span class="form-help-icon">ℹ️</span>
+            Add any specific details, brands, or reminders
+          </small>
+        </div>
+
+        <div class="form-actions">
+          {% if item %}
+            <a href="{% url 'grocery:list_detail' item.grocery_list.pk %}" class="btn btn-outline">
+              Cancel
+            </a>
+          {% else %}
+            <a href="{% url 'grocery:list_detail' grocery_list.pk %}" class="btn btn-outline">
+              Cancel
+            </a>
+          {% endif %}
+          <button type="submit" class="btn btn-primary">
+            ✓ {% if item %}Save Changes{% else %}Add Item{% endif %}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- jQuery (required for Select2) -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<!-- Select2 JS -->
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+  <script>
+    $(document).ready(function() {
+        // Initialize Select2 on category dropdown
+      $('.category-select').select2({
+        tags: true,
+        placeholder: 'Select or type a category...',
+        allowClear: false,
+        width: '100%',
+        createTag: function (params) {
+          var term = $.trim(params.term);
+          if (term === '') {
+            return null;
+          }
+          return {
+            id: term,
+            text: term + ' (create new)',
+            newTag: true
+          }
+        },
+        templateResult: function(data) {
+          if (data.newTag) {
+            return $('<span style="color: var(--accent-color); font-weight: 600;">+ ' + data.text + '</span>');
+          }
+          return data.text;
+        }
+      });
+
+        // Auto-focus on category field
+      setTimeout(function() {
+        $('.category-select').select2('open');
+      }, 300);
+    });
+  </script>
+{% endblock %}

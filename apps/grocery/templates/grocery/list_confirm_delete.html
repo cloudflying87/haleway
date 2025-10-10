@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Delete List - HaleWay{% endblock %}
+{% block content %}
+  <div class="container">
+    <h1>Delete "{{ grocery_list.name }}"?</h1>
+    <p>This will permanently delete this grocery list and all {{ grocery_list.items.count }} items. This action cannot be undone.</p>
+    <form method="post">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-danger">Yes, Delete</button>
+      <a href="{% url 'grocery:list_detail' grocery_list.pk %}" class="btn btn-secondary">Cancel</a>
+    </form>
+  </div>
+{% endblock %}

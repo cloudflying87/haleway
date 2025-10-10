@@ -11,6 +11,8 @@ app_name = "trips"
 urlpatterns = [
     # Trip list views
     path("", views.TripListView.as_view(), name="trip_list"),
+    path("dream/", views.DreamTripsListView.as_view(), name="dream_trip_list"),
+    path("resorts/", views.ResortsListView.as_view(), name="resort_list"),
     path("family/<uuid:family_pk>/", views.FamilyTripListView.as_view(), name="family_trip_list"),
     # Trip CRUD
     path("<uuid:pk>/", views.TripDetailView.as_view(), name="trip_detail"),

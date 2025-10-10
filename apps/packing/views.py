@@ -9,7 +9,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse, reverse_lazy
+from django.urls import reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
 from apps.families.models import Family, FamilyMember
@@ -183,50 +183,6 @@ class TemplateDeleteView(LoginRequiredMixin, DeleteView):
 # ============================================================================
 
 
-class TripPackingListListView(LoginRequiredMixin, ListView):
-    """List all packing lists for a trip."""
-
-    model = TripPackingList
-    template_name = "packing/trip_packing_lists.html"
-    context_object_name = "packing_lists"
-
-    def get_queryset(self):
-        """Return packing lists for the specified trip."""
-        self.trip = get_object_or_404(
-            Trip, pk=self.kwargs["trip_pk"], family__members__user=self.request.user
-        )
-
-        return (
-            TripPackingList.objects.filter(trip=self.trip)
-            .select_related("assigned_to", "based_on_template")
-            .prefetch_related("items")
-        )
-
-    def get_context_data(self, **kwargs):
-        """Add trip and template context."""
-        context = super().get_context_data(**kwargs)
-        context["trip"] = self.trip
-
-        # Available templates for creating new lists
-        context["templates"] = PackingListTemplate.objects.filter(
-            Q(is_system_template=True) | Q(created_by=self.request.user)
-        ).order_by("-is_system_template", "name")
-
-        # Family members for assignment
-        context["family_members"] = self.trip.family.get_all_members()
-
-        # Check permissions
-        try:
-            membership = FamilyMember.objects.get(family=self.trip.family, user=self.request.user)
-            context["can_create"] = True
-            context["can_edit"] = True
-        except FamilyMember.DoesNotExist:
-            context["can_create"] = False
-            context["can_edit"] = False
-
-        return context
-
-
 class PackingListDetailView(LoginRequiredMixin, DetailView):
     """Display packing list details with items and progress."""
 
@@ -239,7 +195,7 @@ class PackingListDetailView(LoginRequiredMixin, DetailView):
         user_families = Family.objects.filter(members__user=self.request.user)
         return (
             TripPackingList.objects.filter(trip__family__in=user_families)
-            .select_related("trip", "assigned_to", "based_on_template")
+            .select_related("trip", "based_on_template")
             .prefetch_related("items")
         )
 
@@ -294,21 +250,20 @@ class PackingListDetailView(LoginRequiredMixin, DetailView):
 
 
 @login_required
-def create_packing_list(request, trip_pk):
-    """Create a new packing list from a template."""
+def create_or_get_packing_list(request, trip_pk):
+    """Get or create the packing list for a trip, optionally from a template."""
     trip = get_object_or_404(Trip, pk=trip_pk, family__members__user=request.user)
+
+    # Check if list already exists
+    try:
+        packing_list = TripPackingList.objects.get(trip=trip)
+        # List already exists, redirect to it
+        return redirect("packing:list_detail", pk=packing_list.pk)
+    except TripPackingList.DoesNotExist:
+        pass
 
     if request.method == "POST":
         template_id = request.POST.get("template_id")
-        list_name = request.POST.get("list_name")
-        assigned_to_id = request.POST.get("assigned_to")
-
-        # Get assigned user if specified
-        assigned_to = None
-        if assigned_to_id:
-            from apps.accounts.models import User
-
-            assigned_to = get_object_or_404(User, pk=assigned_to_id)
 
         # Check if starting from template or blank
         if template_id:
@@ -316,18 +271,14 @@ def create_packing_list(request, trip_pk):
             template = get_object_or_404(PackingListTemplate, pk=template_id)
 
             # Create the packing list from template
-            packing_list = template.duplicate_for_trip(
-                trip=trip, assigned_to=assigned_to, list_name=list_name
-            )
+            packing_list = template.duplicate_for_trip(trip=trip)
 
             messages.success(
-                request, f'Packing list "{packing_list.name}" created successfully from template!'
+                request, f'Packing list created successfully from "{template.name}" template!'
             )
         else:
             # Create blank packing list
-            packing_list = TripPackingList.objects.create(
-                trip=trip, name=list_name, assigned_to=assigned_to
-            )
+            packing_list = TripPackingList.objects.create(trip=trip)
 
             logger.info(
                 "blank_packing_list_created",
@@ -338,7 +289,7 @@ def create_packing_list(request, trip_pk):
 
             messages.success(
                 request,
-                f'Blank packing list "{packing_list.name}" created successfully! Add items using Quick Add.',
+                "Packing list created successfully! Add items using the buttons below.",
             )
 
         return redirect("packing:list_detail", pk=packing_list.pk)
@@ -348,19 +299,12 @@ def create_packing_list(request, trip_pk):
         Q(is_system_template=True) | Q(created_by=request.user)
     ).order_by("-is_system_template", "name")
 
-    # Separate system and custom templates for template display
-    custom_templates = templates.filter(is_system_template=False)
-
-    family_members = trip.family.get_all_members()
-
     return render(
         request,
         "packing/create_packing_list.html",
         {
             "trip": trip,
             "templates": templates,
-            "custom_templates": custom_templates,
-            "family_members": family_members,
         },
     )
 
@@ -378,7 +322,7 @@ def save_as_template(request, pk):
 
         # Create the template
         template = packing_list.save_as_template(
-            template_name=template_name, description=description
+            template_name=template_name, description=description, created_by=request.user
         )
 
         messages.success(
@@ -390,39 +334,31 @@ def save_as_template(request, pk):
     return render(request, "packing/save_as_template.html", {"packing_list": packing_list})
 
 
-class PackingListDeleteView(LoginRequiredMixin, DeleteView):
-    """Delete a packing list."""
+@login_required
+def print_packing_list(request, pk):
+    """Print view for packing list - optimized for printing on one page."""
+    packing_list = get_object_or_404(
+        TripPackingList, pk=pk, trip__family__members__user=request.user
+    )
 
-    model = TripPackingList
-    template_name = "packing/packing_list_confirm_delete.html"
+    # Group items by category
+    items_by_category = {}
+    for item in packing_list.items.all():
+        if item.category not in items_by_category:
+            items_by_category[item.category] = []
+        items_by_category[item.category].append(item)
 
-    def get_queryset(self):
-        """Ensure user is admin of the family."""
-        return TripPackingList.objects.filter(
-            trip__family__members__user=self.request.user,
-            trip__family__members__role__in=["owner", "admin"],
-        )
-
-    def get_success_url(self):
-        """Return to trip packing lists."""
-        return reverse("packing:trip_packing_lists", kwargs={"trip_pk": self.object.trip.pk})
-
-    def delete(self, request, *args, **kwargs):
-        """Log the deletion."""
-        packing_list = self.get_object()
-        list_name = packing_list.name
-        trip_pk = packing_list.trip.pk
-
-        logger.info(
-            "packing_list_deleted",
-            packing_list_id=str(packing_list.id),
-            list_name=list_name,
-            trip_id=str(trip_pk),
-            user_id=request.user.id,
-        )
-
-        messages.success(request, f'Packing list "{list_name}" deleted successfully!')
-        return super().delete(request, *args, **kwargs)
+    return render(
+        request,
+        "packing/print_packing_list.html",
+        {
+            "packing_list": packing_list,
+            "items_by_category": items_by_category,
+            "packed_percentage": packing_list.get_packed_percentage(),
+            "packed_count": packing_list.get_packed_count(),
+            "total_count": packing_list.get_total_count(),
+        },
+    )
 
 
 # ============================================================================
@@ -438,7 +374,7 @@ def add_packing_item(request, list_pk):
     )
 
     if request.method == "POST":
-        form = PackingItemForm(request.POST)
+        form = PackingItemForm(request.POST, packing_list=packing_list)
         if form.is_valid():
             item = form.save(commit=False)
             item.packing_list = packing_list
@@ -455,7 +391,12 @@ def add_packing_item(request, list_pk):
             messages.success(request, f'Item "{item.item_name}" added successfully!')
             return redirect("packing:list_detail", pk=packing_list.pk)
     else:
-        form = PackingItemForm()
+        # Check if category is pre-filled from query parameter
+        category = request.GET.get("category")
+        if category:
+            form = PackingItemForm(packing_list=packing_list, initial={"category": category})
+        else:
+            form = PackingItemForm(packing_list=packing_list)
 
     return render(request, "packing/add_item.html", {"packing_list": packing_list, "form": form})
 
@@ -497,7 +438,7 @@ def edit_packing_item(request, pk):
     )
 
     if request.method == "POST":
-        form = PackingItemForm(request.POST, instance=item)
+        form = PackingItemForm(request.POST, instance=item, packing_list=item.packing_list)
         if form.is_valid():
             item = form.save()
 
@@ -511,7 +452,7 @@ def edit_packing_item(request, pk):
             messages.success(request, f'Item "{item.item_name}" updated successfully!')
             return redirect("packing:list_detail", pk=item.packing_list.pk)
     else:
-        form = PackingItemForm(instance=item)
+        form = PackingItemForm(instance=item, packing_list=item.packing_list)
 
     return render(request, "packing/edit_item.html", {"item": item, "form": form})
 
@@ -558,21 +499,22 @@ def add_outfit(request, list_pk):
     if request.method == "POST":
         form = OutfitCalculatorForm(request.POST)
         if form.is_valid():
+            category = form.cleaned_data["category"]
             num_outfits = form.cleaned_data["num_outfits"]
 
             # Define outfit items with their quantities
             # For example: 5 outfits = 5 shirts, 3 pants, 5 underwear, 5 socks
             outfit_items = [
-                ("Clothing", "Shirts", num_outfits, ""),
-                ("Clothing", "Pants", max(3, num_outfits // 2), "Mix and match"),
-                ("Clothing", "Underwear", num_outfits, ""),
-                ("Clothing", "Socks", num_outfits, ""),
-                ("Clothing", "Pajamas", 2, ""),
+                (category, "Shirts", num_outfits, ""),
+                (category, "Pants", max(3, num_outfits // 2), "Mix and match"),
+                (category, "Underwear", num_outfits, ""),
+                (category, "Socks", num_outfits, ""),
+                (category, "Pajamas", 2, ""),
             ]
 
-            # Get current max order for clothing items
+            # Get current max order for items in this category
             max_order = TripPackingItem.objects.filter(
-                packing_list=packing_list, category="Clothing"
+                packing_list=packing_list, category=category
             ).count()
 
             # Create the items
@@ -591,19 +533,30 @@ def add_outfit(request, list_pk):
             logger.info(
                 "outfit_items_added",
                 num_outfits=num_outfits,
+                category=category,
                 packing_list_id=str(packing_list.id),
                 items_added=len(outfit_items),
                 user_id=request.user.id,
             )
 
-            messages.success(
-                request, f"Added clothing items for {num_outfits} outfits successfully!"
-            )
+            messages.success(request, f"Added {num_outfits} outfits to '{category}' successfully!")
             return redirect("packing:list_detail", pk=packing_list.pk)
     else:
         form = OutfitCalculatorForm()
 
-    return render(request, "packing/add_outfit.html", {"packing_list": packing_list, "form": form})
+    # Get existing categories for suggestions
+    existing_categories = (
+        TripPackingItem.objects.filter(packing_list=packing_list)
+        .values_list("category", flat=True)
+        .distinct()
+        .order_by("category")
+    )
+
+    return render(
+        request,
+        "packing/add_outfit.html",
+        {"packing_list": packing_list, "form": form, "existing_categories": existing_categories},
+    )
 
 
 @login_required

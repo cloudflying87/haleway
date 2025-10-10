@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Grocery Lists - {{ trip.name }} - HaleWay{% endblock %}
+
+{% block content %}
+  <div class="container">
+    <div class="page-header">
+      <h1>Grocery Lists for {{ trip.name }}</h1>
+      <div class="header-actions">
+        <a href="{% url 'grocery:template_list' %}?trip={{ trip.pk }}" class="btn btn-primary">Create from Template</a>
+        <a href="{% url 'grocery:list_create_blank' trip.pk %}" class="btn btn-outline">Create Blank List</a>
+      </div>
+    </div>
+
+    {% if grocery_lists %}
+      <div class="lists-grid">
+        {% for list in grocery_lists %}
+          <div class="list-card">
+            <h3><a href="{% url 'grocery:list_detail' list.pk %}">{{ list.name }}</a></h3>
+            {% if list.assigned_to %}
+              <p>Assigned to: {{ list.assigned_to.get_full_name|default:list.assigned_to.username }}</p>
+            {% endif %}
+            {% if list.shopping_date %}
+              <p>📅 {{ list.shopping_date }}</p>
+            {% endif %}
+            <div class="progress">
+              <div class="progress-bar" style="width: {{ list.percentage }}%"></div>
+            </div>
+            <p>{{ list.purchased_count }} / {{ list.item_count }} items ({{ list.percentage }}%)</p>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p>No grocery lists yet. Create one from a template or start blank!</p>
+    {% endif %}
+  </div>
+
+  <style>
+    .lists-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    .list-card {
+      background: white;
+      padding: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .progress {
+      height: 8px;
+      background: #e0e0e0;
+      border-radius: 4px;
+      overflow: hidden;
+      margin: 0.5rem 0;
+    }
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #06A77D, #2E86AB);
+    }
+  </style>
+{% endblock %}

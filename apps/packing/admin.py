@@ -52,24 +52,20 @@ class TripPackingListAdmin(admin.ModelAdmin):
     """Admin interface for TripPackingList model."""
 
     list_display = [
-        "name",
         "trip",
-        "assigned_to",
         "based_on_template",
         "packed_status",
+        "item_count",
         "created_at",
     ]
     list_filter = ["created_at", "trip__status"]
     search_fields = [
-        "name",
         "trip__name",
         "trip__destination_name",
-        "assigned_to__username",
-        "assigned_to__email",
     ]
     readonly_fields = ["id", "created_at", "updated_at", "packed_status"]
     fieldsets = (
-        ("List Information", {"fields": ("trip", "name", "assigned_to", "based_on_template")}),
+        ("List Information", {"fields": ("trip", "based_on_template")}),
         ("Status", {"fields": ("packed_status",)}),
         ("Metadata", {"fields": ("id", "created_at", "updated_at"), "classes": ("collapse",)}),
     )
@@ -82,6 +78,11 @@ class TripPackingListAdmin(admin.ModelAdmin):
         """Return packing status as percentage."""
         return f"{obj.get_packed_count()}/{obj.get_total_count()} ({obj.get_packed_percentage()}%)"
 
+    @admin.display(description="Items")
+    def item_count(self, obj):
+        """Return the number of items in this list."""
+        return obj.items.count()
+
 
 @admin.register(TripPackingItem)
 class TripPackingItemAdmin(admin.ModelAdmin):
@@ -89,7 +90,7 @@ class TripPackingItemAdmin(admin.ModelAdmin):
 
     list_display = ["item_name", "packing_list", "category", "quantity", "is_packed", "created_at"]
     list_filter = ["is_packed", "category", "created_at"]
-    search_fields = ["item_name", "category", "packing_list__name", "packing_list__trip__name"]
+    search_fields = ["item_name", "category", "packing_list__trip__name"]
     readonly_fields = ["id", "created_at", "updated_at"]
     fieldsets = (
         ("Item Information", {"fields": ("packing_list", "category", "item_name", "quantity")}),

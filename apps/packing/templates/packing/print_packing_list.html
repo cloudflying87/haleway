@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ packing_list.trip.name }} - Packing List</title>
+    <style>
+        /* Print-optimized styles - designed to fit on one page */
+      @page {
+        size: letter;
+        margin: 0.5in;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 10pt;
+        line-height: 1.3;
+        color: #000;
+        background: #fff;
+      }
+
+      .header {
+        text-align: center;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #2e86ab;
+      }
+
+      .header h1 {
+        font-size: 18pt;
+        font-weight: bold;
+        color: #2e86ab;
+        margin-bottom: 5px;
+      }
+
+      .header .trip-info {
+        font-size: 9pt;
+        color: #666;
+      }
+
+      .progress-bar {
+        height: 20px;
+        background: #e0e0e0;
+        border-radius: 10px;
+        overflow: hidden;
+        margin: 10px 0;
+      }
+
+      .progress-bar-fill {
+        height: 100%;
+        background: #06a77d;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 9pt;
+      }
+
+      .categories {
+        column-count: 2;
+        column-gap: 20px;
+        column-fill: balance;
+      }
+
+      .category {
+        break-inside: avoid;
+        page-break-inside: avoid;
+        margin-bottom: 12px;
+      }
+
+      .category-header {
+        font-size: 11pt;
+        font-weight: bold;
+        color: #2e86ab;
+        border-bottom: 1px solid #2e86ab;
+        padding-bottom: 3px;
+        margin-bottom: 6px;
+      }
+
+      .item {
+        display: flex;
+        align-items: flex-start;
+        padding: 3px 0;
+        font-size: 10pt;
+      }
+
+      .checkbox {
+        width: 14px;
+        height: 14px;
+        border: 1.5px solid #666;
+        border-radius: 3px;
+        margin-right: 8px;
+        flex-shrink: 0;
+        margin-top: 2px;
+      }
+
+      .checkbox.checked {
+        background: #06a77d;
+        border-color: #06a77d;
+        position: relative;
+      }
+
+      .checkbox.checked::after {
+        content: '✓';
+        color: white;
+        position: absolute;
+        top: -2px;
+        left: 2px;
+        font-size: 12px;
+        font-weight: bold;
+      }
+
+      .item-content {
+        flex: 1;
+      }
+
+      .item-name {
+        font-weight: normal;
+      }
+
+      .item-quantity {
+        color: #666;
+        font-size: 9pt;
+      }
+
+      .item-notes {
+        font-size: 9pt;
+        color: #666;
+        font-style: italic;
+        margin-top: 2px;
+      }
+
+      .footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        text-align: center;
+        font-size: 8pt;
+        color: #999;
+        padding: 10px;
+      }
+
+        /* Hide footer on screen, show on print */
+      @media screen {
+        .footer {
+          display: none;
+        }
+      }
+
+      @media print {
+        body {
+          print-color-adjust: exact;
+          -webkit-print-color-adjust: exact;
+        }
+
+        .no-print {
+          display: none !important;
+        }
+
+            /* Ensure it fits on one page */
+        .categories {
+          max-height: 8.5in;
+        }
+      }
+
+        /* Print button (hide on print) */
+      .print-button {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #2e86ab;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        font-size: 14px;
+        border-radius: 8px;
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        font-weight: 600;
+      }
+
+      .print-button:hover {
+        background: #236b8a;
+      }
+
+      @media print {
+        .print-button {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <button onclick="window.print()" class="print-button no-print">🖨️ Print</button>
+
+    <div class="header">
+      <h1>{{ packing_list.trip.name }}</h1>
+      <div class="trip-info">
+        {% if packing_list.trip.destination_name %}
+          {{ packing_list.trip.destination_name }} &bull;
+        {% endif %}
+        {{ packing_list.trip.start_date|date:"M d" }} - {{ packing_list.trip.end_date|date:"M d, Y" }}
+      </div>
+    </div>
+
+    <div class="progress-bar">
+      <div class="progress-bar-fill" style="width: {{ packed_percentage }}%">
+        {{ packed_count }} / {{ total_count }} packed ({{ packed_percentage }}%)
+      </div>
+    </div>
+
+    <div class="categories">
+      {% for category, items in items_by_category.items %}
+        <div class="category">
+          <div class="category-header">{{ category }}</div>
+          {% for item in items %}
+            <div class="item">
+              <div class="checkbox {% if item.is_packed %}checked{% endif %}"></div>
+              <div class="item-content">
+                <div class="item-name">
+                  {{ item.item_name }}
+                  {% if item.quantity > 1 %}
+                    <span class="item-quantity">({{ item.quantity }})</span>
+                  {% endif %}
+                </div>
+                {% if item.notes %}
+                  <div class="item-notes">{{ item.notes }}</div>
+                {% endif %}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% empty %}
+        <div class="category">
+          <p style="text-align: center; color: #999; padding: 20px;">
+            No items yet. Add items to your packing list!
+          </p>
+        </div>
+      {% endfor %}
+    </div>
+
+    <div class="footer">
+      Printed from HaleWay on {{ "now"|date:"M d, Y" }}
+    </div>
+  </body>
+</html>

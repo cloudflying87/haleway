@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     "apps.packing",  # Packing list management
     "apps.budget",  # Budget tracking
     "apps.memories",  # Photos and journal entries
+    "apps.grocery",  # Grocery list management
 ]
 
 # Custom User Model

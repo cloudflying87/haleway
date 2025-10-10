@@ -45,6 +45,51 @@ class TripListView(LoginRequiredMixin, ListView):
         return context
 
 
+class DreamTripsListView(LoginRequiredMixin, ListView):
+    """List dream trips (wishlist) for families the user is a member of."""
+
+    model = Trip
+    template_name = "trips/dream_trip_list.html"
+    context_object_name = "trips"
+
+    def get_queryset(self):
+        """Return only dream trips for families the user belongs to."""
+        return (
+            Trip.objects.filter(family__members__user=self.request.user, status="dream")
+            .select_related("family", "created_by")
+            .prefetch_related("resort")
+            .order_by("-created_at")
+        )
+
+    def get_context_data(self, **kwargs):
+        """Add family context."""
+        context = super().get_context_data(**kwargs)
+        # Get user's families for the "create trip" dropdown
+        context["user_families"] = Family.objects.filter(members__user=self.request.user).distinct()
+        return context
+
+
+class ResortsListView(LoginRequiredMixin, ListView):
+    """List all resorts for trips the user is a member of."""
+
+    model = Resort
+    template_name = "trips/resort_list.html"
+    context_object_name = "resorts"
+
+    def get_queryset(self):
+        """Return resorts for trips in families the user belongs to."""
+        return (
+            Resort.objects.filter(trip__family__members__user=self.request.user)
+            .select_related("trip", "trip__family")
+            .order_by("-trip__start_date")
+        )
+
+    def get_context_data(self, **kwargs):
+        """Add context."""
+        context = super().get_context_data(**kwargs)
+        return context
+
+
 class FamilyTripListView(LoginRequiredMixin, ListView):
     """List trips for a specific family."""
 
@@ -262,15 +307,27 @@ class TripDetailView(LoginRequiredMixin, DetailView):
         )
         context["journal_count"] = DailyJournal.objects.filter(trip=trip).count()
 
-        # Get packing lists for this trip (up to 5)
+        # Get packing list for this trip (one per trip)
         from apps.packing.models import TripPackingList
 
-        context["packing_lists"] = (
-            TripPackingList.objects.filter(trip=trip)
+        try:
+            context["packing_list"] = (
+                TripPackingList.objects.select_related("based_on_template")
+                .prefetch_related("items")
+                .get(trip=trip)
+            )
+        except TripPackingList.DoesNotExist:
+            context["packing_list"] = None
+
+        # Get grocery lists for this trip (up to 5)
+        from apps.grocery.models import TripGroceryList
+
+        context["grocery_lists"] = (
+            TripGroceryList.objects.filter(trip=trip)
             .select_related("assigned_to", "based_on_template")
             .prefetch_related("items")[:5]
         )
-        context["packing_lists_count"] = TripPackingList.objects.filter(trip=trip).count()
+        context["grocery_lists_count"] = TripGroceryList.objects.filter(trip=trip).count()
 
         return context
 

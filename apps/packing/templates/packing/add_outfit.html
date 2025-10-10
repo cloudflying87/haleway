@@ -1,75 +1,93 @@
 {% extends "base.html" %}
 
-{% block title %}Add Outfits - {{ packing_list.name }} - HaleWay{% endblock %}
+{% block title %}Add Outfits - {{ packing_list.trip.name }} - HaleWay{% endblock %}
 
 {% block content %}
-<div class="container">
+  <div class="container">
     <div class="page-header">
-        <nav class="breadcrumb">
-            <a href="{% url 'trips:trip_detail' packing_list.trip.pk %}">{{ packing_list.trip.name }}</a>
-            <span>/</span>
-            <a href="{% url 'packing:list_detail' packing_list.pk %}">{{ packing_list.name }}</a>
-            <span>/</span>
-            <span>Add Outfits</span>
-        </nav>
-        <h1>👕 Outfit Calculator</h1>
-        <p class="subtitle">Quickly add clothing items based on the number of outfits you need</p>
+      <nav class="breadcrumb">
+        <a href="{% url 'trips:trip_detail' packing_list.trip.pk %}">{{ packing_list.trip.name }}</a>
+        <span>/</span>
+        <a href="{% url 'packing:list_detail' packing_list.pk %}">Packing List</a>
+        <span>/</span>
+        <span>Add Outfits</span>
+      </nav>
+      <h1>👕 Outfit Calculator</h1>
+      <p class="subtitle">Quickly add clothing items based on the number of outfits you need</p>
     </div>
 
     <form method="post" class="form-card">
-        {% csrf_token %}
+      {% csrf_token %}
 
-        <div class="form-group">
-            {{ form.num_outfits.label_tag }}
-            {{ form.num_outfits }}
-            {% if form.num_outfits.help_text %}
-                <p class="help-text">{{ form.num_outfits.help_text }}</p>
-            {% endif %}
-            {% if form.num_outfits.errors %}
-                <p class="error-text">{{ form.num_outfits.errors }}</p>
-            {% endif %}
-        </div>
+      <div class="form-group">
+        {{ form.category.label_tag }}
+        {{ form.category }}
+        {% if existing_categories %}
+          <datalist id="category-suggestions">
+            {% for category in existing_categories %}
+              <option value="{{ category }}">
+            {% endfor %}
+          </datalist>
+        {% endif %}
+        {% if form.category.help_text %}
+          <p class="help-text">{{ form.category.help_text }}</p>
+        {% endif %}
+        {% if form.category.errors %}
+          <p class="error-text">{{ form.category.errors }}</p>
+        {% endif %}
+      </div>
 
-        <div class="info-box">
-            <h3>What will be added:</h3>
-            <ul>
-                <li><strong>Shirts:</strong> Same as number of outfits</li>
-                <li><strong>Pants:</strong> Half the number (min 3) - for mixing and matching</li>
-                <li><strong>Underwear:</strong> Same as number of outfits</li>
-                <li><strong>Socks:</strong> Same as number of outfits</li>
-                <li><strong>Pajamas:</strong> 2 sets</li>
-            </ul>
-        </div>
+      <div class="form-group">
+        {{ form.num_outfits.label_tag }}
+        {{ form.num_outfits }}
+        {% if form.num_outfits.help_text %}
+          <p class="help-text">{{ form.num_outfits.help_text }}</p>
+        {% endif %}
+        {% if form.num_outfits.errors %}
+          <p class="error-text">{{ form.num_outfits.errors }}</p>
+        {% endif %}
+      </div>
 
-        <div class="form-actions">
-            <a href="{% url 'packing:list_detail' packing_list.pk %}" class="btn btn-outline">Cancel</a>
-            <button type="submit" class="btn btn-primary">Add Items</button>
-        </div>
+      <div class="info-box">
+        <h3>What will be added:</h3>
+        <ul>
+          <li><strong>Shirts:</strong> Same as number of outfits</li>
+          <li><strong>Pants:</strong> Half the number (min 3) - for mixing and matching</li>
+          <li><strong>Underwear:</strong> Same as number of outfits</li>
+          <li><strong>Socks:</strong> Same as number of outfits</li>
+          <li><strong>Pajamas:</strong> 2 sets</li>
+        </ul>
+      </div>
+
+      <div class="form-actions">
+        <a href="{% url 'packing:list_detail' packing_list.pk %}" class="btn btn-outline">Cancel</a>
+        <button type="submit" class="btn btn-primary">Add Items</button>
+      </div>
     </form>
-</div>
+  </div>
 
-<style>
-.info-box {
-    background: #f0f8ff;
-    border-left: 4px solid #2E86AB;
-    padding: 1rem 1.5rem;
-    margin: 1.5rem 0;
-    border-radius: 4px;
-}
+  <style>
+    .info-box {
+      background: #f0f8ff;
+      border-left: 4px solid #2E86AB;
+      padding: 1rem 1.5rem;
+      margin: 1.5rem 0;
+      border-radius: 4px;
+    }
 
-.info-box h3 {
-    color: #2E86AB;
-    margin-bottom: 0.75rem;
-}
+    .info-box h3 {
+      color: #2E86AB;
+      margin-bottom: 0.75rem;
+    }
 
-.info-box ul {
-    margin: 0;
-    padding-left: 1.5rem;
-}
+    .info-box ul {
+      margin: 0;
+      padding-left: 1.5rem;
+    }
 
-.info-box li {
-    margin: 0.5rem 0;
-    color: #2c3e50;
-}
-</style>
+    .info-box li {
+      margin: 0.5rem 0;
+      color: #2c3e50;
+    }
+  </style>
 {% endblock %}

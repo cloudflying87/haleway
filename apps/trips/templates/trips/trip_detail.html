@@ -55,9 +55,9 @@
         <a href="#resort-section" class="quick-nav-link">Resort</a>
         {% if weather_forecast %}<a href="#weather-section" class="quick-nav-link">Weather</a>{% endif %}
         <a href="#packing-section" class="quick-nav-link">Packing</a>
+        <a href="#grocery-section" class="quick-nav-link">Grocery</a>
         <a href="#itinerary-section" class="quick-nav-link">Itinerary</a>
         <a href="#activities-section" class="quick-nav-link">Activities</a>
-        <a href="#budget-section" class="quick-nav-link">Budget</a>
         <a href="#notes-section" class="quick-nav-link">Notes</a>
         <a href="#photos-section" class="quick-nav-link">Photos</a>
         <a href="#journal-section" class="quick-nav-link">Journal</a>
@@ -199,50 +199,96 @@
         </div>
       {% endif %}
 
-        <!-- Packing Lists Section -->
+        <!-- Packing List Section -->
       <div class="section" id="packing-section" data-section="packing">
         <div class="section-header">
           <h2 onclick="toggleSection('packing')" style="cursor: pointer; user-select: none;">
-            <span class="collapse-icon">▼</span> 🎒 Packing Lists{% if packing_lists_count %} ({{ packing_lists_count }}){% endif %}
+            <span class="collapse-icon">▼</span> 🎒 Packing List
           </h2>
           <div class="header-actions">
-            {% if can_edit %}
+            {% if packing_list %}
+              <a href="{% url 'packing:list_detail' packing_list.pk %}" class="btn btn-sm btn-primary">
+                View Packing List
+              </a>
+            {% elif can_edit %}
               <a href="{% url 'packing:create_packing_list' trip.pk %}" class="btn btn-sm btn-primary">
                 + Create Packing List
-              </a>
-            {% endif %}
-            {% if packing_lists_count > 0 %}
-              <a href="{% url 'packing:trip_packing_lists' trip.pk %}" class="btn btn-sm btn-outline">
-                View All ({{ packing_lists_count }})
               </a>
             {% endif %}
           </div>
         </div>
         <div class="section-content">
 
-          {% if packing_lists %}
-            <div class="packing-lists-grid">
-              {% for packing_list in packing_lists %}
-                <div class="packing-list-card">
-                  <div class="packing-list-header">
-                    <h4>{{ packing_list.name }}</h4>
-                    {% if packing_list.assigned_to %}
-                      <span class="assigned-badge">{{ packing_list.assigned_to.get_full_name|default:packing_list.assigned_to.username }}</span>
+          {% if packing_list %}
+            <div class="packing-list-card">
+              <div class="packing-progress">
+                <div class="progress-bar-mini" style="width: {{ packing_list.get_packed_percentage }}%"></div>
+              </div>
+              <p class="packing-status">
+                {{ packing_list.get_packed_count }}/{{ packing_list.get_total_count }} packed
+                ({{ packing_list.get_packed_percentage }}%)
+              </p>
+              <a href="{% url 'packing:list_detail' packing_list.pk %}" class="btn-link">View & Edit List →</a>
+            </div>
+          {% else %}
+            <p class="text-muted">No packing list yet. Create your packing list to start organizing!</p>
+          {% endif %}
+        </div>
+      </div>
+
+        <!-- Grocery Lists Section -->
+      <div class="section" id="grocery-section" data-section="grocery">
+        <div class="section-header">
+          <h2 onclick="toggleSection('grocery')" style="cursor: pointer; user-select: none;">
+            <span class="collapse-icon">▼</span> 🛒 Grocery Lists{% if grocery_lists_count %} ({{ grocery_lists_count }}){% endif %}
+          </h2>
+          <div class="header-actions">
+            {% if can_edit %}
+              <a href="{% url 'grocery:template_list' %}?trip={{ trip.pk }}" class="btn btn-sm btn-primary">
+                + Create from Template
+              </a>
+            {% endif %}
+            {% if grocery_lists_count > 0 %}
+              <a href="{% url 'grocery:trip_grocery_lists' trip.pk %}" class="btn btn-sm btn-outline">
+                View All ({{ grocery_lists_count }})
+              </a>
+            {% endif %}
+          </div>
+        </div>
+        <div class="section-content">
+
+          {% if grocery_lists %}
+            <div class="grocery-lists-grid">
+              {% for grocery_list in grocery_lists %}
+                <div class="grocery-list-card">
+                  <div class="grocery-list-header">
+                    <h4>{{ grocery_list.name }}</h4>
+                    {% if grocery_list.assigned_to %}
+                      <span class="assigned-badge">{{ grocery_list.assigned_to.get_full_name|default:grocery_list.assigned_to.username }}</span>
                     {% endif %}
                   </div>
-                  <div class="packing-progress">
-                    <div class="progress-bar-mini" style="width: {{ packing_list.get_packed_percentage }}%"></div>
+
+                  {% if grocery_list.shopping_date %}
+                    <p class="shopping-date">📅 {{ grocery_list.shopping_date|date:"M d, Y" }}</p>
+                  {% endif %}
+                  {% if grocery_list.store_name %}
+                    <p class="store-name">🏪 {{ grocery_list.store_name }}</p>
+                  {% endif %}
+
+                  <div class="progress-bar-container">
+                    <div class="progress-bar" style="width: {{ grocery_list.get_purchased_percentage }}%"></div>
                   </div>
-                  <p class="packing-status">
-                    {{ packing_list.get_packed_count }}/{{ packing_list.get_total_count }} packed
-                    ({{ packing_list.get_packed_percentage }}%)
+                  <p class="progress-text">
+                    {{ grocery_list.get_purchased_count }} / {{ grocery_list.get_total_count }} items purchased
+                    ({{ grocery_list.get_purchased_percentage }}%)
                   </p>
-                  <a href="{% url 'packing:list_detail' packing_list.pk %}" class="btn-link">View List →</a>
+
+                  <a href="{% url 'grocery:list_detail' grocery_list.pk %}" class="btn-link">View List →</a>
                 </div>
               {% endfor %}
             </div>
           {% else %}
-            <p class="text-muted">No packing lists yet. Create your first packing list to start organizing!</p>
+            <p class="text-muted">No grocery lists yet. Create one from a template to start shopping!</p>
           {% endif %}
         </div>
       </div>
@@ -1615,7 +1661,7 @@
         gap: var(--spacing-xs);
       }
 
-      .packing-lists-grid {
+      .packing-lists-grid, .grocery-lists-grid {
         grid-template-columns: 1fr;
       }
 
@@ -1626,6 +1672,11 @@
 
       .quick-nav-header .btn {
         width: 100%;
+      }
+
+      /* Smaller section titles on mobile */
+      .section-header h2 {
+        font-size: 1.25rem;
       }
     }
   </style>
@@ -1656,9 +1707,10 @@
     function getCollapsedSections() {
       try {
         const stored = localStorage.getItem(STORAGE_KEY);
-        return new Set(stored ? JSON.parse(stored) : []);
+        // Default collapsed sections: packing and grocery
+        return new Set(stored ? JSON.parse(stored) : ['packing', 'grocery']);
       } catch (e) {
-        return new Set();
+        return new Set(['packing', 'grocery']);
       }
     }
 

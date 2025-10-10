@@ -74,17 +74,17 @@
                 </button>
                 <div class="nav-dropdown-menu" id="tripMenu">
                   <div class="dropdown-header">Quick Links</div>
-                  <a href="{% url 'packing:trip_packing_lists' current_trip.pk %}" class="dropdown-item">
-                    🎒 Packing Lists
+                  <a href="{% url 'packing:create_packing_list' current_trip.pk %}" class="dropdown-item">
+                    🎒 Packing List
+                  </a>
+                  <a href="{% url 'grocery:trip_grocery_lists' current_trip.pk %}" class="dropdown-item">
+                    🛒 Grocery Lists
                   </a>
                   <a href="{% url 'itinerary:calendar' current_trip.pk %}" class="dropdown-item">
                     📅 Itinerary
                   </a>
                   <a href="{% url 'activities:activity_list' current_trip.pk %}" class="dropdown-item">
                     🎯 Activities
-                  </a>
-                  <a href="{% url 'budget:budget_overview' current_trip.pk %}" class="dropdown-item">
-                    💰 Budget
                   </a>
                   <a href="{% url 'notes:note_list' current_trip.pk %}" class="dropdown-item">
                     📝 Notes

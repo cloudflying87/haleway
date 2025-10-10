@@ -3,344 +3,307 @@
 {% block title %}Create Packing List - {{ trip.name }} - HaleWay{% endblock %}
 
 {% block content %}
-<div class="container">
+  <div class="container">
     <div class="page-header">
-        <nav class="breadcrumb">
-            <a href="{% url 'trips:trip_detail' trip.pk %}">{{ trip.name }}</a>
-            <span>/</span>
-            <a href="{% url 'packing:trip_packing_lists' trip.pk %}">Packing Lists</a>
-            <span>/</span>
-            <span>Create</span>
-        </nav>
-        <h1>Create Packing List</h1>
-        <p class="subtitle">Choose a template to get started, or create a blank list</p>
+      <nav class="breadcrumb">
+        <a href="{% url 'trips:trip_detail' trip.pk %}">{{ trip.name }}</a>
+        <span>/</span>
+        <span>Create Packing List</span>
+      </nav>
+      <h1>Create Packing List</h1>
+      <p class="subtitle">Choose a template to get started, or create a blank list</p>
     </div>
 
     <form method="post" id="createPackingListForm">
-        {% csrf_token %}
+      {% csrf_token %}
 
         <!-- Template Selection -->
-        <div class="section">
-            <div class="section-header">
-                <h2>1. Choose a Starting Point</h2>
-            </div>
+      <div class="section">
+        <div class="section-header">
+          <h2>Choose a Starting Point</h2>
+        </div>
 
-            <div class="template-grid">
+        <div class="template-grid">
                 <!-- Blank List Option -->
-                <div class="template-card" data-template-id="">
-                    <div class="template-card-icon">📝</div>
-                    <h3 class="template-card-title">Blank List</h3>
-                    <p class="template-card-description">Start fresh and add your own items</p>
-                    <div class="template-card-footer">
-                        <span class="template-item-count">0 items</span>
-                    </div>
-                </div>
+          <div class="template-card" data-template-id="">
+            <div class="template-card-icon">📝</div>
+            <h3 class="template-card-title">Blank List</h3>
+            <p class="template-card-description">Start fresh and add your own items</p>
+            <div class="template-card-footer">
+              <span class="template-item-count">0 items</span>
+            </div>
+          </div>
 
                 <!-- System Templates -->
-                {% for template in templates %}
-                    {% if template.is_system_template %}
-                        <div class="template-card" data-template-id="{{ template.id }}">
-                            <div class="template-card-icon">
-                                {% if template.name == "Beach Trip" %}🏖️
-                                {% elif template.name == "Mountain Trip" %}⛰️
-                                {% elif template.name == "Summer Vacation" %}☀️
-                                {% elif template.name == "Winter Vacation" %}❄️
-                                {% else %}📋{% endif %}
-                            </div>
-                            <h3 class="template-card-title">{{ template.name }}</h3>
-                            <p class="template-card-description">{{ template.description|truncatewords:10 }}</p>
-                            <div class="template-card-footer">
-                                <span class="template-item-count">{{ template.items.count }} items</span>
-                                <span class="template-badge system">System</span>
-                            </div>
-                        </div>
-                    {% endif %}
-                {% endfor %}
+          {% for template in templates %}
+            {% if template.is_system_template %}
+              <div class="template-card" data-template-id="{{ template.id }}">
+                <div class="template-card-icon">
+                  {% if template.name == "Beach Trip" %}🏖️
+                  {% elif template.name == "Mountain Trip" %}⛰️
+                  {% elif template.name == "Summer Vacation" %}☀️
+                  {% elif template.name == "Winter Vacation" %}❄️
+                  {% else %}📋{% endif %}
+                </div>
+                <h3 class="template-card-title">{{ template.name }}</h3>
+                <p class="template-card-description">{{ template.description|truncatewords:10 }}</p>
+                <div class="template-card-footer">
+                  <span class="template-item-count">{{ template.items.count }} items</span>
+                  <span class="template-badge system">System</span>
+                </div>
+              </div>
+            {% endif %}
+          {% endfor %}
 
                 <!-- Custom Templates -->
-                {% for template in custom_templates %}
-                    <div class="template-card" data-template-id="{{ template.id }}">
-                        <div class="template-card-icon">✨</div>
-                        <h3 class="template-card-title">{{ template.name }}</h3>
-                        <p class="template-card-description">{{ template.description|truncatewords:10 }}</p>
-                        <div class="template-card-footer">
-                            <span class="template-item-count">{{ template.items.count }} items</span>
-                            <span class="template-badge custom">Custom</span>
-                        </div>
-                    </div>
-                {% endfor %}
+          {% for template in custom_templates %}
+            <div class="template-card" data-template-id="{{ template.id }}">
+              <div class="template-card-icon">✨</div>
+              <h3 class="template-card-title">{{ template.name }}</h3>
+              <p class="template-card-description">{{ template.description|truncatewords:10 }}</p>
+              <div class="template-card-footer">
+                <span class="template-item-count">{{ template.items.count }} items</span>
+                <span class="template-badge custom">Custom</span>
+              </div>
             </div>
-
-            <input type="hidden" name="template_id" id="template_id" value="">
+          {% endfor %}
         </div>
 
-        <!-- List Details -->
-        <div class="section">
-            <div class="section-header">
-                <h2>2. List Details</h2>
-            </div>
-
-            <div class="form-grid">
-                <div class="form-group">
-                    <label for="list_name" class="form-label">
-                        List Name <span class="required">*</span>
-                    </label>
-                    <input type="text"
-                           name="list_name"
-                           id="list_name"
-                           class="form-input"
-                           required
-                           placeholder="e.g., David's List, Beach Gear, Kids' Stuff">
-                    <p class="help-text">Give this packing list a descriptive name</p>
-                </div>
-
-                <div class="form-group">
-                    <label for="assigned_to" class="form-label">Assign To</label>
-                    <select name="assigned_to" id="assigned_to" class="form-select">
-                        <option value="">General list (not assigned)</option>
-                        {% for member in family_members %}
-                            <option value="{{ member.user.id }}">
-                                {{ member.user.get_full_name|default:member.user.username }}
-                            </option>
-                        {% endfor %}
-                    </select>
-                    <p class="help-text">Optionally assign this list to a specific person</p>
-                </div>
-            </div>
-        </div>
+        <input type="hidden" name="template_id" id="template_id" value="">
+      </div>
 
         <!-- Actions -->
-        <div class="form-actions">
-            <a href="{% url 'packing:trip_packing_lists' trip.pk %}" class="btn btn-outline btn-lg">
-                Cancel
-            </a>
-            <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
-                Create Packing List
-            </button>
-        </div>
+      <div class="form-actions">
+        <a href="{% url 'trips:trip_detail' trip.pk %}" class="btn btn-outline btn-lg">
+          Cancel
+        </a>
+        <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+          Create Packing List
+        </button>
+      </div>
     </form>
-</div>
+  </div>
 
-<style>
-.page-header {
-    margin-bottom: var(--spacing-xl);
-}
+  <style>
+    .page-header {
+      margin-bottom: var(--spacing-xl);
+    }
 
-.subtitle {
-    color: var(--text-secondary);
-    margin-top: var(--spacing-sm);
-    font-size: 1rem;
-}
+    .subtitle {
+      color: var(--text-secondary);
+      margin-top: var(--spacing-sm);
+      font-size: 1rem;
+    }
 
-.section {
-    background: var(--bg-primary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius);
-    padding: var(--spacing-xl);
-    margin-bottom: var(--spacing-lg);
-}
+    .section {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      padding: var(--spacing-xl);
+      margin-bottom: var(--spacing-lg);
+    }
 
-.section-header {
-    margin-bottom: var(--spacing-lg);
-    padding-bottom: var(--spacing-md);
-    border-bottom: 2px solid var(--border-color);
-}
+    .section-header {
+      margin-bottom: var(--spacing-lg);
+      padding-bottom: var(--spacing-md);
+      border-bottom: 2px solid var(--border-color);
+    }
 
-.section-header h2 {
-    color: var(--color-primary);
-    font-size: 1.25rem;
-    margin: 0;
-}
+    .section-header h2 {
+      color: var(--color-primary);
+      font-size: 1.25rem;
+      margin: 0;
+    }
 
 /* Template Grid */
-.template-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: var(--spacing-lg);
-}
+    .template-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: var(--spacing-lg);
+    }
 
-.template-card {
-    background: var(--bg-secondary);
-    border: 2px solid var(--border-color);
-    border-radius: var(--border-radius);
-    padding: var(--spacing-lg);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-}
+    .template-card {
+      background: var(--bg-secondary);
+      border: 2px solid var(--border-color);
+      border-radius: var(--border-radius);
+      padding: var(--spacing-lg);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
 
-.template-card:hover {
-    border-color: var(--color-primary);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(46, 134, 171, 0.15);
-}
+    .template-card:hover {
+      border-color: var(--color-primary);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(46, 134, 171, 0.15);
+    }
 
-.template-card.selected {
-    border-color: var(--color-primary);
-    background: rgba(46, 134, 171, 0.05);
-    box-shadow: 0 0 0 3px rgba(46, 134, 171, 0.1);
-}
+    .template-card.selected {
+      border-color: var(--color-primary);
+      background: rgba(46, 134, 171, 0.05);
+      box-shadow: 0 0 0 3px rgba(46, 134, 171, 0.1);
+    }
 
-.template-card.selected::before {
-    content: '✓';
-    position: absolute;
-    top: var(--spacing-sm);
-    right: var(--spacing-sm);
-    width: 28px;
-    height: 28px;
-    background: var(--color-primary);
-    color: white;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    font-size: 1rem;
-}
+    .template-card.selected::before {
+      content: '✓';
+      position: absolute;
+      top: var(--spacing-sm);
+      right: var(--spacing-sm);
+      width: 28px;
+      height: 28px;
+      background: var(--color-primary);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 1rem;
+    }
 
-.template-card-icon {
-    font-size: 3rem;
-    text-align: center;
-    margin-bottom: var(--spacing-md);
-}
+    .template-card-icon {
+      font-size: 3rem;
+      text-align: center;
+      margin-bottom: var(--spacing-md);
+    }
 
-.template-card-title {
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin: 0 0 var(--spacing-sm) 0;
-}
+    .template-card-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin: 0 0 var(--spacing-sm) 0;
+    }
 
-.template-card-description {
-    color: var(--text-secondary);
-    font-size: 0.875rem;
-    margin: 0 0 var(--spacing-md) 0;
-    flex: 1;
-}
+    .template-card-description {
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+      margin: 0 0 var(--spacing-md) 0;
+      flex: 1;
+    }
 
-.template-card-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-top: var(--spacing-sm);
-    border-top: 1px solid var(--border-color);
-}
+    .template-card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: var(--spacing-sm);
+      border-top: 1px solid var(--border-color);
+    }
 
-.template-item-count {
-    font-size: 0.75rem;
-    color: var(--text-secondary);
-    font-weight: 500;
-}
+    .template-item-count {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
 
-.template-badge {
-    font-size: 0.625rem;
-    padding: 0.25rem 0.5rem;
-    border-radius: 1rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
+    .template-badge {
+      font-size: 0.625rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 1rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
 
-.template-badge.system {
-    background: rgba(46, 134, 171, 0.1);
-    color: var(--color-primary);
-}
+    .template-badge.system {
+      background: rgba(46, 134, 171, 0.1);
+      color: var(--color-primary);
+    }
 
-.template-badge.custom {
-    background: rgba(6, 167, 125, 0.1);
-    color: #06A77D;
-}
+    .template-badge.custom {
+      background: rgba(6, 167, 125, 0.1);
+      color: #06A77D;
+    }
 
 /* Form Grid */
-.form-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: var(--spacing-lg);
-}
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: var(--spacing-lg);
+    }
 
-.form-group {
-    margin-bottom: var(--spacing-md);
-}
+    .form-group {
+      margin-bottom: var(--spacing-md);
+    }
 
-.form-label {
-    display: block;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: var(--spacing-xs);
-    font-size: 0.875rem;
-}
+    .form-label {
+      display: block;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: var(--spacing-xs);
+      font-size: 0.875rem;
+    }
 
-.required {
-    color: #e74c3c;
-}
+    .required {
+      color: #e74c3c;
+    }
 
-.form-input,
-.form-select {
-    width: 100%;
-    padding: 0.75rem;
-    border: 2px solid var(--border-color);
-    border-radius: var(--border-radius);
-    font-size: 1rem;
-    transition: all 0.2s ease;
-    background: var(--bg-primary);
-    color: var(--text-primary);
-}
+    .form-input,
+    .form-select {
+      width: 100%;
+      padding: 0.75rem;
+      border: 2px solid var(--border-color);
+      border-radius: var(--border-radius);
+      font-size: 1rem;
+      transition: all 0.2s ease;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+    }
 
-.form-input:focus,
-.form-select:focus {
-    outline: none;
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(46, 134, 171, 0.1);
-}
+    .form-input:focus,
+    .form-select:focus {
+      outline: none;
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px rgba(46, 134, 171, 0.1);
+    }
 
-.help-text {
-    font-size: 0.75rem;
-    color: var(--text-secondary);
-    margin-top: 0.25rem;
-    margin-bottom: 0;
-}
+    .help-text {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      margin-top: 0.25rem;
+      margin-bottom: 0;
+    }
 
 /* Form Actions */
-.form-actions {
-    display: flex;
-    gap: var(--spacing-md);
-    justify-content: flex-end;
-    padding-top: var(--spacing-lg);
-}
-
-.btn-lg {
-    padding: 0.875rem 2rem;
-    font-size: 1rem;
-}
-
-@media (max-width: 768px) {
-    .template-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .form-grid {
-        grid-template-columns: 1fr;
-    }
-
     .form-actions {
+      display: flex;
+      gap: var(--spacing-md);
+      justify-content: flex-end;
+      padding-top: var(--spacing-lg);
+    }
+
+    .btn-lg {
+      padding: 0.875rem 2rem;
+      font-size: 1rem;
+    }
+
+    @media (max-width: 768px) {
+      .template-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .form-actions {
         flex-direction: column-reverse;
-    }
+      }
 
-    .form-actions .btn {
+      .form-actions .btn {
         width: 100%;
+      }
     }
-}
-</style>
+  </style>
 
-<script>
+  <script>
 // Template card selection
-document.querySelectorAll('.template-card').forEach(card => {
-    card.addEventListener('click', function() {
+    document.querySelectorAll('.template-card').forEach(card => {
+      card.addEventListener('click', function() {
         // Remove selected class from all cards
         document.querySelectorAll('.template-card').forEach(c => {
-            c.classList.remove('selected');
+          c.classList.remove('selected');
         });
 
         // Add selected class to clicked card
@@ -353,14 +316,14 @@ document.querySelectorAll('.template-card').forEach(card => {
         // Update submit button text
         const submitBtn = document.getElementById('submitBtn');
         if (templateId === '') {
-            submitBtn.textContent = 'Create Blank List';
+          submitBtn.textContent = 'Create Blank List';
         } else {
-            submitBtn.textContent = 'Create from Template';
+          submitBtn.textContent = 'Create from Template';
         }
+      });
     });
-});
 
 // Auto-select blank list by default
-document.querySelector('.template-card[data-template-id=""]')?.click();
-</script>
+    document.querySelector('.template-card[data-template-id=""]')?.click();
+  </script>
 {% endblock %}

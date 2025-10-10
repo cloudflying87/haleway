@@ -20,6 +20,7 @@ class Trip(models.Model):
     """
 
     STATUS_CHOICES = [
+        ("dream", _("Dream Trip")),
         ("planning", _("Planning")),
         ("active", _("Active")),
         ("completed", _("Completed")),

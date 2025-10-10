@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}Quick Add Items - HaleWay{% endblock %}
+
+{% block content %}
+  <div class="container">
+    <div class="page-header">
+      <h1>Quick Add Items</h1>
+      <p class="text-muted">{{ grocery_list.name }}</p>
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <form method="post">
+          {% csrf_token %}
+
+          <div class="form-group">
+            <label for="{{ form.items_text.id_for_label }}" class="form-label">
+              {{ form.items_text.label }}
+            </label>
+            {{ form.items_text }}
+            {% if form.items_text.help_text %}
+              <small class="form-text text-muted">{{ form.items_text.help_text }}</small>
+            {% endif %}
+            {% if form.items_text.errors %}
+              <div class="error-message">{{ form.items_text.errors }}</div>
+            {% endif %}
+          </div>
+
+          <details class="category-options">
+            <summary>Advanced Options</summary>
+            <div class="form-group" style="margin-top: var(--spacing-md);">
+              <label for="{{ form.category.id_for_label }}" class="form-label">
+                {{ form.category.label }}
+              </label>
+              {{ form.category }}
+              {% if form.category.help_text %}
+                <small class="form-text text-muted">{{ form.category.help_text }}</small>
+              {% endif %}
+              {% if form.category.errors %}
+                <div class="error-message">{{ form.category.errors }}</div>
+              {% endif %}
+            </div>
+          </details>
+
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Add Items</button>
+            <a href="{% url 'grocery:list_detail' grocery_list.pk %}" class="btn btn-outline">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .page-header {
+      margin-bottom: var(--spacing-xl);
+    }
+
+    .page-header h1 {
+      margin-bottom: var(--spacing-xs);
+    }
+
+    .form-group {
+      margin-bottom: var(--spacing-lg);
+    }
+
+    .form-label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: var(--spacing-xs);
+      color: var(--text-primary);
+    }
+
+    .form-text {
+      display: block;
+      margin-top: var(--spacing-xs);
+    }
+
+    .error-message {
+      color: var(--error-color);
+      font-size: 0.875rem;
+      margin-top: var(--spacing-xs);
+    }
+
+    .category-options {
+      margin-top: var(--spacing-lg);
+      margin-bottom: var(--spacing-lg);
+      padding: var(--spacing-md);
+      background-color: var(--gray-50);
+      border-radius: var(--border-radius);
+    }
+
+    .category-options summary {
+      cursor: pointer;
+      font-weight: 500;
+      color: var(--text-secondary);
+      list-style: none;
+      user-select: none;
+    }
+
+    .category-options summary:hover {
+      color: var(--primary-color);
+    }
+
+    .category-options summary::before {
+      content: '▶ ';
+      display: inline-block;
+      transition: transform var(--transition-fast);
+    }
+
+    .category-options[open] summary::before {
+      transform: rotate(90deg);
+    }
+
+    .form-actions {
+      display: flex;
+      gap: var(--spacing-sm);
+      margin-top: var(--spacing-xl);
+    }
+  </style>
+{% endblock %}

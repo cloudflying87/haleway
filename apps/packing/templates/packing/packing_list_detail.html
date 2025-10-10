@@ -1,458 +1,678 @@
 {% extends "base.html" %}
 
-{% block title %}{{ packing_list.name }} - HaleWay{% endblock %}
+{% block title %}Packing List - {{ packing_list.trip.name }} - HaleWay{% endblock %}
+
+{% block extra_css %}
+<!-- Select2 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+  <style>
+/* Custom Select2 Styling for Modal */
+    .select2-container--default .select2-selection--single {
+      height: 54px !important;
+      padding: 1rem 1.25rem !important;
+      background-color: var(--bg-secondary);
+      border: 2px solid transparent !important;
+      border-radius: var(--border-radius-lg) !important;
+      transition: all var(--transition-base);
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+
+    .select2-container--default .select2-selection--single:hover {
+      background-color: var(--white);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    }
+
+    .select2-container--default.select2-container--focus .select2-selection--single,
+    .select2-container--default.select2-container--open .select2-selection--single {
+      background-color: var(--white) !important;
+      border-color: var(--primary-color) !important;
+      box-shadow: 0 0 0 4px rgba(46, 134, 171, 0.15), 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+      line-height: 32px !important;
+      padding-left: 0 !important;
+      padding-right: 0 !important;
+      color: var(--text-primary);
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+      height: 54px !important;
+      right: 12px !important;
+    }
+
+    .select2-dropdown {
+      border: 2px solid var(--primary-color) !important;
+      border-radius: var(--border-radius-lg) !important;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15) !important;
+      margin-top: 4px;
+    }
+
+    .select2-container--default .select2-results__option {
+      padding: 12px 16px;
+    }
+
+    .select2-container--default .select2-results__option--highlighted[aria-selected] {
+      background-color: var(--primary-color) !important;
+    }
+
+    .select2-container--default .select2-search--dropdown .select2-search__field {
+      border: 2px solid var(--gray-300);
+      border-radius: var(--border-radius);
+      padding: 12px;
+      font-size: 1rem;
+    }
+
+    .select2-container--default .select2-search--dropdown .select2-search__field:focus {
+      border-color: var(--primary-color);
+      outline: none;
+    }
+  </style>
+{% endblock %}
 
 {% block content %}
-<div class="container">
+  <div class="container">
     <div class="page-header">
-        <div class="header-content">
-            <div>
-                <nav class="breadcrumb">
-                    <a href="{% url 'trips:trip_detail' packing_list.trip.pk %}">{{ packing_list.trip.name }}</a>
-                    <span>/</span>
-                    <a href="{% url 'packing:trip_packing_lists' packing_list.trip.pk %}">Packing Lists</a>
-                    <span>/</span>
-                    <span>{{ packing_list.name }}</span>
-                </nav>
-                <h1>{{ packing_list.name }}</h1>
-                {% if packing_list.assigned_to %}
-                    <p class="subtitle">Assigned to: {{ packing_list.assigned_to.get_full_name|default:packing_list.assigned_to.username }}</p>
-                {% endif %}
-            </div>
-            {% if can_edit %}
-                <div class="header-actions">
-                    <a href="{% url 'packing:bulk_add_items' packing_list.pk %}" class="btn btn-primary">
-                        ⚡ Quick Add
-                    </a>
-                    <a href="{% url 'packing:add_item' packing_list.pk %}" class="btn btn-outline">
-                        + Add Item
-                    </a>
-                    <a href="{% url 'packing:add_outfit' packing_list.pk %}" class="btn btn-outline">
-                        👕 Add Outfits
-                    </a>
-                    <a href="{% url 'packing:save_as_template' packing_list.pk %}" class="btn btn-outline">
-                        💾 Save as Template
-                    </a>
-                </div>
-            {% endif %}
+      <div class="header-content">
+        <div>
+          <nav class="breadcrumb">
+            <a href="{% url 'trips:trip_detail' packing_list.trip.pk %}">{{ packing_list.trip.name }}</a>
+            <span>/</span>
+            <span>Packing List</span>
+          </nav>
+          <h1>Packing List</h1>
+          <p class="subtitle">{{ packing_list.trip.name }}</p>
         </div>
+        {% if can_edit %}
+          <div class="header-actions">
+            <a href="{% url 'packing:print_list' packing_list.pk %}" class="btn btn-primary" target="_blank">
+              🖨️ Print
+            </a>
+            <a href="{% url 'packing:bulk_add_items' packing_list.pk %}" class="btn btn-outline">
+              ⚡ Quick Add
+            </a>
+            <button type="button" onclick="openAddItemModal()" class="btn btn-outline">
+              + Add Item
+            </button>
+            <a href="{% url 'packing:add_outfit' packing_list.pk %}" class="btn btn-outline">
+              👕 Add Outfits
+            </a>
+            <a href="{% url 'packing:save_as_template' packing_list.pk %}" class="btn btn-outline">
+              💾 Save as Template
+            </a>
+          </div>
+        {% endif %}
+      </div>
     </div>
 
     <!-- Progress Bar -->
     <div class="progress-section">
-        <div class="progress-bar-container">
-            <div class="progress-bar" id="progress-bar" style="width: {{ packed_percentage }}%"></div>
-        </div>
-        <p class="progress-text" id="progress-text">
-            <span id="packed-count">{{ packed_count }}</span> / <span id="total-count">{{ total_count }}</span> items packed
-            (<span id="percentage">{{ packed_percentage }}</span>%)
-        </p>
+      <div class="progress-bar-container">
+        <div class="progress-bar" id="progress-bar" style="width: {{ packed_percentage }}%"></div>
+      </div>
+      <p class="progress-text" id="progress-text">
+        <span id="packed-count">{{ packed_count }}</span> / <span id="total-count">{{ total_count }}</span> items packed
+        (<span id="percentage">{{ packed_percentage }}</span>%)
+      </p>
     </div>
-
-    <!-- Weather Forecast -->
-    {% if weather_forecast %}
-        <div class="weather-section">
-            <h2 class="weather-header">🌤️ Weather Forecast</h2>
-            {% if temp_range %}
-                <p class="weather-summary">
-                    Trip temperature range: <strong>{{ temp_range.low }}°F - {{ temp_range.high }}°F</strong>
-                </p>
-            {% endif %}
-            <div class="weather-forecast-grid">
-                {% for day in weather_forecast %}
-                    <div class="weather-day">
-                        <div class="weather-date">{{ day.date|date:"M j" }}</div>
-                        <div class="weather-icon">{{ day.weather_icon }}</div>
-                        <div class="weather-temps">
-                            {% if day.high %}<span class="temp-high">{{ day.high }}°</span>{% endif %}
-                            {% if day.low %}<span class="temp-low">{{ day.low }}°</span>{% endif %}
-                        </div>
-                    </div>
-                {% endfor %}
-            </div>
-        </div>
-    {% endif %}
 
     <!-- Packing Items by Category -->
     {% if items_by_category %}
-        {% for category, items in items_by_category.items %}
-            <div class="category-section">
-                <h2 class="category-header">{{ category }}</h2>
-                <div class="items-list">
-                    {% for item in items %}
-                        <div class="packing-item {% if item.is_packed %}packed{% endif %}" id="item-{{ item.id }}">
-                            <label class="checkbox-container">
-                                <input type="checkbox"
-                                       class="item-checkbox"
-                                       data-item-id="{{ item.id }}"
-                                       {% if item.is_packed %}checked{% endif %}
-                                       {% if not can_edit %}disabled{% endif %}>
-                                <span class="checkmark"></span>
-                                <span class="item-details">
-                                    <span class="item-name">{{ item.item_name }}</span>
-                                    {% if item.quantity > 1 %}
-                                        <span class="item-quantity">× {{ item.quantity }}</span>
-                                    {% endif %}
-                                    {% if item.notes %}
-                                        <span class="item-notes">{{ item.notes }}</span>
-                                    {% endif %}
-                                </span>
-                            </label>
-                            {% if can_edit %}
-                                <div class="item-actions">
-                                    <a href="{% url 'packing:edit_item' item.pk %}" class="btn-icon" title="Edit">✏️</a>
-                                    <a href="{% url 'packing:delete_item' item.pk %}" class="btn-icon" title="Delete">🗑️</a>
-                                </div>
-                            {% endif %}
-                        </div>
-                    {% endfor %}
-                </div>
-            </div>
-        {% endfor %}
-    {% else %}
-        <div class="empty-state">
-            <p>No items in this packing list yet.</p>
+      {% for category, items in items_by_category.items %}
+        <div class="category-section">
+          <div class="category-header">
+            <h2 class="category-title">{{ category }}</h2>
             {% if can_edit %}
-                <div style="display: flex; gap: var(--spacing-md); justify-content: center; flex-wrap: wrap;">
-                    <a href="{% url 'packing:bulk_add_items' packing_list.pk %}" class="btn btn-primary">
-                        ⚡ Quick Add Items
-                    </a>
-                    <a href="{% url 'packing:add_item' packing_list.pk %}" class="btn btn-outline">
-                        + Add Single Item
-                    </a>
-                </div>
+              <div class="category-actions">
+                <button type="button"
+                        onclick="openAddItemModal('{{ category|escapejs }}')"
+                        class="btn-category-action"
+                        title="Add item to {{ category }}">
+                  + Add Item
+                </button>
+              </div>
             {% endif %}
+          </div>
+          <div class="items-list">
+            {% for item in items %}
+              <div class="packing-item {% if item.is_packed %}packed{% endif %}" id="item-{{ item.id }}">
+                <label class="checkbox-container">
+                  <input type="checkbox"
+                         class="item-checkbox"
+                         data-item-id="{{ item.id }}"
+                         {% if item.is_packed %}checked{% endif %}
+                         {% if not can_edit %}disabled{% endif %}>
+                  <span class="checkmark"></span>
+                  <span class="item-details">
+                    <span class="item-name">{{ item.item_name }}</span>
+                    {% if item.quantity > 1 %}
+                      <span class="item-quantity">× {{ item.quantity }}</span>
+                    {% endif %}
+                    {% if item.notes %}
+                      <span class="item-notes">{{ item.notes }}</span>
+                    {% endif %}
+                  </span>
+                </label>
+                {% if can_edit %}
+                  <div class="item-actions">
+                    <a href="{% url 'packing:edit_item' item.pk %}" class="btn-icon" title="Edit">✏️</a>
+                    <a href="{% url 'packing:delete_item' item.pk %}" class="btn-icon" title="Delete">🗑️</a>
+                  </div>
+                {% endif %}
+              </div>
+            {% endfor %}
+          </div>
         </div>
-    {% endif %}
-
-    <!-- Delete Button -->
-    {% if can_delete %}
-        <div class="danger-zone">
-            <a href="{% url 'packing:list_delete' packing_list.pk %}" class="btn btn-danger">
-                Delete Packing List
+      {% endfor %}
+    {% else %}
+      <div class="empty-state">
+        <p>No items in this packing list yet.</p>
+        {% if can_edit %}
+          <div style="display: flex; gap: var(--spacing-md); justify-content: center; flex-wrap: wrap;">
+            <a href="{% url 'packing:bulk_add_items' packing_list.pk %}" class="btn btn-primary">
+              ⚡ Quick Add Items
             </a>
-        </div>
+            <button type="button" onclick="openAddItemModal()" class="btn btn-outline">
+              + Add Single Item
+            </button>
+          </div>
+        {% endif %}
+      </div>
     {% endif %}
-</div>
 
-<style>
+    <!-- Add Item Modal -->
+    <div id="addItemModal" class="modal">
+      <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header">
+          <h3>Add Packing Item</h3>
+          <button type="button" class="modal-close" onclick="closeAddItemModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <form id="addItemForm" method="post">
+            {% csrf_token %}
+            <input type="hidden" id="modal_category_hidden" name="category">
+            <div class="form-group" id="category_form_group">
+              <label for="modal_category">Category <span style="color: #e74c3c;">*</span></label>
+              <select id="modal_category" class="form-control category-select-modal" required>
+                <option value=""></option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="modal_item_name">Item Name <span style="color: #e74c3c;">*</span></label>
+              <input type="text" id="modal_item_name" name="item_name" class="form-control" placeholder="e.g., Sunscreen, Hiking boots" maxlength="200" required>
+            </div>
+            <div class="form-group">
+              <label for="modal_quantity">Quantity</label>
+              <input type="number" id="modal_quantity" name="quantity" class="form-control" min="1" value="1">
+            </div>
+            <div class="form-group">
+              <label for="modal_notes">Notes <span style="color: var(--text-muted); font-weight: 400;">(optional)</span></label>
+              <textarea id="modal_notes" name="notes" class="form-control" rows="2" placeholder="Optional notes about this item"></textarea>
+            </div>
+            <div style="display: flex; gap: var(--spacing-md); margin-top: var(--spacing-lg);">
+              <button type="button" onclick="closeAddItemModal()" class="btn btn-outline" style="flex: 1;">Cancel</button>
+              <button type="submit" class="btn btn-primary" style="flex: 1;">Add Item</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
 /* Header Layout */
-.header-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: var(--spacing-lg);
-}
-
-.header-actions {
-    display: flex;
-    gap: var(--spacing-sm);
-    flex-wrap: wrap;
-    align-items: center;
-    position: relative;
-    z-index: 10;
-}
-
-.header-actions .btn {
-    pointer-events: auto;
-    position: relative;
-    z-index: 10;
-}
-
-@media (max-width: 768px) {
     .header-content {
-        flex-direction: column;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: var(--spacing-lg);
     }
 
     .header-actions {
-        width: 100%;
-        flex-direction: column;
+      display: flex;
+      gap: var(--spacing-sm);
+      flex-wrap: wrap;
+      align-items: center;
+      position: relative;
+      z-index: 10;
     }
 
     .header-actions .btn {
+      pointer-events: auto;
+      position: relative;
+      z-index: 10;
+    }
+
+    @media (max-width: 768px) {
+      .header-content {
+        flex-direction: column;
+      }
+
+      .header-actions {
         width: 100%;
+        flex-direction: column;
+      }
+
+      .header-actions .btn {
+        width: 100%;
+      }
     }
-}
 
-.progress-section {
-    background: white;
-    padding: 1.5rem;
-    border-radius: 8px;
-    margin: 2rem 0;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
-
-.progress-bar-container {
-    width: 100%;
-    height: 12px;
-    background: #e0e0e0;
-    border-radius: 6px;
-    overflow: hidden;
-    margin-bottom: 0.75rem;
-}
-
-.progress-bar {
-    height: 100%;
-    background: linear-gradient(90deg, #06A77D, #2E86AB);
-    transition: width 0.3s ease;
-}
-
-.progress-text {
-    text-align: center;
-    font-size: 1rem;
-    color: #666;
-    margin: 0;
-}
-
-.category-section {
-    background: white;
-    border-radius: 8px;
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
-
-.category-header {
-    font-size: 1.25rem;
-    color: #2E86AB;
-    margin-bottom: 1rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 2px solid #e0e0e0;
-}
-
-.items-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-}
-
-.packing-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0.75rem;
-    border-radius: 6px;
-    transition: background 0.2s ease;
-}
-
-.packing-item:hover {
-    background: #f8f9fa;
-}
-
-.packing-item.packed {
-    opacity: 0.6;
-}
-
-.packing-item.packed .item-name {
-    text-decoration: line-through;
-    color: #888;
-}
-
-.checkbox-container {
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    flex: 1;
-}
-
-.checkbox-container input {
-    position: absolute;
-    opacity: 0;
-    cursor: pointer;
-}
-
-.checkmark {
-    width: 24px;
-    height: 24px;
-    border: 2px solid #ccc;
-    border-radius: 4px;
-    margin-right: 1rem;
-    display: inline-block;
-    position: relative;
-    transition: all 0.2s ease;
-}
-
-.checkbox-container input:checked ~ .checkmark {
-    background: #06A77D;
-    border-color: #06A77D;
-}
-
-.checkbox-container input:checked ~ .checkmark:after {
-    content: '✓';
-    position: absolute;
-    color: white;
-    font-size: 16px;
-    font-weight: bold;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-}
-
-.item-details {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-}
-
-.item-name {
-    font-weight: 500;
-    color: #2c3e50;
-}
-
-.item-quantity {
-    color: #06A77D;
-    font-size: 0.875rem;
-    font-weight: 600;
-}
-
-.item-notes {
-    color: #888;
-    font-size: 0.875rem;
-}
-
-.item-actions {
-    display: flex;
-    gap: 0.5rem;
-    opacity: 0;
-    transition: opacity 0.2s ease;
-}
-
-.packing-item:hover .item-actions {
-    opacity: 1;
-}
-
-.btn-icon {
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 1.25rem;
-    padding: 0.25rem;
-    text-decoration: none;
-}
-
-.btn-icon:hover {
-    transform: scale(1.1);
-}
-
-.danger-zone {
-    margin-top: 3rem;
-    padding-top: 2rem;
-    border-top: 1px solid #e0e0e0;
-    text-align: center;
-}
-
-/* Weather Forecast Styles */
-.weather-section {
-    background: white;
-    padding: 1.5rem;
-    border-radius: 8px;
-    margin: 2rem 0;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
-
-.weather-header {
-    font-size: 1.25rem;
-    color: #2E86AB;
-    margin-bottom: 1rem;
-}
-
-.weather-summary {
-    color: #666;
-    margin-bottom: 1rem;
-    font-size: 1rem;
-}
-
-.weather-forecast-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-    gap: 1rem;
-    margin-top: 1rem;
-}
-
-.weather-day {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 1rem;
-    background: #f8f9fa;
-    border-radius: 8px;
-    text-align: center;
-}
-
-.weather-date {
-    font-weight: 600;
-    color: #2c3e50;
-    margin-bottom: 0.5rem;
-    font-size: 0.875rem;
-}
-
-.weather-icon {
-    font-size: 2rem;
-    margin: 0.5rem 0;
-}
-
-.weather-temps {
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
-    margin-top: 0.5rem;
-}
-
-.temp-high {
-    color: #e74c3c;
-    font-weight: 600;
-}
-
-.temp-low {
-    color: #3498db;
-    font-weight: 600;
-}
-
-@media (max-width: 576px) {
-    .weather-forecast-grid {
-        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    .progress-section {
+      background: white;
+      padding: 1rem;
+      border-radius: 8px;
+      margin: 1rem 0;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
-}
-</style>
 
-<script>
+    .progress-bar-container {
+      width: 100%;
+      height: 10px;
+      background: #e0e0e0;
+      border-radius: 5px;
+      overflow: hidden;
+      margin-bottom: 0.5rem;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #06A77D, #2E86AB);
+      transition: width 0.3s ease;
+    }
+
+    .progress-text {
+      text-align: center;
+      font-size: 0.9rem;
+      color: #666;
+      margin: 0;
+    }
+
+    .category-section {
+      background: white;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .category-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 2px solid #e0e0e0;
+      gap: var(--spacing-md);
+    }
+
+    .category-title {
+      font-size: 1.1rem;
+      color: #2E86AB;
+      margin: 0;
+    }
+
+    .category-actions {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .btn-category-action {
+      background: linear-gradient(135deg, var(--primary-color) 0%, #236b8a 100%);
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: var(--border-radius-lg);
+      font-size: 0.875rem;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all var(--transition-base);
+      box-shadow: 0 2px 8px rgba(46, 134, 171, 0.2);
+      white-space: nowrap;
+    }
+
+    .btn-category-action:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(46, 134, 171, 0.3);
+    }
+
+    .btn-category-action:active {
+      transform: translateY(0);
+    }
+
+    @media (max-width: 768px) {
+      .category-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .category-actions {
+        width: 100%;
+      }
+
+      .btn-category-action {
+        width: 100%;
+        text-align: center;
+      }
+    }
+
+    .items-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .packing-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.5rem;
+      border-radius: 6px;
+      transition: background 0.2s ease;
+    }
+
+    .packing-item:hover {
+      background: #f8f9fa;
+    }
+
+    .packing-item.packed {
+      opacity: 0.6;
+    }
+
+    .packing-item.packed .item-name {
+      text-decoration: line-through;
+      color: #888;
+    }
+
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      flex: 1;
+    }
+
+    .checkbox-container input {
+      position: absolute;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .checkmark {
+      width: 24px;
+      height: 24px;
+      border: 2px solid #ccc;
+      border-radius: 4px;
+      margin-right: 1rem;
+      display: inline-block;
+      position: relative;
+      transition: all 0.2s ease;
+    }
+
+    .checkbox-container input:checked ~ .checkmark {
+      background: #06A77D;
+      border-color: #06A77D;
+    }
+
+    .checkbox-container input:checked ~ .checkmark:after {
+      content: '✓';
+      position: absolute;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .item-details {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .item-name {
+      font-weight: 500;
+      color: #2c3e50;
+    }
+
+    .item-quantity {
+      color: #06A77D;
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+
+    .item-notes {
+      color: #888;
+      font-size: 0.875rem;
+    }
+
+    .item-actions {
+      display: flex;
+      gap: 0.5rem;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .packing-item:hover .item-actions {
+      opacity: 1;
+    }
+
+    .btn-icon {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1.25rem;
+      padding: 0.25rem;
+      text-decoration: none;
+    }
+
+    .btn-icon:hover {
+      transform: scale(1.1);
+    }
+
+    .danger-zone {
+      margin-top: 2rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid #e0e0e0;
+      text-align: center;
+    }
+  </style>
+
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+  <script>
+// Category suggestions for modal
+    const categoryList = [
+      {% for category in items_by_category.keys %}
+        "{{ category|escapejs }}",
+      {% endfor %}
+      "Clothing",
+      "Electronics",
+      "Toiletries",
+      "Documents",
+      "Medications",
+      "Beach Gear",
+      "Outdoor Gear",
+      "Sports Equipment",
+      "Entertainment",
+      "Food & Snacks"
+    ];
+
+// Remove duplicates
+    const uniqueCategories = [...new Set(categoryList)];
+
+// Initialize Select2 on page load
+    $(document).ready(function() {
+    // Populate category dropdown
+      const $categorySelect = $('.category-select-modal');
+      uniqueCategories.forEach(cat => {
+        if (cat) {
+          $categorySelect.append(new Option(cat, cat));
+        }
+      });
+
+    // Initialize Select2
+      $categorySelect.select2({
+        tags: true,
+        placeholder: 'Select or type a category...',
+        allowClear: false,
+        width: '100%',
+        dropdownParent: $('#addItemModal'),
+        createTag: function (params) {
+          var term = $.trim(params.term);
+          if (term === '') {
+            return null;
+          }
+          return {
+            id: term,
+            text: term + ' (create new)',
+            newTag: true
+          }
+        },
+        templateResult: function(data) {
+          if (data.newTag) {
+            return $('<span style="color: var(--accent-color); font-weight: 600;">+ ' + data.text + '</span>');
+          }
+          return data.text;
+        }
+      });
+    });
+
+// Open modal
+    function openAddItemModal(category = '') {
+      const modal = document.getElementById('addItemModal');
+      modal.classList.add('show');
+      document.body.style.overflow = 'hidden';
+
+    // Reset form
+      document.getElementById('addItemForm').reset();
+
+      const categoryFormGroup = document.getElementById('category_form_group');
+      const categoryHidden = document.getElementById('modal_category_hidden');
+      const categorySelect = document.getElementById('modal_category');
+
+    // Set category if provided
+      if (category) {
+        // Hide the category dropdown and show category in hidden input
+        categoryFormGroup.style.display = 'none';
+        categoryHidden.value = category;
+        categorySelect.removeAttribute('required');
+
+        // Focus on item name field
+        setTimeout(() => {
+          document.getElementById('modal_item_name').focus();
+        }, 100);
+      } else {
+        // Show the category dropdown
+        categoryFormGroup.style.display = 'block';
+        categoryHidden.value = '';
+        categorySelect.setAttribute('required', 'required');
+        $('.category-select-modal').val(null).trigger('change');
+
+        // Focus on category field
+        setTimeout(() => {
+          $('.category-select-modal').select2('open');
+        }, 300);
+      }
+    }
+
+// Close modal
+    function closeAddItemModal() {
+      const modal = document.getElementById('addItemModal');
+      modal.classList.remove('show');
+      document.body.style.overflow = '';
+    }
+
+// Handle form submission
+    document.getElementById('addItemForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+    // If category dropdown is visible, sync its value to the hidden input
+      const categoryFormGroup = document.getElementById('category_form_group');
+      if (categoryFormGroup.style.display !== 'none') {
+        const categoryValue = $('.category-select-modal').val();
+        document.getElementById('modal_category_hidden').value = categoryValue;
+      }
+
+      const formData = new FormData(this);
+
+      fetch('{% url "packing:add_item" packing_list.pk %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'X-CSRFToken': '{{ csrf_token }}'
+        }
+      })
+        .then(response => {
+          if (response.ok) {
+            // Reload page to show new item
+            window.location.reload();
+          } else {
+            alert('Error adding item. Please try again.');
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Error adding item. Please try again.');
+        });
+    });
+
+// Close modal on escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        const modal = document.getElementById('addItemModal');
+        if (modal && modal.classList.contains('show')) {
+          closeAddItemModal();
+        }
+      }
+    });
+
+// Close modal when clicking outside
+    document.getElementById('addItemModal')?.addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeAddItemModal();
+      }
+    });
+
 // Toggle packed status via AJAX
-document.querySelectorAll('.item-checkbox').forEach(checkbox => {
-    checkbox.addEventListener('change', function() {
+    document.querySelectorAll('.item-checkbox').forEach(checkbox => {
+      checkbox.addEventListener('change', function() {
         const itemId = this.dataset.itemId;
         const isChecked = this.checked;
 
         fetch(`/packing/item/${itemId}/toggle/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': '{{ csrf_token }}'
-            }
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+          }
         })
-        .then(response => response.json())
-        .then(data => {
+          .then(response => response.json())
+          .then(data => {
             if (data.success) {
                 // Update progress bar
-                document.getElementById('packed-count').textContent = data.packed_count;
-                document.getElementById('total-count').textContent = data.total_count;
-                document.getElementById('percentage').textContent = data.percentage;
-                document.getElementById('progress-bar').style.width = data.percentage + '%';
+              document.getElementById('packed-count').textContent = data.packed_count;
+              document.getElementById('total-count').textContent = data.total_count;
+              document.getElementById('percentage').textContent = data.percentage;
+              document.getElementById('progress-bar').style.width = data.percentage + '%';
 
                 // Toggle packed class
-                const itemElement = document.getElementById(`item-${itemId}`);
-                if (data.is_packed) {
-                    itemElement.classList.add('packed');
-                } else {
-                    itemElement.classList.remove('packed');
-                }
+              const itemElement = document.getElementById(`item-${itemId}`);
+              if (data.is_packed) {
+                itemElement.classList.add('packed');
+              } else {
+                itemElement.classList.remove('packed');
+              }
             }
-        })
-        .catch(error => {
+          })
+          .catch(error => {
             console.error('Error:', error);
             // Revert checkbox if error
             this.checked = !isChecked;
-        });
+          });
+      });
     });
-});
-</script>
+  </script>
 {% endblock %}

@@ -15,14 +15,13 @@ urlpatterns = [
     path("templates/create/", views.TemplateCreateView.as_view(), name="template_create"),
     path("templates/<uuid:pk>/edit/", views.TemplateUpdateView.as_view(), name="template_edit"),
     path("templates/<uuid:pk>/delete/", views.TemplateDeleteView.as_view(), name="template_delete"),
-    # Trip packing lists
+    # Trip packing lists (one per trip)
     path(
-        "trip/<uuid:trip_pk>/", views.TripPackingListListView.as_view(), name="trip_packing_lists"
+        "trip/<uuid:trip_pk>/create/", views.create_or_get_packing_list, name="create_packing_list"
     ),
-    path("trip/<uuid:trip_pk>/create/", views.create_packing_list, name="create_packing_list"),
     path("list/<uuid:pk>/", views.PackingListDetailView.as_view(), name="list_detail"),
+    path("list/<uuid:pk>/print/", views.print_packing_list, name="print_list"),
     path("list/<uuid:pk>/save-as-template/", views.save_as_template, name="save_as_template"),
-    path("list/<uuid:pk>/delete/", views.PackingListDeleteView.as_view(), name="list_delete"),
     # Packing items
     path("list/<uuid:list_pk>/add-item/", views.add_packing_item, name="add_item"),
     path("list/<uuid:list_pk>/bulk-add/", views.bulk_add_items, name="bulk_add_items"),

@@ -85,6 +85,9 @@ def dashboard(request):
         except Resort.DoesNotExist:
             context["active_resort"] = None
 
+    # Get user's primary family (first family for trip creation)
+    context["primary_family"] = user_families.first()
+
     return render(request, "core/dashboard.html", context)
 
 
