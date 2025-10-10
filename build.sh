@@ -10,7 +10,7 @@
 # PROJECT CONFIGURATION - CHANGE THESE
 PROJECT_NAME="haleway"                    # ← CHANGE THIS
 REMOTE_SERVER="davidhale87@172.16.205.4"           # ← Development machine (for copying backups FROM production)
-REMOTE_BACKUP_DIR="halefiles/coding/halewaybackups"               # ← CHANGE THIS (optional)
+REMOTE_BACKUP_DIR="halefiles/Coding/halewaybackups"               # ← CHANGE THIS (optional)
 
 # Auto-generated container names (usually don't need to change)
 DB_CONTAINER="${PROJECT_NAME}-db-1"
