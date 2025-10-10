@@ -2,6 +2,11 @@
 Forms for budget category and item management.
 """
 
+import contextlib
+import csv
+import io
+from decimal import Decimal, InvalidOperation
+
 from django import forms
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
@@ -191,3 +196,158 @@ class BudgetItemForm(forms.ModelForm):
         if commit:
             item.save()
         return item
+
+
+class BudgetCSVImportForm(forms.Form):
+    """Form for importing budget items from CSV."""
+
+    csv_file = forms.FileField(
+        label=_("CSV File"),
+        help_text=_(
+            "Upload a CSV file with columns: description, estimated_amount, category, actual_amount, paid_by, payment_date, notes"
+        ),
+        widget=forms.FileInput(attrs={"class": "form-control", "accept": ".csv"}),
+    )
+
+    def __init__(self, *args, trip=None, family_members=None, **kwargs):
+        """Initialize form with trip and family members."""
+        super().__init__(*args, **kwargs)
+        self.trip = trip
+        self.family_members = family_members
+
+    def clean_csv_file(self):
+        """Validate CSV file format."""
+        csv_file = self.cleaned_data.get("csv_file")
+
+        if not csv_file:
+            raise ValidationError(_("Please upload a CSV file."))
+
+        if not csv_file.name.endswith(".csv"):
+            raise ValidationError(_("File must be a CSV file."))
+
+        # Check file size (max 5MB)
+        if csv_file.size > 5 * 1024 * 1024:
+            raise ValidationError(_("File size must be less than 5MB."))
+
+        return csv_file
+
+    def parse_csv(self):
+        """Parse CSV file and return list of budget item data."""
+        csv_file = self.cleaned_data["csv_file"]
+
+        # Read file content
+        file_content = csv_file.read().decode("utf-8")
+        csv_file.seek(0)  # Reset file pointer
+
+        reader = csv.DictReader(io.StringIO(file_content))
+
+        items_data = []
+        errors = []
+
+        # Expected columns
+        required_columns = ["description", "estimated_amount"]
+        optional_columns = ["category", "actual_amount", "paid_by", "payment_date", "notes"]
+
+        # Check if required columns exist
+        if not all(col in reader.fieldnames for col in required_columns):
+            raise ValidationError(
+                _("CSV must contain at least these columns: {}").format(", ".join(required_columns))
+            )
+
+        for row_num, row in enumerate(reader, start=2):  # Start at 2 (header is row 1)
+            try:
+                # Required fields
+                description = row.get("description", "").strip()
+                if not description:
+                    errors.append(f"Row {row_num}: Description is required")
+                    continue
+
+                # Parse estimated amount
+                try:
+                    estimated_amount = Decimal(row.get("estimated_amount", "0").strip())
+                    if estimated_amount < 0:
+                        errors.append(f"Row {row_num}: Estimated amount cannot be negative")
+                        continue
+                except (InvalidOperation, ValueError):
+                    errors.append(f"Row {row_num}: Invalid estimated amount")
+                    continue
+
+                # Optional fields
+                category_name = row.get("category", "").strip()
+                category = None
+                if category_name and self.trip:
+                    with contextlib.suppress(BudgetCategory.DoesNotExist):
+                        category = BudgetCategory.objects.get(trip=self.trip, name=category_name)
+
+                # Parse actual amount
+                actual_amount = None
+                actual_amount_str = row.get("actual_amount", "").strip()
+                if actual_amount_str:
+                    try:
+                        actual_amount = Decimal(actual_amount_str)
+                        if actual_amount < 0:
+                            errors.append(f"Row {row_num}: Actual amount cannot be negative")
+                            actual_amount = None
+                    except (InvalidOperation, ValueError):
+                        errors.append(f"Row {row_num}: Invalid actual amount, skipping")
+
+                # Parse paid_by
+                paid_by = None
+                paid_by_str = row.get("paid_by", "").strip()
+                if paid_by_str and self.family_members:
+                    # Try to match by username, email, or full name
+                    for member in self.family_members:
+                        if paid_by_str.lower() in [
+                            member.username.lower(),
+                            member.email.lower(),
+                            member.get_full_name().lower(),
+                        ]:
+                            paid_by = member
+                            break
+
+                # Parse payment_date
+                payment_date = None
+                payment_date_str = row.get("payment_date", "").strip()
+                if payment_date_str:
+                    from datetime import datetime
+
+                    # Try different date formats
+                    for fmt in ["%Y-%m-%d", "%m/%d/%Y", "%m-%d-%Y", "%d/%m/%Y"]:
+                        try:
+                            payment_date = datetime.strptime(payment_date_str, fmt).date()
+                            break
+                        except ValueError:
+                            continue
+
+                    if not payment_date:
+                        errors.append(
+                            f"Row {row_num}: Invalid payment date format (use YYYY-MM-DD)"
+                        )
+
+                # Notes
+                notes = row.get("notes", "").strip()
+
+                items_data.append(
+                    {
+                        "description": description,
+                        "estimated_amount": estimated_amount,
+                        "category": category,
+                        "actual_amount": actual_amount,
+                        "paid_by": paid_by,
+                        "payment_date": payment_date,
+                        "notes": notes,
+                    }
+                )
+
+            except Exception as e:
+                errors.append(f"Row {row_num}: {str(e)}")
+
+        if errors:
+            raise ValidationError(
+                _("CSV import errors:\n{}").format("\n".join(errors[:10]))
+            )  # Show first 10 errors
+
+        if not items_data:
+            raise ValidationError(_("No valid data found in CSV file."))
+
+        return items_data

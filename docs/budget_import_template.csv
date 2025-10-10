@@ -1,0 +1,9 @@
+description,estimated_amount,category,actual_amount,paid_by,payment_date,notes
+Hotel Accommodation,1500.00,Lodging,1450.00,john@example.com,2025-10-01,5 nights at Marriott
+Flight Tickets,800.00,Transportation,,,,"Round trip for 2, booked with Southwest"
+Rental Car,350.00,Transportation,375.00,jane.smith@example.com,2025-10-02,Full-size SUV for week
+Dinner at Italian Restaurant,120.00,Food,135.00,John Doe,2025-10-05,Great pasta place downtown
+Luau Experience,200.00,Activities,,,,"Pre-booked, payment pending"
+Groceries for Week,300.00,Food,285.50,jane.smith@example.com,2025-10-03,Costco run
+Snorkeling Tour,180.00,Activities,180.00,john@example.com,2025-10-06,Captain Andy's tour
+Beach Parking,50.00,,45.00,Jane Smith,2025-10-04,"Daily parking fees, various beaches"

@@ -10,7 +10,7 @@
 # PROJECT CONFIGURATION - CHANGE THESE
 PROJECT_NAME="haleway"                    # ← CHANGE THIS
 REMOTE_SERVER="davidhale87@172.16.205.4"           # ← Development machine (for copying backups FROM production)
-REMOTE_BACKUP_DIR="halefiles/Coding/halewaybackups"               # ← CHANGE THIS (optional)
+REMOTE_BACKUP_DIR="/halefiles/Coding/halewaybackups"               # ← CHANGE THIS (optional)
 
 # Auto-generated container names (usually don't need to change)
 DB_CONTAINER="${PROJECT_NAME}-db-1"
@@ -151,6 +151,8 @@ backup_database() {
         # Copy to remote if configured
         if [ -n "$REMOTE_SERVER" ]; then
             echo -e "${YELLOW}Copying to remote server...${NC}"
+            # Ensure remote directory exists first
+            ssh $REMOTE_SERVER "mkdir -p $REMOTE_BACKUP_DIR" 2>/dev/null || true
             scp /Users/$(whoami)/backups/${PROJECT_NAME}_backup_${backup_date}*.sql $REMOTE_SERVER:$REMOTE_BACKUP_DIR/
         fi
     else
@@ -170,6 +172,8 @@ backup_database() {
         # Copy to remote if configured
         if [ -n "$REMOTE_SERVER" ]; then
             echo -e "${YELLOW}Copying to remote server...${NC}"
+            # Ensure remote directory exists first
+            ssh $REMOTE_SERVER "mkdir -p $REMOTE_BACKUP_DIR" 2>/dev/null || true
             scp ./backups/${PROJECT_NAME}_backup_${backup_date}*.sql $REMOTE_SERVER:$REMOTE_BACKUP_DIR/
         fi
 

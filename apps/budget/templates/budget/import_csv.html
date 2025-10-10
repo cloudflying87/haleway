@@ -1,0 +1,266 @@
+{% extends "base.html" %}
+
+{% block title %}Import Budget Items - {{ trip.name }} - HaleWay{% endblock %}
+
+{% block extra_css %}
+  <style>
+    .import-container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: var(--spacing-md);
+    }
+
+    .page-header {
+      text-align: center;
+      margin-bottom: var(--spacing-xl);
+    }
+
+    .page-icon {
+      font-size: 3rem;
+      display: block;
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .modern-form-card {
+      background: white;
+      border-radius: var(--border-radius-lg);
+      padding: var(--spacing-xl);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05),
+                  0 10px 15px rgba(0, 0, 0, 0.1);
+      border: 1px solid rgba(46, 134, 171, 0.1);
+    }
+
+    .quick-tips {
+      background: linear-gradient(135deg, #E8F4F8 0%, #F0F8FB 100%);
+      border-left: 4px solid var(--primary-color);
+      border-radius: var(--border-radius-md);
+      padding: var(--spacing-lg);
+      margin-bottom: var(--spacing-xl);
+    }
+
+    .quick-tips h3 {
+      color: var(--primary-color);
+      font-size: 1rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: var(--spacing-md);
+    }
+
+    .quick-tips ul {
+      list-style: none;
+      padding-left: 0;
+      margin-bottom: 0;
+    }
+
+    .quick-tips li {
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .quick-tips li:before {
+      content: "→";
+      color: var(--accent-color);
+      font-weight: bold;
+      margin-right: var(--spacing-sm);
+    }
+
+    .quick-tips code {
+      background: rgba(46, 134, 171, 0.1);
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9em;
+    }
+
+    .csv-format {
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: var(--border-radius-md);
+      padding: var(--spacing-md);
+      margin-top: var(--spacing-lg);
+      overflow-x: auto;
+    }
+
+    .csv-format h4 {
+      margin-top: 0;
+      margin-bottom: var(--spacing-md);
+      font-size: 1rem;
+      color: var(--text-secondary);
+    }
+
+    .csv-format table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      background: white;
+    }
+
+    .csv-format th,
+    .csv-format td {
+      padding: var(--spacing-sm);
+      text-align: left;
+      border: 1px solid #dee2e6;
+    }
+
+    .csv-format th {
+      background: var(--primary-color);
+      color: white;
+      font-weight: 600;
+    }
+
+    .csv-format .required {
+      color: var(--danger-color);
+      font-weight: bold;
+    }
+
+    .form-group {
+      margin-bottom: var(--spacing-lg);
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: var(--spacing-sm);
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 0.75rem;
+      font-size: 1rem;
+      border: 2px solid #ddd;
+      border-radius: var(--border-radius-md);
+      transition: all 0.2s ease;
+    }
+
+    .form-control:hover {
+      border-color: rgba(46, 134, 171, 0.4);
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 4px rgba(46, 134, 171, 0.15);
+      transform: translateY(-1px);
+    }
+
+    .form-help {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      margin-top: var(--spacing-xs);
+    }
+
+    .form-actions {
+      display: flex;
+      gap: var(--spacing-md);
+      margin-top: var(--spacing-xl);
+    }
+
+    @media (max-width: 576px) {
+      .form-actions {
+        flex-direction: column;
+      }
+
+      .csv-format {
+        font-size: 0.8rem;
+      }
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+  <div class="import-container">
+    <div class="page-header">
+      <nav class="breadcrumb">
+        <a href="{% url 'trips:trip_detail' trip.pk %}">{{ trip.name }}</a>
+        <span>›</span>
+        <a href="{% url 'budget:budget_overview' trip.pk %}">Budget</a>
+        <span>›</span>
+        <span>Import CSV</span>
+      </nav>
+      <span class="page-icon">📊</span>
+      <h1>Import Budget Items from CSV</h1>
+      <p class="page-subtitle">Bulk import expenses from a spreadsheet</p>
+    </div>
+
+    <div class="modern-form-card">
+      <div class="quick-tips">
+        <h3>💡 CSV Format Guide</h3>
+        <ul>
+          <li><strong>Required columns</strong>: <code>description</code>, <code>estimated_amount</code></li>
+          <li><strong>Optional columns</strong>: <code>category</code>, <code>actual_amount</code>, <code>paid_by</code>, <code>payment_date</code>, <code>notes</code></li>
+          <li><strong>Category</strong>: Must match existing category name exactly (or leave blank)</li>
+          <li><strong>Paid By</strong>: Use username, email, or full name of family member</li>
+          <li><strong>Date Format</strong>: YYYY-MM-DD (e.g., 2025-10-15)</li>
+          <li><strong>Example</strong>: See sample table below</li>
+        </ul>
+      </div>
+
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <div class="form-group">
+          <label for="{{ form.csv_file.id_for_label }}">{{ form.csv_file.label }}</label>
+          {{ form.csv_file }}
+          {% if form.csv_file.help_text %}
+            <div class="form-help">{{ form.csv_file.help_text }}</div>
+          {% endif %}
+          {% if form.csv_file.errors %}
+            <div class="form-error">{{ form.csv_file.errors.0 }}</div>
+          {% endif %}
+        </div>
+
+        <div class="csv-format">
+          <h4>Example CSV Format:</h4>
+          <table>
+            <thead>
+              <tr>
+                <th>description <span class="required">*</span></th>
+                <th>estimated_amount <span class="required">*</span></th>
+                <th>category</th>
+                <th>actual_amount</th>
+                <th>paid_by</th>
+                <th>payment_date</th>
+                <th>notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Hotel Accommodation</td>
+                <td>1500.00</td>
+                <td>Lodging</td>
+                <td>1450.00</td>
+                <td>john@example.com</td>
+                <td>2025-10-01</td>
+                <td>5 nights at Marriott</td>
+              </tr>
+              <tr>
+                <td>Flight Tickets</td>
+                <td>800.00</td>
+                <td>Transportation</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>Round trip for 2</td>
+              </tr>
+              <tr>
+                <td>Dinner at Italian Restaurant</td>
+                <td>120.00</td>
+                <td>Food</td>
+                <td>135.00</td>
+                <td>Jane Smith</td>
+                <td>2025-10-05</td>
+                <td></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="form-actions">
+          <a href="{% url 'budget:budget_overview' trip.pk %}" class="btn btn-outline">Cancel</a>
+          <button type="submit" class="btn btn-primary">📤 Import CSV</button>
+        </div>
+      </form>
+    </div>
+  </div>
+{% endblock %}

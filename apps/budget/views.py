@@ -9,16 +9,19 @@ from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db import transaction
 from django.db.models import Sum
-from django.shortcuts import get_object_or_404, redirect
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
+from django.views.decorators.http import require_POST
 from django.views.generic import CreateView, DeleteView, ListView, UpdateView
 
 from apps.families.models import Family, FamilyMember
 from apps.trips.models import Trip
 
-from .forms import BudgetCategoryForm, BudgetItemForm
+from .forms import BudgetCategoryForm, BudgetCSVImportForm, BudgetItemForm
 from .models import BudgetCategory, BudgetItem
 
 logger = structlog.get_logger(__name__)
@@ -405,3 +408,127 @@ def add_activity_to_budget(request, activity_pk):
     )
 
     return redirect("activities:activity_detail", pk=activity_pk)
+
+
+@login_required
+@require_POST
+def add_item_ajax(request, trip_pk):
+    """
+    AJAX endpoint to add a budget item from modal form.
+    Returns JSON response with success/error status.
+    """
+    trip = get_object_or_404(Trip, pk=trip_pk, family__members__user=request.user)
+
+    # Check permissions
+    try:
+        FamilyMember.objects.get(family=trip.family, user=request.user)
+    except FamilyMember.DoesNotExist:
+        return JsonResponse({"success": False, "error": "Permission denied"}, status=403)
+
+    # Get family members for paid_by dropdown
+    family_members = User.objects.filter(family_memberships__family=trip.family).distinct()
+
+    form = BudgetItemForm(
+        request.POST, trip=trip, created_by=request.user, family_members=family_members
+    )
+
+    if form.is_valid():
+        item = form.save()
+
+        logger.info(
+            "budget_item_created_ajax",
+            item_id=str(item.id),
+            description=item.description,
+            trip_id=str(trip.id),
+            user_id=request.user.id,
+        )
+
+        return JsonResponse(
+            {
+                "success": True,
+                "item": {
+                    "id": str(item.id),
+                    "description": item.description,
+                    "estimated_amount": float(item.estimated_amount),
+                    "category": item.category.name if item.category else None,
+                },
+                "message": f'Budget item "{item.description}" added successfully!',
+            }
+        )
+    else:
+        # Return form errors
+        errors = {field: errors[0] for field, errors in form.errors.items()}
+        return JsonResponse({"success": False, "errors": errors}, status=400)
+
+
+@login_required
+def import_csv(request, trip_pk):
+    """
+    Import budget items from CSV file.
+    """
+    trip = get_object_or_404(Trip, pk=trip_pk, family__members__user=request.user)
+
+    # Check permissions
+    try:
+        FamilyMember.objects.get(family=trip.family, user=request.user)
+    except FamilyMember.DoesNotExist:
+        messages.error(request, _("You do not have permission to import budget items."))
+        return redirect("budget:budget_overview", trip_pk=trip.pk)
+
+    # Get family members for CSV parsing
+    family_members = User.objects.filter(family_memberships__family=trip.family).distinct()
+
+    if request.method == "POST":
+        form = BudgetCSVImportForm(
+            request.POST, request.FILES, trip=trip, family_members=family_members
+        )
+
+        if form.is_valid():
+            try:
+                items_data = form.parse_csv()
+
+                # Create budget items in a transaction
+                with transaction.atomic():
+                    created_items = []
+                    for item_data in items_data:
+                        item = BudgetItem.objects.create(
+                            trip=trip,
+                            description=item_data["description"],
+                            estimated_amount=item_data["estimated_amount"],
+                            category=item_data.get("category"),
+                            actual_amount=item_data.get("actual_amount"),
+                            paid_by=item_data.get("paid_by"),
+                            payment_date=item_data.get("payment_date"),
+                            notes=item_data.get("notes", ""),
+                            created_by=request.user,
+                        )
+                        created_items.append(item)
+
+                logger.info(
+                    "budget_items_imported_from_csv",
+                    trip_id=str(trip.id),
+                    user_id=request.user.id,
+                    items_count=len(created_items),
+                )
+
+                messages.success(
+                    request,
+                    _(f"Successfully imported {len(created_items)} budget items from CSV!"),
+                )
+                return redirect("budget:budget_overview", trip_pk=trip.pk)
+
+            except Exception as e:
+                logger.error("budget_csv_import_failed", trip_id=str(trip.id), error=str(e))
+                messages.error(request, _(f"Error importing CSV: {str(e)}"))
+
+    else:
+        form = BudgetCSVImportForm(trip=trip, family_members=family_members)
+
+    return render(
+        request,
+        "budget/import_csv.html",
+        {
+            "form": form,
+            "trip": trip,
+        },
+    )

@@ -35,4 +35,7 @@ urlpatterns = [
         views.add_activity_to_budget,
         name="add_from_activity",
     ),
+    # AJAX and Import URLs
+    path("<uuid:trip_pk>/item/add-ajax/", views.add_item_ajax, name="add_item_ajax"),
+    path("<uuid:trip_pk>/import-csv/", views.import_csv, name="import_csv"),
 ]
