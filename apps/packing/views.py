@@ -617,3 +617,41 @@ def bulk_add_items(request, list_pk):
         "packing/bulk_add_items.html",
         {"packing_list": packing_list, "form": form, "existing_categories": existing_categories},
     )
+
+
+@login_required
+def rename_category(request, list_pk):
+    """Rename a category for all items in a packing list (AJAX)."""
+    packing_list = get_object_or_404(
+        TripPackingList, pk=list_pk, trip__family__members__user=request.user
+    )
+
+    if request.method == "POST":
+        old_category = request.POST.get("old_category")
+        new_category = request.POST.get("new_category")
+
+        if not old_category or not new_category:
+            return JsonResponse({"success": False, "error": "Missing category name"}, status=400)
+
+        if old_category == new_category:
+            return JsonResponse(
+                {"success": False, "error": "New category name must be different"}, status=400
+            )
+
+        # Update all items with this category
+        updated_count = TripPackingItem.objects.filter(
+            packing_list=packing_list, category=old_category
+        ).update(category=new_category)
+
+        logger.info(
+            "packing_category_renamed",
+            packing_list_id=str(packing_list.id),
+            old_category=old_category,
+            new_category=new_category,
+            items_updated=updated_count,
+            user_id=request.user.id,
+        )
+
+        return JsonResponse({"success": True, "items_updated": updated_count})
+
+    return JsonResponse({"success": False, "error": "Invalid request method"}, status=405)

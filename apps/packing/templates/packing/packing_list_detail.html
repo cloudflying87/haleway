@@ -121,7 +121,17 @@
       {% for category, items in items_by_category.items %}
         <div class="category-section">
           <div class="category-header">
-            <h2 class="category-title">{{ category }}</h2>
+            <div class="category-title-wrapper">
+              <h2 class="category-title">{{ category }}</h2>
+              {% if can_edit %}
+                <button type="button"
+                        onclick="openRenameCategoryModal('{{ category|escapejs }}')"
+                        class="btn-edit-category"
+                        title="Rename category">
+                  ✏️
+                </button>
+              {% endif %}
+            </div>
             {% if can_edit %}
               <div class="category-actions">
                 <button type="button"
@@ -217,6 +227,30 @@
         </div>
       </div>
     </div>
+
+    <!-- Rename Category Modal -->
+    <div id="renameCategoryModal" class="modal">
+      <div class="modal-content" style="max-width: 500px;">
+        <div class="modal-header">
+          <h3>Rename Category</h3>
+          <button type="button" class="modal-close" onclick="closeRenameCategoryModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <form id="renameCategoryForm">
+            {% csrf_token %}
+            <input type="hidden" id="old_category_name" name="old_category">
+            <div class="form-group">
+              <label for="new_category_name">New Category Name <span style="color: #e74c3c;">*</span></label>
+              <input type="text" id="new_category_name" name="new_category" class="form-control" placeholder="Enter new category name" maxlength="100" required>
+            </div>
+            <div style="display: flex; gap: var(--spacing-md); margin-top: var(--spacing-lg);">
+              <button type="button" onclick="closeRenameCategoryModal()" class="btn btn-outline" style="flex: 1;">Cancel</button>
+              <button type="submit" class="btn btn-primary" style="flex: 1;">Rename</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
   </div>
 
   <style>
@@ -306,10 +340,34 @@
       gap: var(--spacing-md);
     }
 
+    .category-title-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
     .category-title {
       font-size: 1.1rem;
       color: #2E86AB;
       margin: 0;
+    }
+
+    .btn-edit-category {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1rem;
+      padding: 0.25rem 0.5rem;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .category-header:hover .btn-edit-category {
+      opacity: 1;
+    }
+
+    .btn-edit-category:hover {
+      transform: scale(1.1);
     }
 
     .category-actions {
@@ -673,6 +731,76 @@
             this.checked = !isChecked;
           });
       });
+    });
+
+// Rename category functions
+    function openRenameCategoryModal(categoryName) {
+      const modal = document.getElementById('renameCategoryModal');
+      const oldCategoryInput = document.getElementById('old_category_name');
+      const newCategoryInput = document.getElementById('new_category_name');
+
+      oldCategoryInput.value = categoryName;
+      newCategoryInput.value = categoryName;
+
+      modal.classList.add('show');
+      document.body.style.overflow = 'hidden';
+
+      setTimeout(() => {
+        newCategoryInput.focus();
+        newCategoryInput.select();
+      }, 100);
+    }
+
+    function closeRenameCategoryModal() {
+      const modal = document.getElementById('renameCategoryModal');
+      modal.classList.remove('show');
+      document.body.style.overflow = '';
+      document.getElementById('renameCategoryForm').reset();
+    }
+
+    // Handle rename category form submission
+    document.getElementById('renameCategoryForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const formData = new FormData(this);
+
+      fetch('{% url "packing:rename_category" packing_list.pk %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'X-CSRFToken': '{{ csrf_token }}'
+        }
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            // Reload page to show updated category name
+            window.location.reload();
+          } else {
+            alert(data.error || 'Error renaming category. Please try again.');
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Error renaming category. Please try again.');
+        });
+    });
+
+    // Close rename modal on escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        const modal = document.getElementById('renameCategoryModal');
+        if (modal && modal.classList.contains('show')) {
+          closeRenameCategoryModal();
+        }
+      }
+    });
+
+    // Close rename modal when clicking outside
+    document.getElementById('renameCategoryModal')?.addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeRenameCategoryModal();
+      }
     });
   </script>
 {% endblock %}

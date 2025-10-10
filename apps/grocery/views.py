@@ -651,3 +651,44 @@ def list_print(request, pk):
         "items_by_category": items_by_category,
     }
     return render(request, "grocery/list_print.html", context)
+
+
+@login_required
+def rename_category(request, list_pk):
+    """Rename a category for all items in a grocery list (AJAX)."""
+    grocery_list = get_object_or_404(TripGroceryList, pk=list_pk)
+
+    # Check permissions
+    user_families = request.user.family_memberships.values_list("family_id", flat=True)
+    if grocery_list.trip.family_id not in user_families:
+        return JsonResponse({"success": False, "error": "Permission denied"}, status=403)
+
+    if request.method == "POST":
+        old_category = request.POST.get("old_category")
+        new_category = request.POST.get("new_category")
+
+        if not old_category or not new_category:
+            return JsonResponse({"success": False, "error": "Missing category name"}, status=400)
+
+        if old_category == new_category:
+            return JsonResponse(
+                {"success": False, "error": "New category name must be different"}, status=400
+            )
+
+        # Update all items with this category
+        updated_count = TripGroceryItem.objects.filter(
+            grocery_list=grocery_list, category=old_category
+        ).update(category=new_category)
+
+        logger.info(
+            "grocery_category_renamed",
+            grocery_list_id=str(grocery_list.id),
+            old_category=old_category,
+            new_category=new_category,
+            items_updated=updated_count,
+            user_id=str(request.user.id),
+        )
+
+        return JsonResponse({"success": True, "items_updated": updated_count})
+
+    return JsonResponse({"success": False, "error": "Invalid request method"}, status=405)

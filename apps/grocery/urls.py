@@ -28,6 +28,7 @@ urlpatterns = [
     # Item URLs
     path("list/<uuid:list_pk>/add-item/", views.add_item, name="add_item"),
     path("list/<uuid:list_pk>/bulk-add/", views.bulk_add_items, name="bulk_add_items"),
+    path("list/<uuid:list_pk>/rename-category/", views.rename_category, name="rename_category"),
     path("item/<uuid:pk>/edit/", views.edit_item, name="edit_item"),
     path("item/<uuid:pk>/delete/", views.delete_item, name="delete_item"),
     path("item/<uuid:pk>/toggle/", views.toggle_purchased, name="toggle_purchased"),
