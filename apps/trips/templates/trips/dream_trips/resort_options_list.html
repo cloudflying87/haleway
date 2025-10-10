@@ -1,0 +1,306 @@
+{% extends "base.html" %}
+
+{% block title %}Resort Options - {{ trip.name }} - HaleWay{% endblock %}
+
+{% block content %}
+  <div class="container">
+    <div class="breadcrumb">
+      <a href="{% url 'trips:trip_list' %}">Trips</a>
+      <span>/</span>
+      <a href="{% url 'trips:trip_detail' trip.pk %}">{{ trip.name }}</a>
+      <span>/</span>
+      <span>Resort Options</span>
+    </div>
+
+    <div class="page-header">
+      <div class="header-left">
+        <h1>Resort Options</h1>
+        <p class="text-muted">{{ trip.name }} - {{ trip.destination_name }}</p>
+      </div>
+      {% if can_edit %}
+        <div class="header-actions">
+          <a href="{% url 'trips:resort_option_create' trip.pk %}" class="btn btn-primary">
+            Add Resort Option
+          </a>
+        </div>
+      {% endif %}
+    </div>
+
+    {% if resort_options %}
+      <div class="comparison-grid">
+        {% for option in resort_options %}
+          <div class="card resort-option-card {% if option.is_preferred %}preferred{% endif %}">
+            <div class="card-header">
+              <div class="header-left">
+                <h3>{{ option.name }}</h3>
+                {% if option.is_preferred %}
+                  <span class="badge badge-primary">Preferred</span>
+                {% endif %}
+              </div>
+              {% if can_edit %}
+                <div class="card-actions">
+                  <a href="{% url 'trips:resort_option_edit' option.pk %}" class="btn btn-sm btn-outline" title="Edit">
+                    Edit
+                  </a>
+                  {% if can_delete %}
+                    <a href="{% url 'trips:resort_option_delete' option.pk %}" class="btn btn-sm btn-text" title="Delete">
+                      Delete
+                    </a>
+                  {% endif %}
+                </div>
+              {% endif %}
+            </div>
+
+            <div class="card-body">
+              <!-- Location -->
+              {% if option.city or option.state %}
+                <div class="option-detail">
+                  <span class="label">Location</span>
+                  <span class="value">
+                    {% if option.city %}{{ option.city }}{% endif %}{% if option.state %}, {{ option.state }}{% endif %}
+                  </span>
+                </div>
+              {% endif %}
+
+              <!-- Cost -->
+              {% if option.estimated_cost_per_night %}
+                <div class="option-detail">
+                  <span class="label">Est. Cost/Night</span>
+                  <span class="value cost">${{ option.estimated_cost_per_night }}</span>
+                </div>
+              {% endif %}
+
+              <!-- Rating -->
+              {% if option.rating %}
+                <div class="option-detail">
+                  <span class="label">Rating</span>
+                  <span class="value rating">
+                    {% for i in "12345" %}
+                      {% if forloop.counter <= option.rating %}
+                        <span class="star filled">★</span>
+                      {% else %}
+                        <span class="star">☆</span>
+                      {% endif %}
+                    {% endfor %}
+                  </span>
+                </div>
+              {% endif %}
+
+              <!-- Pros -->
+              {% if option.pros %}
+                <div class="option-detail">
+                  <span class="label">Pros</span>
+                  <div class="value pros">{{ option.pros|linebreaks }}</div>
+                </div>
+              {% endif %}
+
+              <!-- Cons -->
+              {% if option.cons %}
+                <div class="option-detail">
+                  <span class="label">Cons</span>
+                  <div class="value cons">{{ option.cons|linebreaks }}</div>
+                </div>
+              {% endif %}
+
+              <!-- Website -->
+              {% if option.website_url %}
+                <div class="option-detail">
+                  <span class="label">Website</span>
+                  <span class="value">
+                    <a href="{{ option.website_url }}" target="_blank" rel="noopener" class="external-link">
+                      Visit Website
+                    </a>
+                  </span>
+                </div>
+              {% endif %}
+
+              <!-- Notes -->
+              {% if option.general_notes %}
+                <div class="option-detail">
+                  <span class="label">Notes</span>
+                  <div class="value">{{ option.general_notes|linebreaks }}</div>
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+
+      {% if can_edit %}
+        <div class="conversion-cta">
+          <h2>Ready to Book?</h2>
+          <p>When you've decided on a resort and have specific dates, convert this dream trip to a planning trip.</p>
+          <a href="{% url 'trips:convert_dream_trip' trip.pk %}" class="btn btn-primary btn-lg">
+            Convert to Planning Trip
+          </a>
+        </div>
+      {% endif %}
+    {% else %}
+      <div class="empty-state">
+        <h2>No Resort Options Yet</h2>
+        <p>Add resort options to compare and decide where to stay for this dream trip.</p>
+        {% if can_edit %}
+          <a href="{% url 'trips:resort_option_create' trip.pk %}" class="btn btn-primary btn-lg">
+            Add First Resort Option
+          </a>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+
+  <style>
+    .breadcrumb {
+      margin-bottom: var(--spacing-md);
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+    }
+
+    .breadcrumb a {
+      color: var(--primary-color);
+      text-decoration: none;
+    }
+
+    .breadcrumb a:hover {
+      text-decoration: underline;
+    }
+
+    .breadcrumb span {
+      margin: 0 var(--spacing-xs);
+    }
+
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--spacing-xl);
+      flex-wrap: wrap;
+      gap: var(--spacing-md);
+    }
+
+    .header-left {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-xs);
+    }
+
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: var(--spacing-xl);
+      margin-bottom: var(--spacing-xl);
+    }
+
+    @media (min-width: 992px) {
+      .comparison-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (min-width: 1200px) {
+      .comparison-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    .resort-option-card {
+      transition: all var(--transition-fast);
+      position: relative;
+    }
+
+    .resort-option-card.preferred {
+      border: 2px solid var(--primary-color);
+      box-shadow: 0 4px 8px rgba(46, 134, 171, 0.2);
+    }
+
+    .resort-option-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-actions {
+      display: flex;
+      gap: var(--spacing-xs);
+    }
+
+    .option-detail {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-xs);
+      padding: var(--spacing-sm) 0;
+      border-bottom: 1px solid var(--gray-200);
+    }
+
+    .option-detail:last-child {
+      border-bottom: none;
+    }
+
+    .option-detail .label {
+      font-weight: 600;
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .option-detail .value {
+      color: var(--text-primary);
+    }
+
+    .cost {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--success-color);
+    }
+
+    .rating .star {
+      color: var(--warning-color);
+      font-size: 1.125rem;
+    }
+
+    .rating .star.filled {
+      color: var(--warning-color);
+    }
+
+    .pros {
+      color: var(--success-color);
+    }
+
+    .cons {
+      color: var(--danger-color);
+    }
+
+    .external-link {
+      color: var(--primary-color);
+      text-decoration: none;
+    }
+
+    .external-link:hover {
+      text-decoration: underline;
+    }
+
+    .conversion-cta {
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      color: white;
+      padding: var(--spacing-xxl) var(--spacing-xl);
+      border-radius: var(--border-radius);
+      text-align: center;
+      margin-top: var(--spacing-xxl);
+    }
+
+    .conversion-cta h2 {
+      margin-bottom: var(--spacing-md);
+      color: white;
+    }
+
+    .conversion-cta p {
+      margin-bottom: var(--spacing-lg);
+      font-size: 1.125rem;
+      opacity: 0.95;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: var(--spacing-xxl);
+    }
+  </style>
+{% endblock %}

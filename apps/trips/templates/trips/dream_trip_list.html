@@ -9,7 +9,7 @@
       {% if user_families %}
         <div class="header-actions">
           {% if user_families|length == 1 %}
-            <a href="{% url 'trips:trip_create' user_families.0.pk %}" class="btn btn-primary">
+            <a href="{% url 'trips:trip_create' user_families.0.pk %}?status=dream" class="btn btn-primary">
               Create Dream Trip
             </a>
           {% else %}
@@ -19,7 +19,7 @@
               </button>
               <div class="dropdown-menu" id="createTripMenu">
                 {% for family in user_families %}
-                  <a href="{% url 'trips:trip_create' family.pk %}" class="dropdown-item">
+                  <a href="{% url 'trips:trip_create' family.pk %}?status=dream" class="dropdown-item">
                     {{ family.name }}
                   </a>
                 {% endfor %}
@@ -33,6 +33,7 @@
     <div class="trip-navigation">
       <a href="{% url 'trips:trip_list' %}" class="nav-link">All Trips</a>
       <a href="{% url 'trips:dream_trip_list' %}" class="nav-link active">Dream Trips</a>
+      <a href="{% url 'trips:wishlist_list' %}" class="nav-link">Wishlist</a>
       <a href="{% url 'trips:resort_list' %}" class="nav-link">Resorts</a>
     </div>
 

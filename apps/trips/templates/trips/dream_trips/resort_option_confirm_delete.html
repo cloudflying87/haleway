@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}Delete {{ object.name }} - Resort Option - HaleWay{% endblock %}
+
+{% block content %}
+  <div class="container">
+    <div class="breadcrumb">
+      <a href="{% url 'trips:trip_list' %}">Trips</a>
+      <span>/</span>
+      <a href="{% url 'trips:trip_detail' object.trip.pk %}">{{ object.trip.name }}</a>
+      <span>/</span>
+      <a href="{% url 'trips:resort_options_list' object.trip.pk %}">Resort Options</a>
+      <span>/</span>
+      <span>Delete {{ object.name }}</span>
+    </div>
+
+    <div class="confirm-delete-container">
+      <div class="icon-warning">⚠️</div>
+
+      <h1>Delete Resort Option?</h1>
+
+      <p class="confirm-message">
+        Are you sure you want to delete <strong>{{ object.name }}</strong> from this trip's resort options?
+      </p>
+
+      <div class="item-details">
+        <p><strong>Trip:</strong> {{ object.trip.name }}</p>
+        {% if object.city or object.state %}
+          <p><strong>Location:</strong> {{ object.city }}{% if object.state %}, {{ object.state }}{% endif %}</p>
+        {% endif %}
+        {% if object.estimated_cost_per_night %}
+          <p><strong>Est. Cost:</strong> ${{ object.estimated_cost_per_night }}/night</p>
+        {% endif %}
+        {% if object.is_preferred %}
+          <p><span class="badge badge-primary">Preferred Option</span></p>
+        {% endif %}
+      </div>
+
+      <p class="warning-text">
+        This action cannot be undone.
+      </p>
+
+      <form method="post" class="delete-form">
+        {% csrf_token %}
+        <div class="form-actions">
+          <button type="submit" class="btn btn-danger">
+            Yes, Delete Resort Option
+          </button>
+          <a href="{% url 'trips:resort_options_list' object.trip.pk %}" class="btn btn-outline">
+            Cancel
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <style>
+    .breadcrumb {
+      margin-bottom: var(--spacing-lg);
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+    }
+
+    .breadcrumb a {
+      color: var(--primary-color);
+      text-decoration: none;
+    }
+
+    .breadcrumb a:hover {
+      text-decoration: underline;
+    }
+
+    .breadcrumb span {
+      margin: 0 var(--spacing-xs);
+    }
+
+    .confirm-delete-container {
+      max-width: 600px;
+      margin: 0 auto;
+      text-align: center;
+      padding: var(--spacing-xxl) var(--spacing-lg);
+    }
+
+    .icon-warning {
+      font-size: 4rem;
+      margin-bottom: var(--spacing-lg);
+    }
+
+    .confirm-message {
+      font-size: 1.125rem;
+      margin: var(--spacing-lg) 0;
+    }
+
+    .item-details {
+      background-color: var(--gray-50);
+      border-radius: var(--border-radius);
+      padding: var(--spacing-lg);
+      margin: var(--spacing-lg) 0;
+      text-align: left;
+    }
+
+    .item-details p {
+      margin: var(--spacing-sm) 0;
+    }
+
+    .warning-text {
+      color: var(--danger-color);
+      font-weight: 600;
+      margin: var(--spacing-lg) 0;
+    }
+
+    .delete-form {
+      margin-top: var(--spacing-xl);
+    }
+
+    .form-actions {
+      display: flex;
+      gap: var(--spacing-md);
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+  </style>
+{% endblock %}

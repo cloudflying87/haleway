@@ -66,6 +66,27 @@
           {% if user.is_authenticated %}
             <a href="{% url 'core:dashboard' %}" class="nav-link">Dashboard</a>
 
+            <!-- Trips Dropdown -->
+            <div class="navbar-dropdown">
+              <button class="nav-dropdown-toggle" onclick="toggleTripsMenu(event)">
+                Trips ▾
+              </button>
+              <div class="nav-dropdown-menu" id="tripsMenu">
+                <a href="{% url 'trips:trip_list' %}" class="dropdown-item">
+                  All Trips
+                </a>
+                <a href="{% url 'trips:dream_trip_list' %}" class="dropdown-item">
+                  Dream Trips
+                </a>
+                <a href="{% url 'trips:wishlist_list' %}" class="dropdown-item">
+                  Resort Wishlist
+                </a>
+                <a href="{% url 'trips:resort_list' %}" class="dropdown-item">
+                  All Resorts
+                </a>
+              </div>
+            </div>
+
             {% if current_trip %}
               <!-- Current Trip Dropdown -->
               <div class="navbar-dropdown">
@@ -174,8 +195,21 @@
       function toggleUserMenu() {
         const menu = document.getElementById('userMenu');
         menu.classList.toggle('show');
-        // Close trip menu if open
+        // Close other menus
         const tripMenu = document.getElementById('tripMenu');
+        const tripsMenu = document.getElementById('tripsMenu');
+        if (tripMenu) tripMenu.classList.remove('show');
+        if (tripsMenu) tripsMenu.classList.remove('show');
+      }
+
+      function toggleTripsMenu(event) {
+        event.stopPropagation();
+        const menu = document.getElementById('tripsMenu');
+        menu.classList.toggle('show');
+        // Close other menus
+        const userMenu = document.getElementById('userMenu');
+        const tripMenu = document.getElementById('tripMenu');
+        if (userMenu) userMenu.classList.remove('show');
         if (tripMenu) tripMenu.classList.remove('show');
       }
 
@@ -183,9 +217,11 @@
         event.stopPropagation();
         const menu = document.getElementById('tripMenu');
         menu.classList.toggle('show');
-        // Close user menu if open
+        // Close other menus
         const userMenu = document.getElementById('userMenu');
+        const tripsMenu = document.getElementById('tripsMenu');
         if (userMenu) userMenu.classList.remove('show');
+        if (tripsMenu) tripsMenu.classList.remove('show');
       }
 
       // Close dropdowns when clicking outside
@@ -193,11 +229,15 @@
         if (!e.target.matches('.user-dropdown-toggle') && !e.target.matches('.nav-dropdown-toggle')) {
           const userMenu = document.getElementById('userMenu');
           const tripMenu = document.getElementById('tripMenu');
+          const tripsMenu = document.getElementById('tripsMenu');
           if (userMenu && userMenu.classList.contains('show')) {
             userMenu.classList.remove('show');
           }
           if (tripMenu && tripMenu.classList.contains('show')) {
             tripMenu.classList.remove('show');
+          }
+          if (tripsMenu && tripsMenu.classList.contains('show')) {
+            tripsMenu.classList.remove('show');
           }
         }
       });

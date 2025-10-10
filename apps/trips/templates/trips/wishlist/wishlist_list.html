@@ -1,0 +1,397 @@
+{% extends "base.html" %}
+
+{% block title %}Resort Wishlist - HaleWay{% endblock %}
+
+{% block content %}
+  <div class="container">
+    <div class="page-header">
+      <h1>Resort Wishlist</h1>
+      {% if user_families %}
+        <div class="header-actions">
+          {% if user_families|length == 1 %}
+            <a href="{% url 'trips:wishlist_create' user_families.0.pk %}" class="btn btn-primary">
+              Add to Wishlist
+            </a>
+          {% else %}
+            <div class="dropdown">
+              <button class="btn btn-primary dropdown-toggle" type="button" id="addWishlistDropdown">
+                Add to Wishlist
+              </button>
+              <div class="dropdown-menu" id="addWishlistMenu">
+                {% for family in user_families %}
+                  <a href="{% url 'trips:wishlist_create' family.pk %}" class="dropdown-item">
+                    {{ family.name }}
+                  </a>
+                {% endfor %}
+              </div>
+            </div>
+          {% endif %}
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-section">
+      <form method="get" class="filters-form">
+        <div class="filter-group">
+          <input
+            type="text"
+            name="destination"
+            placeholder="Search destination..."
+            value="{{ current_destination }}"
+            class="form-control"
+          >
+        </div>
+
+        <div class="filter-group">
+          <select name="visited" class="form-control">
+            <option value="">All Resorts</option>
+            <option value="yes" {% if current_visited == 'yes' %}selected{% endif %}>Visited</option>
+            <option value="no" {% if current_visited == 'no' %}selected{% endif %}>Not Visited</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <select name="tag" class="form-control">
+            <option value="">All Tags</option>
+            {% for tag in all_tags %}
+              <option value="{{ tag }}" {% if current_tag == tag %}selected{% endif %}>{{ tag }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label class="checkbox-label">
+            <input
+              type="checkbox"
+              name="favorites"
+              value="true"
+              {% if current_favorites == 'true' %}checked{% endif %}
+              onchange="this.form.submit()"
+            >
+            <span>Favorites Only</span>
+          </label>
+        </div>
+
+        <button type="submit" class="btn btn-outline">Filter</button>
+        <a href="{% url 'trips:wishlist_list' %}" class="btn btn-text">Clear</a>
+      </form>
+    </div>
+
+    {% if wishlist_items %}
+      <div class="wishlist-grid">
+        {% for item in wishlist_items %}
+          <div class="card wishlist-card {% if item.visited %}visited{% endif %}">
+            <div class="card-header">
+              <div class="header-left">
+                <h3>{{ item.name }}</h3>
+                {% if item.is_favorite %}
+                  <span class="favorite-badge" title="Favorite">★</span>
+                {% endif %}
+                {% if item.visited %}
+                  <span class="badge badge-success">Visited</span>
+                {% endif %}
+              </div>
+            </div>
+            <div class="card-body">
+              <p class="destination">
+                <strong>📍 {{ item.destination }}</strong>
+              </p>
+
+              {% if item.description %}
+                <p class="description">{{ item.description|truncatewords:20 }}</p>
+              {% endif %}
+
+              {% if item.estimated_cost_per_night %}
+                <p class="cost">
+                  <strong>Est. Cost:</strong> ${{ item.estimated_cost_per_night }}/night
+                </p>
+              {% endif %}
+
+              {% if item.get_tags_list %}
+                <div class="tags">
+                  {% for tag in item.get_tags_list %}
+                    <span class="tag">{{ tag }}</span>
+                  {% endfor %}
+                </div>
+              {% endif %}
+
+              <p class="family-name text-muted">
+                {{ item.family.name }}
+              </p>
+
+              {% if item.visited_trip %}
+                <p class="visited-info text-muted">
+                  Visited on: <a href="{% url 'trips:trip_detail' item.visited_trip.pk %}">{{ item.visited_trip.name }}</a>
+                </p>
+              {% endif %}
+            </div>
+            <div class="card-footer">
+              <a href="{% url 'trips:wishlist_detail' item.pk %}" class="btn btn-primary">
+                View Details
+              </a>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+
+      {% if is_paginated %}
+        <div class="pagination">
+          {% if page_obj.has_previous %}
+            <a href="?page=1" class="btn btn-outline">First</a>
+            <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-outline">Previous</a>
+          {% endif %}
+
+          <span class="page-info">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+          </span>
+
+          {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}" class="btn btn-outline">Next</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}" class="btn btn-outline">Last</a>
+          {% endif %}
+        </div>
+      {% endif %}
+    {% else %}
+      <div class="empty-state">
+        <h2>No Wishlist Items Yet</h2>
+        <p>Start building your dream destination wishlist!</p>
+        {% if user_families %}
+          <p class="text-muted">Add resorts you'd love to visit someday:</p>
+          {% if user_families|length == 1 %}
+            <a href="{% url 'trips:wishlist_create' user_families.0.pk %}" class="btn btn-primary btn-lg">
+              Add First Resort
+            </a>
+          {% else %}
+            <p class="text-muted">Choose a family:</p>
+            <div class="family-links">
+              {% for family in user_families %}
+                <a href="{% url 'trips:wishlist_create' family.pk %}" class="btn btn-outline">
+                  Add to {{ family.name }}
+                </a>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% else %}
+          <a href="{% url 'families:family_create' %}" class="btn btn-primary btn-lg">
+            Create a Family First
+          </a>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+
+  <style>
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--spacing-lg);
+      flex-wrap: wrap;
+      gap: var(--spacing-md);
+    }
+
+    .header-actions {
+      position: relative;
+    }
+
+    .dropdown {
+      position: relative;
+      display: inline-block;
+    }
+
+    .dropdown-toggle::after {
+      content: ' ▼';
+      font-size: 0.75em;
+      margin-left: var(--spacing-xs);
+    }
+
+    .dropdown-menu {
+      display: none;
+      position: absolute;
+      right: 0;
+      top: 100%;
+      background-color: white;
+      min-width: 200px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      border: 1px solid var(--gray-300);
+      border-radius: var(--border-radius);
+      margin-top: var(--spacing-xs);
+      z-index: 1000;
+    }
+
+    .dropdown-menu.show {
+      display: block;
+    }
+
+    .dropdown-item {
+      display: block;
+      padding: var(--spacing-sm) var(--spacing-md);
+      color: var(--text-primary);
+      text-decoration: none;
+      transition: background-color var(--transition-fast);
+    }
+
+    .dropdown-item:hover {
+      background-color: var(--gray-100);
+    }
+
+    .filters-section {
+      background-color: var(--gray-50);
+      padding: var(--spacing-md);
+      border-radius: var(--border-radius);
+      margin-bottom: var(--spacing-xl);
+    }
+
+    .filters-form {
+      display: flex;
+      gap: var(--spacing-md);
+      flex-wrap: wrap;
+      align-items: flex-end;
+    }
+
+    .filter-group {
+      flex: 1;
+      min-width: 150px;
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-xs);
+      cursor: pointer;
+      padding: var(--spacing-xs) 0;
+    }
+
+    .wishlist-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: var(--spacing-lg);
+      margin-bottom: var(--spacing-xl);
+    }
+
+    @media (min-width: 768px) {
+      .wishlist-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (min-width: 992px) {
+      .wishlist-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    .wishlist-card {
+      transition: transform var(--transition-fast);
+      position: relative;
+    }
+
+    .wishlist-card:hover {
+      transform: translateY(-4px);
+    }
+
+    .wishlist-card.visited {
+      opacity: 0.85;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+      flex-wrap: wrap;
+    }
+
+    .favorite-badge {
+      color: var(--warning-color);
+      font-size: 1.25rem;
+    }
+
+    .destination {
+      font-size: 1.125rem;
+      margin: var(--spacing-sm) 0;
+    }
+
+    .description {
+      color: var(--text-secondary);
+      margin: var(--spacing-sm) 0;
+      font-size: 0.9375rem;
+    }
+
+    .cost {
+      color: var(--text-secondary);
+      margin: var(--spacing-sm) 0;
+    }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--spacing-xs);
+      margin: var(--spacing-sm) 0;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: var(--spacing-xs) var(--spacing-sm);
+      background-color: var(--gray-200);
+      border-radius: var(--border-radius-sm);
+      font-size: 0.8125rem;
+      color: var(--text-secondary);
+    }
+
+    .family-name {
+      font-size: 0.875rem;
+      margin-top: var(--spacing-sm);
+    }
+
+    .visited-info {
+      font-size: 0.875rem;
+      margin-top: var(--spacing-xs);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: var(--spacing-xxl);
+    }
+
+    .family-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--spacing-md);
+      justify-content: center;
+      margin-top: var(--spacing-lg);
+    }
+
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: var(--spacing-md);
+      margin-top: var(--spacing-xl);
+    }
+
+    .page-info {
+      color: var(--text-secondary);
+    }
+  </style>
+
+  <script>
+    // Dropdown toggle functionality
+    document.addEventListener('DOMContentLoaded', function() {
+      const dropdownBtn = document.getElementById('addWishlistDropdown');
+      const dropdownMenu = document.getElementById('addWishlistMenu');
+
+      if (dropdownBtn && dropdownMenu) {
+        dropdownBtn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          dropdownMenu.classList.toggle('show');
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function() {
+          dropdownMenu.classList.remove('show');
+        });
+      }
+    });
+  </script>
+{% endblock %}

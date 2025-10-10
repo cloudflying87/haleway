@@ -21,6 +21,29 @@
         </div>
       </div>
 
+      <!-- Quick Trip Links -->
+      <div class="quick-links-section">
+        <h3>Quick Trip Links</h3>
+        <div class="quick-links-grid">
+          <a href="{% url 'trips:trip_list' %}" class="quick-link-card">
+            <div class="quick-link-icon">✈️</div>
+            <div class="quick-link-text">All Trips</div>
+          </a>
+          <a href="{% url 'trips:dream_trip_list' %}" class="quick-link-card">
+            <div class="quick-link-icon">💭</div>
+            <div class="quick-link-text">Dream Trips</div>
+          </a>
+          <a href="{% url 'trips:wishlist_list' %}" class="quick-link-card">
+            <div class="quick-link-icon">⭐</div>
+            <div class="quick-link-text">Resort Wishlist</div>
+          </a>
+          <a href="{% url 'trips:resort_list' %}" class="quick-link-card">
+            <div class="quick-link-icon">🏨</div>
+            <div class="quick-link-text">All Resorts</div>
+          </a>
+        </div>
+      </div>
+
         <!-- Active Trip Section -->
       {% if active_trip %}
         <div class="current-trip-section">
@@ -182,6 +205,54 @@
     .stat-label {
       font-size: 0.875rem;
       color: var(--text-secondary);
+    }
+
+    .quick-links-section {
+      margin: var(--spacing-xxl) 0;
+    }
+
+    .quick-links-section h3 {
+      margin-bottom: var(--spacing-md);
+      font-size: 1.25rem;
+      color: var(--text-primary);
+    }
+
+    .quick-links-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: var(--spacing-md);
+      max-width: 800px;
+    }
+
+    .quick-link-card {
+      background: white;
+      border: 2px solid var(--gray-200);
+      padding: var(--spacing-lg);
+      border-radius: var(--border-radius);
+      text-decoration: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--spacing-sm);
+      transition: all var(--transition-fast);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    .quick-link-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--primary-color);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .quick-link-icon {
+      font-size: 2rem;
+    }
+
+    .quick-link-text {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      text-align: center;
     }
 
     .current-trip-section {
@@ -452,6 +523,10 @@
       }
 
       .quick-stats {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .quick-links-grid {
         grid-template-columns: repeat(2, 1fr);
       }
 

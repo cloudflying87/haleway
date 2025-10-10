@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Delete {{ object.name }} - Wishlist - HaleWay{% endblock %}
+
+{% block content %}
+  <div class="container">
+    <div class="breadcrumb">
+      <a href="{% url 'trips:wishlist_list' %}">Wishlist</a>
+      <span>/</span>
+      <a href="{% url 'trips:wishlist_detail' object.pk %}">{{ object.name }}</a>
+      <span>/</span>
+      <span>Delete</span>
+    </div>
+
+    <div class="confirm-delete-container">
+      <div class="icon-warning">⚠️</div>
+
+      <h1>Delete Wishlist Item?</h1>
+
+      <p class="confirm-message">
+        Are you sure you want to delete <strong>{{ object.name }}</strong> from your wishlist?
+      </p>
+
+      <div class="item-details">
+        <p><strong>Destination:</strong> {{ object.destination }}</p>
+        <p><strong>Family:</strong> {{ object.family.name }}</p>
+        {% if object.is_favorite %}
+          <p><span class="badge badge-warning">Favorite</span></p>
+        {% endif %}
+      </div>
+
+      <p class="warning-text">
+        This action cannot be undone.
+      </p>
+
+      <form method="post" class="delete-form">
+        {% csrf_token %}
+        <div class="form-actions">
+          <button type="submit" class="btn btn-danger">
+            Yes, Delete Wishlist Item
+          </button>
+          <a href="{% url 'trips:wishlist_detail' object.pk %}" class="btn btn-outline">
+            Cancel
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <style>
+    .breadcrumb {
+      margin-bottom: var(--spacing-lg);
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+    }
+
+    .breadcrumb a {
+      color: var(--primary-color);
+      text-decoration: none;
+    }
+
+    .breadcrumb a:hover {
+      text-decoration: underline;
+    }
+
+    .breadcrumb span {
+      margin: 0 var(--spacing-xs);
+    }
+
+    .confirm-delete-container {
+      max-width: 600px;
+      margin: 0 auto;
+      text-align: center;
+      padding: var(--spacing-xxl) var(--spacing-lg);
+    }
+
+    .icon-warning {
+      font-size: 4rem;
+      margin-bottom: var(--spacing-lg);
+    }
+
+    .confirm-message {
+      font-size: 1.125rem;
+      margin: var(--spacing-lg) 0;
+    }
+
+    .item-details {
+      background-color: var(--gray-50);
+      border-radius: var(--border-radius);
+      padding: var(--spacing-lg);
+      margin: var(--spacing-lg) 0;
+      text-align: left;
+    }
+
+    .item-details p {
+      margin: var(--spacing-sm) 0;
+    }
+
+    .warning-text {
+      color: var(--danger-color);
+      font-weight: 600;
+      margin: var(--spacing-lg) 0;
+    }
+
+    .delete-form {
+      margin-top: var(--spacing-xl);
+    }
+
+    .form-actions {
+      display: flex;
+      gap: var(--spacing-md);
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+  </style>
+{% endblock %}

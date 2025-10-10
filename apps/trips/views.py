@@ -15,7 +15,11 @@ from django.views.generic import CreateView, DeleteView, DetailView, ListView, U
 from apps.families.models import Family, FamilyMember
 from apps.packing.weather import WeatherService
 
-from .forms import ResortForm, TripForm, TripResortForm
+from .forms import (
+    ResortForm,
+    TripForm,
+    TripResortForm,
+)
 from .models import Resort, Trip
 
 logger = structlog.get_logger(__name__)
@@ -368,9 +372,9 @@ class TripCreateView(LoginRequiredMixin, CreateView):
                 family=self.family,
                 name=form.cleaned_data["trip_name"],
                 destination_name=form.cleaned_data["destination_name"],
-                start_date=form.cleaned_data["start_date"],
-                end_date=form.cleaned_data["end_date"],
-                status="planning",
+                start_date=form.cleaned_data.get("start_date"),  # May be None for dream trips
+                end_date=form.cleaned_data.get("end_date"),  # May be None for dream trips
+                status=form.cleaned_data["status"],
                 created_by=self.request.user,
             )
 

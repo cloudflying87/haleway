@@ -207,7 +207,18 @@ class TripResortForm(forms.Form):
             }
         ),
     )
+    status = forms.ChoiceField(
+        choices=Trip.STATUS_CHOICES,
+        initial="planning",
+        label=_("Status"),
+        widget=forms.Select(
+            attrs={
+                "class": "form-control",
+            }
+        ),
+    )
     start_date = forms.DateField(
+        required=False,  # Will be validated based on status
         label=_("Start Date"),
         widget=forms.DateInput(
             attrs={
@@ -217,6 +228,7 @@ class TripResortForm(forms.Form):
         ),
     )
     end_date = forms.DateField(
+        required=False,  # Will be validated based on status
         label=_("End Date"),
         widget=forms.DateInput(
             attrs={
@@ -250,11 +262,22 @@ class TripResortForm(forms.Form):
     )
 
     def clean(self):
-        """Validate that end_date is after start_date."""
+        """Validate dates based on status."""
         cleaned_data = super().clean()
         start_date = cleaned_data.get("start_date")
         end_date = cleaned_data.get("end_date")
+        status = cleaned_data.get("status")
 
+        # For non-dream trips, dates are required
+        if status != "dream":
+            if not start_date:
+                raise ValidationError(
+                    {"start_date": _("Start date is required for non-dream trips.")}
+                )
+            if not end_date:
+                raise ValidationError({"end_date": _("End date is required for non-dream trips.")})
+
+        # Validate date order if both dates are provided
         if start_date and end_date:
             if end_date < start_date:
                 raise ValidationError({"end_date": _("End date must be after start date.")})
