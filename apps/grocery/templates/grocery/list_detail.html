@@ -210,24 +210,32 @@
           <form id="addItemForm" method="post">
             {% csrf_token %}
             <input type="hidden" id="modal_category_hidden" name="category">
-            <div class="form-group" id="category_form_group">
-              <label for="modal_category">Category <span style="color: #e74c3c;">*</span></label>
-              <select id="modal_category" class="form-control category-select-modal" required>
-                <option value=""></option>
-              </select>
-            </div>
+
             <div class="form-group">
               <label for="modal_item_name">Item Name <span style="color: #e74c3c;">*</span></label>
               <input type="text" id="modal_item_name" name="item_name" class="form-control" placeholder="e.g., Bananas, Milk, Chips" maxlength="200" required>
             </div>
-            <div class="form-group">
-              <label for="modal_quantity">Quantity <span style="color: var(--text-muted); font-weight: 400;">(optional)</span></label>
-              <input type="text" id="modal_quantity" name="quantity" class="form-control" placeholder="e.g., 2 lbs, 1 gallon, 6 pack">
-            </div>
-            <div class="form-group">
-              <label for="modal_notes">Notes <span style="color: var(--text-muted); font-weight: 400;">(optional)</span></label>
-              <textarea id="modal_notes" name="notes" class="form-control" rows="2" placeholder="Optional notes about this item"></textarea>
-            </div>
+
+            <details class="advanced-options-modal" id="advanced_options">
+              <summary>Advanced Options</summary>
+              <div class="advanced-options-content">
+                <div class="form-group" id="category_form_group">
+                  <label for="modal_category">Category</label>
+                  <select id="modal_category" class="form-control category-select-modal" required>
+                    <option value=""></option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="modal_quantity">Quantity <span style="color: var(--text-muted); font-weight: 400;">(optional)</span></label>
+                  <input type="text" id="modal_quantity" name="quantity" class="form-control" placeholder="e.g., 2 lbs, 1 gallon, 6 pack">
+                </div>
+                <div class="form-group">
+                  <label for="modal_notes">Notes <span style="color: var(--text-muted); font-weight: 400;">(optional)</span></label>
+                  <textarea id="modal_notes" name="notes" class="form-control" rows="2" placeholder="Optional notes about this item"></textarea>
+                </div>
+              </div>
+            </details>
+
             <div style="display: flex; gap: var(--spacing-md); margin-top: var(--spacing-lg);">
               <button type="button" onclick="closeAddItemModal()" class="btn btn-outline" style="flex: 1;">Cancel</button>
               <button type="submit" class="btn btn-primary" style="flex: 1;">Add Item</button>
@@ -493,6 +501,46 @@
       gap: 1rem;
       justify-content: center;
     }
+
+    /* Advanced Options Collapsible in Modal */
+    .advanced-options-modal {
+      margin-top: var(--spacing-lg);
+      margin-bottom: var(--spacing-lg);
+      padding: var(--spacing-md);
+      background-color: var(--gray-50);
+      border-radius: var(--border-radius);
+    }
+
+    .advanced-options-modal summary {
+      cursor: pointer;
+      font-weight: 600;
+      color: var(--text-secondary);
+      list-style: none;
+      user-select: none;
+      padding: var(--spacing-sm);
+      font-size: 0.95rem;
+    }
+
+    .advanced-options-modal summary:hover {
+      color: var(--primary-color);
+    }
+
+    .advanced-options-modal summary::before {
+      content: '▶ ';
+      display: inline-block;
+      transition: transform var(--transition-fast);
+      margin-right: var(--spacing-xs);
+    }
+
+    .advanced-options-modal[open] summary::before {
+      transform: rotate(90deg);
+    }
+
+    .advanced-options-content {
+      margin-top: var(--spacing-lg);
+      padding-top: var(--spacing-md);
+      border-top: 1px solid var(--gray-200);
+    }
   </style>
 
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
@@ -565,13 +613,15 @@
     // Reset form
       document.getElementById('addItemForm').reset();
 
+      const advancedOptions = document.getElementById('advanced_options');
       const categoryFormGroup = document.getElementById('category_form_group');
       const categoryHidden = document.getElementById('modal_category_hidden');
       const categorySelect = document.getElementById('modal_category');
 
-    // Set category if provided
+    // Set category if provided (from category button)
       if (category) {
-        // Hide the category dropdown and show category in hidden input
+        // Auto-open Advanced Options and pre-fill category
+        advancedOptions.setAttribute('open', true);
         categoryFormGroup.style.display = 'none';
         categoryHidden.value = category;
         categorySelect.removeAttribute('required');
@@ -581,16 +631,17 @@
           document.getElementById('modal_item_name').focus();
         }, 100);
       } else {
-        // Show the category dropdown
+        // Close Advanced Options by default
+        advancedOptions.removeAttribute('open');
         categoryFormGroup.style.display = 'block';
         categoryHidden.value = '';
         categorySelect.setAttribute('required', 'required');
         $('.category-select-modal').val(null).trigger('change');
 
-        // Focus on category field
+        // Focus on item name field
         setTimeout(() => {
-          $('.category-select-modal').select2('open');
-        }, 300);
+          document.getElementById('modal_item_name').focus();
+        }, 100);
       }
     }
 
@@ -605,11 +656,17 @@
     document.getElementById('addItemForm').addEventListener('submit', function(e) {
       e.preventDefault();
 
-    // If category dropdown is visible, sync its value to the hidden input
+    // Handle category value
       const categoryFormGroup = document.getElementById('category_form_group');
+      const categoryHidden = document.getElementById('modal_category_hidden');
+
       if (categoryFormGroup.style.display !== 'none') {
+        // Category dropdown is visible - use its value
         const categoryValue = $('.category-select-modal').val();
-        document.getElementById('modal_category_hidden').value = categoryValue;
+        categoryHidden.value = categoryValue;
+      } else if (!categoryHidden.value) {
+        // Category is hidden and not pre-filled - default to "Groceries"
+        categoryHidden.value = 'Groceries';
       }
 
       const formData = new FormData(this);

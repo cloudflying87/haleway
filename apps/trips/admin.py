@@ -5,7 +5,7 @@ Django admin configuration for trips app.
 from django.contrib import admin
 from django.utils.html import format_html
 
-from .models import Resort, Trip
+from .models import Resort, ResortWishlist, Trip, TripResortOption
 
 
 class ResortInline(admin.StackedInline):
@@ -14,7 +14,8 @@ class ResortInline(admin.StackedInline):
     model = Resort
     extra = 0
     fieldsets = (
-        ("Basic Information", {"fields": ("name", "website_url")}),
+        ("Basic Information", {"fields": ("name", "website_url", "phone_number")}),
+        ("Check-in/Check-out", {"fields": ("check_in_time", "check_out_time")}),
         (
             "Address",
             {"fields": ("address_line1", "address_line2", "city", "state", "zip_code", "country")},
@@ -22,6 +23,15 @@ class ResortInline(admin.StackedInline):
         ("Location Coordinates", {"fields": ("latitude", "longitude"), "classes": ("collapse",)}),
         ("Notes", {"fields": ("general_notes",)}),
     )
+
+
+class TripResortOptionInline(admin.TabularInline):
+    """Inline admin for resort options on dream trips."""
+
+    model = TripResortOption
+    extra = 1
+    fields = ["name", "city", "state", "rating", "is_preferred", "order"]
+    ordering = ["order", "-is_preferred"]
 
 
 @admin.register(Trip)
@@ -41,7 +51,7 @@ class TripAdmin(admin.ModelAdmin):
     list_filter = ["status", "start_date", "created_at"]
     search_fields = ["name", "destination_name", "family__name"]
     readonly_fields = ["id", "created_at", "updated_at", "duration"]
-    inlines = [ResortInline]
+    inlines = [ResortInline, TripResortOptionInline]
 
     fieldsets = (
         ("Trip Details", {"fields": ("family", "name", "destination_name", "status")}),
@@ -60,7 +70,12 @@ class TripAdmin(admin.ModelAdmin):
     @admin.display(description="Status")
     def status_badge(self, obj):
         """Display a colored status badge."""
-        colors = {"planning": "#ffc107", "active": "#28a745", "completed": "#6c757d"}
+        colors = {
+            "dream": "#e91e63",  # Pink for dream trips
+            "planning": "#ffc107",  # Yellow for planning
+            "active": "#28a745",  # Green for active
+            "completed": "#6c757d",  # Gray for completed
+        }
         color = colors.get(obj.status, "#6c757d")
         return format_html(
             '<span style="background-color: {}; color: white; padding: 3px 10px; border-radius: 3px;">{}</span>',
@@ -79,7 +94,8 @@ class ResortAdmin(admin.ModelAdmin):
     readonly_fields = ["id"]
 
     fieldsets = (
-        ("Basic Information", {"fields": ("trip", "name", "website_url")}),
+        ("Basic Information", {"fields": ("trip", "name", "website_url", "phone_number")}),
+        ("Check-in/Check-out", {"fields": ("check_in_time", "check_out_time")}),
         (
             "Address",
             {"fields": ("address_line1", "address_line2", "city", "state", "zip_code", "country")},
@@ -87,4 +103,82 @@ class ResortAdmin(admin.ModelAdmin):
         ("Location Coordinates", {"fields": ("latitude", "longitude"), "classes": ("collapse",)}),
         ("Notes", {"fields": ("general_notes",)}),
         ("Metadata", {"fields": ("id",), "classes": ("collapse",)}),
+    )
+
+
+@admin.register(TripResortOption)
+class TripResortOptionAdmin(admin.ModelAdmin):
+    """Admin interface for TripResortOption model."""
+
+    list_display = ["name", "trip", "city", "state", "rating", "is_preferred", "order"]
+    list_filter = ["is_preferred", "rating", "trip__status"]
+    search_fields = ["name", "city", "trip__name"]
+    readonly_fields = ["id", "created_at", "updated_at"]
+
+    fieldsets = (
+        ("Basic Information", {"fields": ("trip", "name", "website_url", "phone_number")}),
+        (
+            "Address",
+            {"fields": ("address_line1", "address_line2", "city", "state", "zip_code", "country")},
+        ),
+        ("Location Coordinates", {"fields": ("latitude", "longitude"), "classes": ("collapse",)}),
+        (
+            "Comparison Details",
+            {
+                "fields": (
+                    "estimated_cost_per_night",
+                    "rating",
+                    "is_preferred",
+                    "order",
+                    "pros",
+                    "cons",
+                )
+            },
+        ),
+        ("Notes", {"fields": ("general_notes",)}),
+        ("Metadata", {"fields": ("id", "created_at", "updated_at"), "classes": ("collapse",)}),
+    )
+
+
+@admin.register(ResortWishlist)
+class ResortWishlistAdmin(admin.ModelAdmin):
+    """Admin interface for ResortWishlist model."""
+
+    list_display = [
+        "name",
+        "destination",
+        "family",
+        "is_favorite",
+        "visited",
+        "added_by",
+        "created_at",
+    ]
+    list_filter = ["is_favorite", "visited", "country", "created_at"]
+    search_fields = ["name", "destination", "city", "description", "tags"]
+    readonly_fields = ["id", "created_at", "updated_at"]
+
+    fieldsets = (
+        ("Basic Information", {"fields": ("family", "name", "destination", "website_url")}),
+        (
+            "Address",
+            {"fields": ("address_line1", "address_line2", "city", "state", "zip_code", "country")},
+        ),
+        ("Location Coordinates", {"fields": ("latitude", "longitude"), "classes": ("collapse",)}),
+        (
+            "Wishlist Details",
+            {
+                "fields": (
+                    "description",
+                    "estimated_cost_per_night",
+                    "tags",
+                    "is_favorite",
+                )
+            },
+        ),
+        ("Visit Tracking", {"fields": ("visited", "visited_trip")}),
+        ("Notes", {"fields": ("notes",)}),
+        (
+            "Metadata",
+            {"fields": ("id", "added_by", "created_at", "updated_at"), "classes": ("collapse",)},
+        ),
     )

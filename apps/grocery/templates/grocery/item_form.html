@@ -234,44 +234,44 @@
       color: var(--text-primary);
     }
 
-    /* Quick Tips Box */
-    .quick-tips {
-      background: linear-gradient(135deg, rgba(46, 134, 171, 0.05) 0%, rgba(6, 167, 125, 0.05) 100%);
-      border-left: 4px solid var(--primary-color);
+    /* Advanced Options Collapsible */
+    .advanced-options {
+      margin-top: var(--spacing-xl);
+      margin-bottom: var(--spacing-lg);
+      padding: var(--spacing-md);
+      background-color: var(--gray-50);
       border-radius: var(--border-radius);
-      padding: var(--spacing-lg);
-      margin-bottom: var(--spacing-xl);
     }
 
-    .quick-tips h3 {
-      font-size: 0.875rem;
-      font-weight: 700;
-      color: var(--primary-color);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin: 0 0 var(--spacing-sm) 0;
-    }
-
-    .quick-tips ul {
-      margin: 0;
-      padding-left: var(--spacing-lg);
-      list-style: none;
-    }
-
-    .quick-tips li {
+    .advanced-options summary {
+      cursor: pointer;
+      font-weight: 600;
       color: var(--text-secondary);
-      font-size: 0.875rem;
-      line-height: 1.6;
-      margin-bottom: var(--spacing-xs);
-      position: relative;
+      list-style: none;
+      user-select: none;
+      padding: var(--spacing-sm);
+      font-size: 0.95rem;
     }
 
-    .quick-tips li:before {
-      content: "→";
-      position: absolute;
-      left: -20px;
-      color: var(--accent-color);
-      font-weight: bold;
+    .advanced-options summary:hover {
+      color: var(--primary-color);
+    }
+
+    .advanced-options summary::before {
+      content: '▶ ';
+      display: inline-block;
+      transition: transform var(--transition-fast);
+      margin-right: var(--spacing-xs);
+    }
+
+    .advanced-options[open] summary::before {
+      transform: rotate(90deg);
+    }
+
+    .advanced-options-content {
+      margin-top: var(--spacing-lg);
+      padding-top: var(--spacing-md);
+      border-top: 1px solid var(--gray-200);
     }
 
     /* Responsive */
@@ -321,38 +321,8 @@
     </div>
 
     <div class="modern-form-card">
-      <div class="quick-tips">
-        <h3>💡 Quick Tips</h3>
-        <ul>
-          <li>Use categories to organize your items (e.g., Produce, Dairy, Snacks)</li>
-          <li>You can create a new category by typing it in the dropdown</li>
-          <li>Include quantity for easy shopping (e.g., 2 lbs, 1 gallon, 6 pack)</li>
-        </ul>
-      </div>
-
       <form method="post">
         {% csrf_token %}
-
-        <div class="form-group">
-          <label for="{{ form.category.id_for_label }}">
-            Category <span class="required">*</span>
-          </label>
-          <select name="{{ form.category.name }}"
-                  id="{{ form.category.id_for_label }}"
-                  class="form-control category-select"
-                  required>
-            <option value=""></option>
-            {% if form.category_suggestions %}
-              {% for category in form.category_suggestions %}
-                <option value="{{ category }}" {% if category == form.category.value %}selected{% endif %}>{{ category }}</option>
-              {% endfor %}
-            {% endif %}
-          </select>
-          <small class="form-help">
-            <span class="form-help-icon">ℹ️</span>
-            Select an existing category or type to create a new one
-          </small>
-        </div>
 
         <div class="form-group">
           <label for="{{ form.item_name.id_for_label }}">
@@ -365,27 +335,53 @@
           </small>
         </div>
 
-        <div class="form-group">
-          <label for="{{ form.quantity.id_for_label }}">
-            Quantity <span style="color: var(--text-muted); font-weight: 400;">(optional)</span>
-          </label>
-          {{ form.quantity }}
-          <small class="form-help">
-            <span class="form-help-icon">ℹ️</span>
-            How much do you need? (e.g., 2 lbs, 1 gallon, 6 pack)
-          </small>
-        </div>
+        <details class="advanced-options">
+          <summary>Advanced Options</summary>
+          <div class="advanced-options-content">
+            <div class="form-group">
+              <label for="{{ form.category.id_for_label }}">
+                Category
+              </label>
+              <select name="{{ form.category.name }}"
+                      id="{{ form.category.id_for_label }}"
+                      class="form-control category-select"
+                      required>
+                <option value=""></option>
+                {% if form.category_suggestions %}
+                  {% for category in form.category_suggestions %}
+                    <option value="{{ category }}" {% if category == form.category.value %}selected{% endif %}>{{ category }}</option>
+                  {% endfor %}
+                {% endif %}
+              </select>
+              <small class="form-help">
+                <span class="form-help-icon">ℹ️</span>
+                Select an existing category or type to create a new one
+              </small>
+            </div>
 
-        <div class="form-group">
-          <label for="{{ form.notes.id_for_label }}">
-            Notes <span style="color: var(--text-muted); font-weight: 400;">(optional)</span>
-          </label>
-          {{ form.notes }}
-          <small class="form-help">
-            <span class="form-help-icon">ℹ️</span>
-            Add any specific details, brands, or reminders
-          </small>
-        </div>
+            <div class="form-group">
+              <label for="{{ form.quantity.id_for_label }}">
+                Quantity <span style="color: var(--text-muted); font-weight: 400;">(optional)</span>
+              </label>
+              {{ form.quantity }}
+              <small class="form-help">
+                <span class="form-help-icon">ℹ️</span>
+                How much do you need? (e.g., 2 lbs, 1 gallon, 6 pack)
+              </small>
+            </div>
+
+            <div class="form-group">
+              <label for="{{ form.notes.id_for_label }}">
+                Notes <span style="color: var(--text-muted); font-weight: 400;">(optional)</span>
+              </label>
+              {{ form.notes }}
+              <small class="form-help">
+                <span class="form-help-icon">ℹ️</span>
+                Add any specific details, brands, or reminders
+              </small>
+            </div>
+          </div>
+        </details>
 
         <div class="form-actions">
           {% if item %}
@@ -438,10 +434,17 @@
         }
       });
 
-        // Auto-focus on category field
+      // Check if category is pre-filled (from URL parameter)
+      var categoryValue = $('.category-select').val();
+      if (categoryValue) {
+        // Open the Advanced Options section if category is pre-filled
+        $('.advanced-options').attr('open', true);
+      }
+
+      // Auto-focus on item name field
       setTimeout(function() {
-        $('.category-select').select2('open');
-      }, 300);
+        $('#{{ form.item_name.id_for_label }}').focus();
+      }, 100);
     });
   </script>
 {% endblock %}
