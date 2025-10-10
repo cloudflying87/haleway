@@ -1349,9 +1349,102 @@ family_vacation_planner/
 
 ---
 
-### Dream Trips & Resort Wishlist (PLANNED - Priority: HIGH)
+### Dream Trips & Resort Wishlist 🔨 IN PROGRESS (2025-10-09)
 
 **Goal**: Support trip ideas and resort discovery before committing to dates
+
+**✅ What's Been Built (Models, Forms, Admin):**
+
+#### Models Created
+- **TripResortOption**: Multiple resort possibilities for dream trips
+  - Comparison fields: pros, cons, rating (1-5), estimated_cost_per_night
+  - Preferred option flagging and custom ordering
+  - Full address and location coordinates for Mapbox
+  - phone_number field for contact info
+  - general_notes TextField for research notes
+  - Database indexes: (trip, order), (trip, is_preferred)
+  - UUID primary key, created_at/updated_at timestamps
+
+- **ResortWishlist**: Family-level resort wishlist for future trips
+  - Destination field for location (e.g., "Maui", "Paris", "Tokyo")
+  - Tags CharField for comma-separated organization (beach, luxury, family-friendly)
+  - Description TextField for "why we want to visit"
+  - Visit tracking: visited boolean, visited_trip ForeignKey
+  - is_favorite boolean for family favorites
+  - estimated_cost_per_night for budget planning
+  - Full address and coordinates support
+  - Research notes TextField
+  - Database indexes: (family, is_favorite), (family, visited), (family, destination)
+  - UUID primary key, added_by tracking
+
+- **Trip Model Updates**:
+  - Made start_date and end_date nullable (blank=True, null=True)
+  - Help text updated: "Optional for dream trips"
+  - Status field already included 'dream' option
+  - Updated TripForm validation to require dates only for non-dream trips
+
+#### Forms Created
+- **TripResortOptionForm**: Full ModelForm for resort options
+  - All address fields with Mapbox autocomplete support (id="address-search")
+  - Pros/cons TextArea widgets (3 rows each)
+  - Rating Select dropdown (1-5)
+  - is_preferred checkbox
+  - estimated_cost_per_night with decimal input
+  - Consistent form-control styling throughout
+
+- **ResortWishlistForm**: Complete wishlist form
+  - Destination field for location input
+  - Tags field with helpful placeholder (comma-separated)
+  - Description TextArea for rationale
+  - is_favorite checkbox
+  - Address autocomplete integration
+  - estimated_cost_per_night field
+
+- **ConvertDreamTripForm**: Convert dream → planning trip
+  - ModelForm with dynamic resort option dropdown
+  - Populates queryset from trip's resort_options
+  - Orders by is_preferred, then order
+  - start_date and end_date required fields
+  - Custom validation ensures dates are provided
+  - date_type="date" widgets for browser date pickers
+
+- **TripForm Updates**: Enhanced validation
+  - Checks if status == 'dream' before requiring dates
+  - Raises ValidationError if non-dream trip lacks dates
+  - Validates end_date > start_date when both provided
+
+#### Admin Interfaces
+- **TripResortOptionAdmin**: Full admin with comparison details
+  - list_display: name, trip, city, state, rating, is_preferred, order
+  - list_filter: is_preferred, rating, trip__status
+  - Fieldsets organized: Basic Info, Address, Location, Comparison Details, Notes
+  - Search by name, city, trip__name
+
+- **ResortWishlistAdmin**: Wishlist management
+  - list_display: name, destination, family, is_favorite, visited, added_by, created_at
+  - list_filter: is_favorite, visited, country, created_at
+  - Search: name, destination, city, description, tags
+  - Fieldsets: Basic Info, Address, Location, Wishlist Details, Visit Tracking, Notes
+
+- **TripResortOptionInline**: Tabular inline for trips
+  - Shows on Trip admin page
+  - Fields: name, city, state, rating, is_preferred, order
+  - extra=1 for easy adding
+  - Orders by: order, -is_preferred
+
+- **Trip Admin Updates**:
+  - Added TripResortOptionInline to inlines list
+  - Updated status_badge to include dream trip color (#e91e63 pink)
+  - Resort inline includes phone_number and check-in/check-out times
+
+#### Migration Applied
+- apps/trips/migrations/0004_alter_trip_end_date_alter_trip_start_date_and_more.py
+- Alters Trip.start_date to nullable
+- Alters Trip.end_date to nullable
+- Creates TripResortOption model with all fields and indexes
+- Creates ResortWishlist model with all fields and indexes
+
+**🔨 Next Steps (Views & Templates):**
 
 #### Trip Model Updates
 
@@ -1610,7 +1703,15 @@ Family-level wishlist of resorts to consider for future trips:
   - ✅ Grocery Lists - COMPLETED
   - ✅ UI & Navigation Refinements - COMPLETED (2025-10-09)
   - 🔨 User Section Preferences - PLANNED (DEFERRED)
-  - 🔨 Dream Trips & Resort Wishlist - PLANNED (DEFERRED)
+  - 🔨 **Dream Trips & Resort Wishlist** - IN PROGRESS (2025-10-09)
+    - ✅ Models created (TripResortOption, ResortWishlist)
+    - ✅ Trip model updated (nullable dates, dream status)
+    - ✅ Forms created (TripResortOptionForm, ResortWishlistForm, ConvertDreamTripForm)
+    - ✅ Admin interfaces complete
+    - ✅ Migration applied
+    - 🔨 Building views and templates (in progress)
+    - ⏳ URL patterns and integration (pending)
+    - ⏳ Testing and polish (pending)
 - 🔍 Phase 8: Search & Discovery - FUTURE (Priority: HIGH)
 - 🤝 Phase 9: Sharing & Collaboration - FUTURE (Priority: MEDIUM)
 - 🚀 Phase 10: Advanced Features - FUTURE (Priority: LOW)
