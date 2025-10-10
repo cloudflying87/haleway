@@ -3,14 +3,14 @@
 # ============================================================================
 # Django Project Build Script Template
 # Based on Keep-Logging's proven deployment automation
-# 
+#
 # CUSTOMIZE THESE VARIABLES FOR YOUR PROJECT:
 # ============================================================================
 
 # PROJECT CONFIGURATION - CHANGE THESE
 PROJECT_NAME="haleway"                    # ← CHANGE THIS
-REMOTE_SERVER="davidhale87@172.16.205.4"           # ← CHANGE THIS (optional)
-REMOTE_BACKUP_DIR="halewaybackups"               # ← CHANGE THIS (optional)
+REMOTE_SERVER="davidhale87@172.16.205.4"           # ← Development machine (for copying backups FROM production)
+REMOTE_BACKUP_DIR="halefiles/coding/halewaybackups"               # ← CHANGE THIS (optional)
 
 # Auto-generated container names (usually don't need to change)
 DB_CONTAINER="${PROJECT_NAME}-db-1"
@@ -80,7 +80,7 @@ wait_for_database() {
     echo -e "${YELLOW}Waiting for database to be ready...${NC}"
     local max_attempts=30
     local attempt=1
-    
+
     while [ $attempt -le $max_attempts ]; do
         if sudo docker exec $DB_CONTAINER pg_isready -U $DB_USER > /dev/null 2>&1; then
             echo -e "${GREEN}✓ Database is ready!${NC}"
@@ -90,7 +90,7 @@ wait_for_database() {
         sleep 2
         ((attempt++))
     done
-    
+
     echo -e "${RED}✗ ERROR: Database failed to become ready${NC}"
     return 1
 }
@@ -106,12 +106,12 @@ ensure_backup_dir() {
 # Function to run Django migrations
 run_migrations() {
     echo -e "${BLUE}Running Django migrations...${NC}"
-    
+
     # Collect static files
     echo -e "${YELLOW}Collecting static files...${NC}"
     sudo docker compose exec web python manage.py collectstatic --noinput --clear
     echo -e "${GREEN}✓ Static files collected${NC}"
-    
+
     # Check for new migrations
     echo -e "${YELLOW}Checking for new migrations...${NC}"
     sudo docker compose exec web python manage.py makemigrations --dry-run --verbosity=0 > /tmp/migration_check.log 2>&1
@@ -125,7 +125,7 @@ run_migrations() {
         echo -e "${GREEN}✓ No new migrations needed${NC}"
     fi
     rm -f /tmp/migration_check.log
-    
+
     # Apply all migrations
     echo -e "${YELLOW}Applying database migrations...${NC}"
     sudo docker compose exec web python manage.py migrate
@@ -136,43 +136,43 @@ run_migrations() {
 backup_database() {
     local backup_date=$1
     local is_local=$2
-    
+
     echo -e "${BLUE}Backing up database in all formats: $backup_date${NC}"
-    
+
     if [ "$is_local" = true ]; then
         # Local backup without Docker - only exclude cache table
         local local_db_name="${DB_NAME}"  # Adjust if different in local setup
         pg_dump $local_db_name -a -O -T cache_table --format=plain --file=/Users/$(whoami)/backups/${PROJECT_NAME}_backup_${backup_date}_data.sql
         pg_dump $local_db_name -O -T cache_table --format=plain --file=/Users/$(whoami)/backups/${PROJECT_NAME}_backup_${backup_date}.sql
         pg_dump $local_db_name -c -O -T cache_table --format=plain --file=/Users/$(whoami)/backups/${PROJECT_NAME}_backup_${backup_date}_clean.sql
-        
+
         echo -e "${GREEN}✓ Local backup completed${NC}"
-        
+
         # Copy to remote if configured
-        if [ -n "$REMOTE_SERVER" ] && [ "$REMOTE_SERVER" != "davidhale87@172.16.205.4" ]; then
+        if [ -n "$REMOTE_SERVER" ]; then
             echo -e "${YELLOW}Copying to remote server...${NC}"
             scp /Users/$(whoami)/backups/${PROJECT_NAME}_backup_${backup_date}*.sql $REMOTE_SERVER:$REMOTE_BACKUP_DIR/
         fi
     else
         # Docker backup
         ensure_backup_dir
-        
+
         # Create all three backup formats - only exclude cache table
         sudo docker exec -it $DB_CONTAINER pg_dump -U $DB_USER $DB_NAME -a -O -T cache_table --format=plain --file=/var/lib/postgresql/data/${PROJECT_NAME}_backup_${backup_date}_data.sql
         sudo docker exec -it $DB_CONTAINER pg_dump -U $DB_USER $DB_NAME -O -T cache_table --format=plain --file=/var/lib/postgresql/data/${PROJECT_NAME}_backup_${backup_date}.sql
         sudo docker exec -it $DB_CONTAINER pg_dump -U $DB_USER $DB_NAME -c -O -T cache_table --format=plain --file=/var/lib/postgresql/data/${PROJECT_NAME}_backup_${backup_date}_clean.sql
-        
+
         # Copy from container to host
         sudo docker cp $DB_CONTAINER:/var/lib/postgresql/data/${PROJECT_NAME}_backup_${backup_date}_data.sql ./backups/
         sudo docker cp $DB_CONTAINER:/var/lib/postgresql/data/${PROJECT_NAME}_backup_${backup_date}.sql ./backups/
         sudo docker cp $DB_CONTAINER:/var/lib/postgresql/data/${PROJECT_NAME}_backup_${backup_date}_clean.sql ./backups/
-        
+
         # Copy to remote if configured
-        if [ -n "$REMOTE_SERVER" ] && [ "$REMOTE_SERVER" != "davidhale87@172.16.205.4" ]; then
+        if [ -n "$REMOTE_SERVER" ]; then
             echo -e "${YELLOW}Copying to remote server...${NC}"
             scp ./backups/${PROJECT_NAME}_backup_${backup_date}*.sql $REMOTE_SERVER:$REMOTE_BACKUP_DIR/
         fi
-        
+
         echo -e "${GREEN}✓ Docker backup completed${NC}"
     fi
 }
@@ -180,15 +180,15 @@ backup_database() {
 # Function to download backup from remote
 download_backup() {
     local backup_date=$1
-    
-    if [ -z "$REMOTE_SERVER" ] || [ "$REMOTE_SERVER" = "davidhale87@172.16.205.4" ]; then
+
+    if [ -z "$REMOTE_SERVER" ]; then
         echo -e "${RED}✗ Remote server not configured${NC}"
         return 1
     fi
-    
+
     echo -e "${BLUE}Downloading backup from remote server: $backup_date${NC}"
     ensure_backup_dir
-    
+
     # Download all backup formats
     for suffix in "_data.sql" ".sql" "_clean.sql"; do
         local filename="${PROJECT_NAME}_backup_${backup_date}${suffix}"
@@ -198,7 +198,7 @@ download_backup() {
             echo -e "${YELLOW}⚠ Warning: Could not download $filename${NC}"
         fi
     done
-    
+
     # List downloaded files
     ls -la ./backups/${PROJECT_NAME}_backup_${backup_date}* 2>/dev/null || echo -e "${RED}✗ No backup files found for date: $backup_date${NC}"
 }
@@ -206,79 +206,79 @@ download_backup() {
 # Function to apply migration-specific fixes for restore compatibility
 apply_migration_fixes() {
     echo -e "${YELLOW}Applying migration fixes for restore compatibility...${NC}"
-    
+
     # First, clear django_migrations to avoid duplicate key conflicts
     echo -e "${YELLOW}Clearing django_migrations table to prevent duplicate key errors...${NC}"
     sudo docker exec -it $DB_CONTAINER psql -d $DB_NAME -U $DB_USER -c "TRUNCATE django_migrations CASCADE;"
     echo -e "${GREEN}✓ django_migrations table cleared${NC}"
-    
+
     # Add project-specific migration fixes here
     sudo docker exec -i $DB_CONTAINER bash -c 'cat > /var/lib/postgresql/data/migration_fixes.sql << '\''EOF'\''
 -- Migration fixes for restore compatibility
 -- Add your project-specific fixes here
 
-DO $$ 
+DO $$
 BEGIN
     -- Example: Handle new fields added in recent migrations
-    -- IF EXISTS (SELECT 1 FROM information_schema.columns 
-    --            WHERE table_name = '\''your_table'\'' 
+    -- IF EXISTS (SELECT 1 FROM information_schema.columns
+    --            WHERE table_name = '\''your_table'\''
     --            AND column_name = '\''your_field'\'') THEN
     --     ALTER TABLE your_table ALTER COLUMN your_field DROP NOT NULL;
     --     RAISE NOTICE '\''Temporarily removed NOT NULL constraint from your_table.your_field'\'';
     -- END IF;
-    
+
     RAISE NOTICE '\''Migration fixes completed'\'';
-    
+
 END $$;
 EOF'
-    
+
     # Run the migration fixes
     sudo docker exec -it $DB_CONTAINER psql -d $DB_NAME -U $DB_USER -f /var/lib/postgresql/data/migration_fixes.sql
-    
+
     # Clean up
     sudo docker exec -i $DB_CONTAINER rm -f /var/lib/postgresql/data/migration_fixes.sql
-    
+
     echo -e "${GREEN}✓ Migration fixes applied successfully${NC}"
 }
 
 # Function to restore migration constraints after successful restore
 restore_migration_constraints() {
     echo -e "${YELLOW}Restoring migration constraints after data restore...${NC}"
-    
+
     sudo docker exec -i $DB_CONTAINER bash -c 'cat > /var/lib/postgresql/data/restore_constraints.sql << '\''EOF'\''
 -- Restore constraints and set default values after data restore
 
-DO $$ 
+DO $$
 BEGIN
     -- Example: Fix and restore constraints
-    -- IF EXISTS (SELECT 1 FROM information_schema.columns 
-    --            WHERE table_name = '\''your_table'\'' 
+    -- IF EXISTS (SELECT 1 FROM information_schema.columns
+    --            WHERE table_name = '\''your_table'\''
     --            AND column_name = '\''your_field'\'') THEN
     --     UPDATE your_table SET your_field = false WHERE your_field IS NULL;
     --     ALTER TABLE your_table ALTER COLUMN your_field SET NOT NULL;
     --     RAISE NOTICE '\''Fixed and restored NOT NULL constraint for your_table.your_field'\'';
     -- END IF;
-    
+
     RAISE NOTICE '\''Constraint restoration completed'\'';
-    
+
 END $$;
 EOF'
-    
+
     # Run the constraint restoration
     sudo docker exec -it $DB_CONTAINER psql -d $DB_NAME -U $DB_USER -f /var/lib/postgresql/data/restore_constraints.sql
-    
+
     # Clean up
     sudo docker exec -i $DB_CONTAINER rm -f /var/lib/postgresql/data/restore_constraints.sql
-    
+
     echo -e "${GREEN}✓ Migration constraints restored successfully${NC}"
 }
 
 # Function to restore database with enhanced error handling
 restore_database() {
     local backup_date=$1
-    
+
     echo -e "${BLUE}Restoring database from backup: $backup_date${NC}"
-    
+
     # Try full backup first, fall back to data-only
     if [ -f "./backups/${PROJECT_NAME}_backup_${backup_date}.sql" ]; then
         backup_file="${PROJECT_NAME}_backup_${backup_date}.sql"
@@ -292,21 +292,21 @@ restore_database() {
         echo -e "${RED}        and: ./backups/${PROJECT_NAME}_backup_${backup_date}_data.sql${NC}"
         return 1
     fi
-    
+
     wait_for_database || return 1
-    
+
     # Apply migration fixes if requested
     if [ "$MIGRATION_FIX" = true ]; then
         apply_migration_fixes
     fi
-    
+
     # Copy backup to container
     sudo docker cp ./backups/${backup_file} $DB_CONTAINER:/var/lib/postgresql/data/
-    
+
     # Run the actual restore
     echo -e "${YELLOW}Running database restore...${NC}"
     echo "=================================================================================="
-    
+
     if sudo docker exec -i $DB_CONTAINER psql -d $DB_NAME -U $DB_USER -f /var/lib/postgresql/data/${backup_file}; then
         restore_status=0
         echo "=================================================================================="
@@ -318,22 +318,22 @@ restore_database() {
         echo -e "${RED}Check the error messages above for details${NC}"
         return $restore_status
     fi
-    
+
     # Restore migration constraints if fixes were applied
     if [ "$MIGRATION_FIX" = true ]; then
         restore_migration_constraints
     fi
-    
+
     # Clean up backup file from container
     sudo docker exec -i $DB_CONTAINER rm -f /var/lib/postgresql/data/${backup_file}
-    
+
     echo -e "${GREEN}✓ Database restore completed${NC}"
 }
 
 # Function to stop containers
 stop_containers() {
     local preserve_db=$1
-    
+
     echo -e "${YELLOW}Stopping containers...${NC}"
     if [ "$preserve_db" = true ]; then
         # Soft rebuild - preserve database
@@ -354,7 +354,7 @@ stop_containers() {
 # Function to remove containers
 remove_containers() {
     local preserve_db=$1
-    
+
     echo -e "${YELLOW}Removing containers...${NC}"
     if [ "$preserve_db" = true ]; then
         # Soft rebuild - preserve database
@@ -374,13 +374,13 @@ remove_containers() {
 # Function to remove volumes
 remove_volumes() {
     local preserve_db=$1
-    
+
     echo -e "${YELLOW}Removing volumes...${NC}"
     # Always remove these to ensure fresh files
     sudo docker volume rm ${PROJECT_NAME}_static_volume 2>/dev/null || true
     sudo docker volume rm ${PROJECT_NAME}_media_volume 2>/dev/null || true
     sudo docker volume rm ${PROJECT_NAME}_log_volume 2>/dev/null || true
-    
+
     if [ "$preserve_db" = false ]; then
         # Full rebuild - also remove database
         sudo docker volume rm ${PROJECT_NAME}_postgres_data 2>/dev/null || true
@@ -483,69 +483,69 @@ fi
 # Soft rebuild
 if [ "$SOFT_REBUILD" = true ]; then
     echo -e "${BLUE}Starting soft rebuild...${NC}"
-    
+
     # Git pull
     echo -e "${YELLOW}Pulling latest changes from git...${NC}"
     git pull
-    
+
     # Stop and remove containers (preserve database)
     stop_containers true
     remove_containers true
-    
+
     # Remove volumes (preserve database)
     remove_volumes true
-    
+
     # Prune and rebuild
     echo -e "${YELLOW}Cleaning up unused Docker images...${NC}"
     sudo docker image prune -f
     echo -e "${GREEN}✓ Image cleanup completed${NC}"
-    
+
     echo -e "${YELLOW}Rebuilding images with --no-cache (this may take several minutes)...${NC}"
     sudo docker compose build --no-cache
     echo -e "${GREEN}✓ Images rebuilt successfully${NC}"
-    
+
     # Start containers
     echo -e "${YELLOW}Starting containers...${NC}"
     sudo docker compose up -d
     echo -e "${GREEN}✓ Containers started${NC}"
-    
+
     # Wait and run migrations
     wait_for_database
     run_migrations
-    
+
     echo -e "${GREEN}🎉 Soft rebuild completed!${NC}"
 fi
 
 # Full rebuild
 if [ "$REBUILD" = true ]; then
     echo -e "${BLUE}Starting full rebuild...${NC}"
-    
+
     # Git pull
     echo -e "${YELLOW}Pulling latest changes from git...${NC}"
     git pull
-    
+
     # Stop and remove everything
     stop_containers false
     remove_containers false
     remove_volumes false
-    
+
     # Prune and rebuild
     echo -e "${YELLOW}Cleaning up unused Docker images...${NC}"
     sudo docker image prune -f
     echo -e "${GREEN}✓ Image cleanup completed${NC}"
-    
+
     echo -e "${YELLOW}Rebuilding images with --no-cache (this may take several minutes)...${NC}"
     sudo docker compose build --no-cache
     echo -e "${GREEN}✓ Images rebuilt successfully${NC}"
-    
+
     # Start containers
     echo -e "${YELLOW}Starting containers...${NC}"
     sudo docker compose up -d
     echo -e "${GREEN}✓ Containers started${NC}"
-    
+
     # Wait for database
     wait_for_database
-    
+
     # Check if we have a full backup - if so, restore first then migrate
     if [ -f "./backups/${PROJECT_NAME}_backup_${USER_DATE}.sql" ]; then
         echo -e "${GREEN}Full backup found - restoring database first, then running migrations${NC}"
