@@ -1009,22 +1009,33 @@
       document.body.style.overflow = '';
     }
 
-    // Check if trip has dates and show warning
+    // Check if trip has dates and show/hide date fields
     function checkStatusDates() {
       const statusSelect = document.getElementById('status_select');
-      const datesWarning = document.getElementById('dates_warning');
-      const hasStartDate = {% if trip.start_date %}true{% else %}false{% endif %};
-      const hasEndDate = {% if trip.end_date %}true{% else %}false{% endif %};
-      const hasDates = hasStartDate && hasEndDate;
+      const dateFields = document.getElementById('date_fields');
+      const startDateInput = document.getElementById('start_date');
+      const endDateInput = document.getElementById('end_date');
 
-      statusSelect.addEventListener('change', function() {
-        const selectedStatus = this.value;
-        if (!hasDates && selectedStatus !== 'dream') {
-          datesWarning.style.display = 'block';
+      function updateDateFields() {
+        const selectedStatus = statusSelect.value;
+        if (selectedStatus !== 'dream') {
+          // Show date fields and make them required
+          dateFields.style.display = 'block';
+          startDateInput.setAttribute('required', 'required');
+          endDateInput.setAttribute('required', 'required');
         } else {
-          datesWarning.style.display = 'none';
+          // Hide date fields and make them optional
+          dateFields.style.display = 'none';
+          startDateInput.removeAttribute('required');
+          endDateInput.removeAttribute('required');
         }
-      });
+      }
+
+      // Initial check
+      updateDateFields();
+
+      // Listen for changes
+      statusSelect.addEventListener('change', updateDateFields);
     }
 
     // Close status modal when clicking outside
