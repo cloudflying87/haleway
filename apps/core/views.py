@@ -42,16 +42,27 @@ def dashboard(request):
     today = timezone.now().date()
 
     # Get active trip (trip happening right now)
+    # Exclude dream trips (they don't have dates)
     active_trip = (
-        Trip.objects.filter(family__in=user_families, start_date__lte=today, end_date__gte=today)
+        Trip.objects.filter(
+            family__in=user_families,
+            start_date__lte=today,
+            end_date__gte=today,
+            start_date__isnull=False,  # Exclude dream trips
+        )
         .select_related("family")
         .prefetch_related("resort")
         .first()
     )
 
     # Get upcoming trips (future trips)
+    # Exclude dream trips (they don't have dates)
     upcoming_trips_qs = (
-        Trip.objects.filter(family__in=user_families, start_date__gt=today)
+        Trip.objects.filter(
+            family__in=user_families,
+            start_date__gt=today,
+            start_date__isnull=False,  # Exclude dream trips
+        )
         .select_related("family")
         .prefetch_related("resort")
         .order_by("start_date")[:5]
@@ -64,8 +75,13 @@ def dashboard(request):
         upcoming_trips.append(trip)
 
     # Get recent/past trips
+    # Exclude dream trips (they don't have dates)
     past_trips = (
-        Trip.objects.filter(family__in=user_families, end_date__lt=today)
+        Trip.objects.filter(
+            family__in=user_families,
+            end_date__lt=today,
+            end_date__isnull=False,  # Exclude dream trips
+        )
         .select_related("family")
         .prefetch_related("resort")
         .order_by("-end_date")[:3]
@@ -102,12 +118,8 @@ def get_user_trips(request):
         # Get user's families
         user_families = Family.objects.filter(members__user=request.user)
 
-        # Get all user's trips
-        trips = (
-            Trip.objects.filter(family__in=user_families)
-            .select_related("family")
-            .order_by("-start_date")
-        )
+        # Get all user's trips (order by created_at for now, will sort in Python)
+        trips = Trip.objects.filter(family__in=user_families).select_related("family")
 
         # Get current trip ID from session
         current_trip_id = request.session.get("current_trip_id")
@@ -115,18 +127,32 @@ def get_user_trips(request):
         # Build trip list
         trip_list = []
         for trip in trips:
+            # Handle dream trips with no dates
+            if trip.start_date and trip.end_date:
+                date_range = f"{trip.start_date.strftime('%b %d, %Y')} - {trip.end_date.strftime('%b %d, %Y')}"
+            else:
+                date_range = "Dates not set (Dream Trip)"
+
             trip_list.append(
                 {
                     "id": str(trip.pk),
                     "name": trip.name,
                     "destination": trip.destination_name,
-                    "date_range": f"{trip.start_date.strftime('%b %d, %Y')} - {trip.end_date.strftime('%b %d, %Y')}",
+                    "date_range": date_range,
                     "status": trip.status,
                     "is_current": str(trip.pk) == str(current_trip_id)
                     if current_trip_id
                     else False,
+                    "start_date": trip.start_date,  # For sorting
                 }
             )
+
+        # Sort trips: dream trips first (null dates), then by start_date descending
+        trip_list.sort(key=lambda t: (t["start_date"] is not None, t["start_date"]), reverse=True)
+
+        # Remove the start_date field before returning (only used for sorting)
+        for trip in trip_list:
+            trip.pop("start_date", None)
 
         logger.info("user_trips_fetched", user_id=request.user.id, trip_count=len(trip_list))
 

@@ -20,7 +20,7 @@ from .forms import (
     TripForm,
     TripResortForm,
 )
-from .models import Resort, Trip
+from .models import Resort, Trip, TripResortOption
 
 logger = structlog.get_logger(__name__)
 
@@ -132,8 +132,13 @@ class TripDetailView(LoginRequiredMixin, DetailView):
     """Display trip details."""
 
     model = Trip
-    template_name = "trips/trip_detail.html"
     context_object_name = "trip"
+
+    def get_template_names(self):
+        """Use different template for dream trips."""
+        if self.object.status == "dream":
+            return ["trips/dream_trip_detail.html"]
+        return ["trips/trip_detail.html"]
 
     def get_queryset(self):
         """Ensure user can only view trips from their families."""
@@ -183,6 +188,14 @@ class TripDetailView(LoginRequiredMixin, DetailView):
             context["resort"] = trip.resort
         except Resort.DoesNotExist:
             context["resort"] = None
+
+        # Get resort options for dream trips
+        if trip.status == "dream":
+            context["resort_options"] = TripResortOption.objects.filter(trip=trip).order_by(
+                "-is_preferred", "-rating", "order"
+            )
+        else:
+            context["resort_options"] = []
 
         # Get weather forecast if resort has coordinates
         if hasattr(trip, "resort") and trip.resort:
@@ -356,6 +369,15 @@ class TripCreateView(LoginRequiredMixin, CreateView):
         # TripResortForm is a regular Form, not ModelForm, so remove instance
         kwargs.pop("instance", None)
         return kwargs
+
+    def get_initial(self):
+        """Pre-populate form with query parameters."""
+        initial = super().get_initial()
+        # Check if status was passed in the URL (e.g., ?status=dream)
+        status = self.request.GET.get("status")
+        if status and status in dict(Trip.STATUS_CHOICES):
+            initial["status"] = status
+        return initial
 
     def get_context_data(self, **kwargs):
         """Add family context."""

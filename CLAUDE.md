@@ -356,6 +356,167 @@ static/css/
 - **BEM Methodology**: `.component__element--modifier` naming
 - **Responsive**: Breakpoints at 576px, 768px, 992px, 1200px
 
+### Modern Form Styling Pattern (Established 2025-10-09)
+
+**IMPORTANT**: All new forms should use this consistent modern styling pattern. This creates a unified look across packing lists, grocery lists, and all future forms.
+
+#### Required Template Structure
+
+```html
+{% extends "base.html" %}
+
+{% block title %}Form Title - HaleWay{% endblock %}
+
+{% block extra_css %}
+<!-- Select2 CSS (for category dropdowns) -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<style>
+  /* Include modern form CSS (see below) */
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="add-item-container">
+  <div class="page-header">
+    <nav class="breadcrumb">
+      <!-- Breadcrumb navigation -->
+    </nav>
+    <span class="page-icon">🎒</span>
+    <h1>Form Title</h1>
+    <p class="page-subtitle">Description of what this form does</p>
+  </div>
+
+  <div class="modern-form-card">
+    <div class="quick-tips">
+      <h3>💡 Quick Tips</h3>
+      <ul>
+        <li>Helpful tip 1</li>
+        <li>Helpful tip 2</li>
+      </ul>
+    </div>
+
+    <form method="post">
+      {% csrf_token %}
+      <!-- Form fields here -->
+
+      <div class="form-actions">
+        <a href="..." class="btn btn-outline">Cancel</a>
+        <button type="submit" class="btn btn-primary">✓ Submit</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- jQuery + Select2 for category dropdowns -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+  $(document).ready(function() {
+    // Initialize Select2 on category dropdown
+    $('.category-select').select2({
+      tags: true,
+      placeholder: 'Select or type a category...',
+      allowClear: false,
+      width: '100%',
+      createTag: function (params) {
+        var term = $.trim(params.term);
+        if (term === '') return null;
+        return {
+          id: term,
+          text: term + ' (create new)',
+          newTag: true
+        }
+      },
+      templateResult: function(data) {
+        if (data.newTag) {
+          return $('<span style="color: var(--accent-color); font-weight: 600;">+ ' + data.text + '</span>');
+        }
+        return data.text;
+      }
+    });
+  });
+</script>
+{% endblock %}
+```
+
+#### Core CSS Classes (Copy this to `<style>` block)
+
+**Layout:**
+- `.add-item-container` - Max width 700px, centered, responsive padding
+- `.page-header` - Centered header with icon, title, subtitle
+- `.page-icon` - Large emoji icon (3rem)
+- `.page-subtitle` - Secondary text below title
+- `.modern-form-card` - White card with gradient shadows and border
+
+**Form Elements:**
+- `.form-group` - Form field wrapper with spacing
+- `.form-control` - Styled input/textarea/select with hover/focus effects
+- `.form-help` - Help text with icon below inputs
+- `.form-actions` - Button container with flex layout
+
+**Quick Tips Box:**
+- `.quick-tips` - Gradient background box with arrow bullets
+- `.quick-tips h3` - Uppercase heading with primary color
+- `.quick-tips ul` - List with custom arrow bullets
+- `.quick-tips code` - Inline code examples
+
+**Select2 Category Dropdown:**
+- `.select2-container--default .select2-selection--single` - Match form-control styling
+- Custom hover/focus states matching other inputs
+- "Create new" tag styling with accent color
+- Dropdown with primary color border
+
+**Example Section (Optional):**
+- `.example-section` - Gradient box showing usage example
+- `.example-box` - White box with monospace code
+- `.example-note` - Italic note below example
+
+#### Key Features
+
+1. **Consistent Visual Design**:
+   - Gradient shadows on cards: `0 4px 6px rgba(0, 0, 0, 0.05), 0 10px 15px rgba(0, 0, 0, 0.1)`
+   - Border with transparency: `1px solid rgba(46, 134, 171, 0.1)`
+   - Primary color focus ring: `0 0 0 4px rgba(46, 134, 171, 0.15)`
+   - Transform on focus: `translateY(-1px)`
+
+2. **Select2 Integration**:
+   - Searchable category dropdowns
+   - Create new category inline
+   - Visual indicator for new items: `+ Category Name (create new)`
+   - Matches form-control styling exactly
+
+3. **Responsive Behavior**:
+   - Mobile: Single column, stacked buttons
+   - Desktop: Wider layout, side-by-side buttons
+   - Auto-adjust padding for screen size
+
+4. **User Experience**:
+   - Auto-focus on primary input field
+   - Hover effects on all interactive elements
+   - Visual feedback on form submission
+   - Breadcrumb navigation for context
+
+#### Examples in Codebase
+
+**Reference Templates:**
+- `/apps/grocery/templates/grocery/item_form.html` - Single item form
+- `/apps/packing/templates/packing/bulk_add_items.html` - Bulk add form
+- Both use identical modern styling pattern
+
+**When to Use:**
+- Item creation forms (add/edit)
+- Bulk add forms
+- Any form with category selection
+- Settings/configuration forms
+
+#### Don't Use This Pattern For:
+- Simple inline forms (use modal pattern instead)
+- Multi-step wizards (different layout needed)
+- Login/registration forms (simpler design appropriate)
+- Admin-only forms (basic styling sufficient)
+
 ## Development Workflow
 
 ### Daily Development

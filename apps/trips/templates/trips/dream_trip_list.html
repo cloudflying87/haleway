@@ -79,7 +79,7 @@
           <p class="text-muted">Choose a family to create a dream trip:</p>
           <div class="family-links">
             {% for family in user_families %}
-              <a href="{% url 'trips:trip_create' family.pk %}" class="btn btn-outline">
+              <a href="{% url 'trips:trip_create' family.pk %}?status=dream" class="btn btn-outline">
                 {{ family.name }}
               </a>
             {% endfor %}

@@ -5,29 +5,118 @@
     <style>
       @media print {
         .no-print { display: none; }
+
+        /* Try to keep everything on one page */
+        @page {
+          size: letter;
+          margin: 0.5in;
+        }
+
+        body {
+          margin: 0;
+          padding: 0;
+        }
+
+        /* Prevent page breaks */
+        h1, h2 {
+          page-break-after: avoid;
+          break-after: avoid;
+        }
+
+        /* Keep category sections together if possible */
+        .category-section {
+          page-break-inside: avoid;
+          break-inside: avoid;
+        }
+
+        /* Reduce spacing for print */
+        h1 {
+          margin-top: 0;
+          margin-bottom: 0.25rem;
+        }
+
+        h2 {
+          margin-top: 0.75rem;
+          margin-bottom: 0.25rem;
+        }
+
+        li {
+          margin: 0.25rem 0;
+        }
+
+        .header-info {
+          margin-bottom: 0.5rem;
+        }
       }
-      body { font-family: Arial, sans-serif; margin: 2rem; }
-      h1 { font-size: 24px; margin-bottom: 0.5rem; }
-      h2 { font-size: 18px; color: #2E86AB; margin-top: 1.5rem; margin-bottom: 0.5rem; }
-      ul { list-style: none; padding: 0; }
-      li { margin: 0.5rem 0; padding-left: 2rem; position: relative; }
-      li:before { content: '☐'; position: absolute; left: 0; font-size: 18px; }
+
+      /* Screen styles */
+      body {
+        font-family: Arial, sans-serif;
+        margin: 2rem;
+        max-width: 8.5in; /* Letter width */
+      }
+      h1 {
+        font-size: 24px;
+        margin-bottom: 0.5rem;
+      }
+      h2 {
+        font-size: 18px;
+        color: #2E86AB;
+        margin-top: 1.5rem;
+        margin-bottom: 0.5rem;
+      }
+      ul {
+        list-style: none;
+        padding: 0;
+      }
+      li {
+        margin: 0.5rem 0;
+        padding-left: 2rem;
+        position: relative;
+      }
+      li:before {
+        content: '☐';
+        position: absolute;
+        left: 0;
+        font-size: 18px;
+      }
+
+      button.no-print {
+        background: #2E86AB;
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-size: 16px;
+        cursor: pointer;
+        margin-bottom: 1rem;
+      }
+
+      button.no-print:hover {
+        background: #236b8a;
+      }
     </style>
   </head>
   <body>
     <button class="no-print" onclick="window.print()">Print</button>
     <h1>{{ grocery_list.name }}</h1>
-    <p>Trip: {{ grocery_list.trip.name }}</p>
-    {% if grocery_list.shopping_date %}<p>Date: {{ grocery_list.shopping_date }}</p>{% endif %}
-    {% if grocery_list.store_name %}<p>Store: {{ grocery_list.store_name }}</p>{% endif %}
+    <div class="header-info">
+      <p>Trip: {{ grocery_list.trip.name }}</p>
+      {% if grocery_list.shopping_date %}<p>Date: {{ grocery_list.shopping_date }}</p>{% endif %}
+      {% if grocery_list.store_name %}<p>Store: {{ grocery_list.store_name }}</p>{% endif %}
+    </div>
 
     {% for category, items in items_by_category.items %}
-      <h2>{{ category }}</h2>
-      <ul>
-        {% for item in items %}
-          <li>{{ item.quantity }} {{ item.item_name }}</li>
-        {% endfor %}
-      </ul>
+      <div class="category-section">
+        <h2>{{ category }}</h2>
+        <ul>
+          {% for item in items %}
+            <li>
+              {% if item.quantity %}{{ item.quantity }} {% endif %}{{ item.item_name }}
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
     {% endfor %}
   </body>
 </html>

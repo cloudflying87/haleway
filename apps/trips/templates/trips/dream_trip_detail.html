@@ -1,0 +1,1410 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ trip.name }} - HaleWay{% endblock %}
+
+{% block breadcrumbs %}
+  <nav class="breadcrumbs" aria-label="Breadcrumb">
+    <div class="breadcrumbs-container">
+      <ol class="breadcrumbs-list">
+        <li class="breadcrumb-item">
+          <a href="{% url 'core:dashboard' %}">Dashboard</a>
+        </li>
+        <li class="breadcrumb-separator">›</li>
+        <li class="breadcrumb-item">
+          <a href="{% url 'families:family_detail' trip.family.pk %}">{{ trip.family.name }}</a>
+        </li>
+        <li class="breadcrumb-separator">›</li>
+        <li class="breadcrumb-item">
+          <a href="{% url 'trips:trip_list' %}">Trips</a>
+        </li>
+        <li class="breadcrumb-separator">›</li>
+        <li class="breadcrumb-item active" aria-current="page">{{ trip.name }}</li>
+      </ol>
+    </div>
+  </nav>
+{% endblock %}
+
+{% block content %}
+  <div class="container">
+    <div class="page-header">
+      <div>
+        <h1>{{ trip.name }}</h1>
+        <p class="destination">📍 {{ trip.destination_name }}</p>
+        <p class="dates">💭 Dream Trip - Dates not set yet</p>
+      </div>
+      <div class="trip-actions">
+        {% if can_edit %}
+          <a href="{% url 'trips:trip_edit' trip.pk %}" class="btn btn-outline">Edit Trip</a>
+        {% endif %}
+        {% if can_delete %}
+          <a href="{% url 'trips:trip_delete' trip.pk %}" class="btn btn-danger btn-sm">Delete</a>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Trip Status -->
+    <div class="section">
+      <h3>Trip Information</h3>
+      <p><strong>Family:</strong> {{ trip.family.name }}</p>
+      <p>
+        <strong>Status:</strong>
+        <span class="badge badge-{{ trip.status }}">{{ trip.get_status_display }}</span>
+        {% if can_edit %}
+          <button type="button" onclick="openStatusModal()" class="btn-small btn-outline" style="margin-left: 1rem;">
+            Change Status
+          </button>
+        {% endif %}
+      </p>
+      <p><strong>Created by:</strong> {{ trip.created_by.get_full_name }}</p>
+    </div>
+
+    <!-- Quick Navigation -->
+    <div class="quick-nav">
+      <div class="quick-nav-header">
+        <div class="quick-nav-title">Jump to:</div>
+        <button onclick="toggleAllSections()" class="btn btn-sm btn-outline" id="toggleAllBtn">
+          Collapse All
+        </button>
+      </div>
+      <div class="quick-nav-links">
+        <a href="#resort-options-section" class="quick-nav-link">Resort Options</a>
+        <a href="#activities-section" class="quick-nav-link">Activities</a>
+        <a href="#notes-section" class="quick-nav-link">Notes</a>
+      </div>
+    </div>
+
+    <div class="trip-content">
+      <!-- Resort Options (Dream Trips Only) -->
+      <div class="section" id="resort-options-section" data-section="resort-options">
+        <div class="section-header">
+          <h2 onclick="toggleSection('resort-options')" style="cursor: pointer; user-select: none;">
+            <span class="collapse-icon">▼</span> 💭 Resort Options Under Consideration
+          </h2>
+          <div class="header-actions">
+            {% if can_edit %}
+              <a href="{% url 'trips:resort_option_create' trip.pk %}" class="btn btn-sm btn-primary">
+                + Add Resort Option
+              </a>
+              <a href="{% url 'trips:resort_options_list' trip.pk %}" class="btn btn-sm btn-outline">
+                Compare All
+              </a>
+            {% endif %}
+          </div>
+        </div>
+        <div class="section-content">
+          {% if resort_options %}
+            <div class="resort-options-grid">
+              {% for option in resort_options|slice:":3" %}
+                <div class="resort-option-card {% if option.is_preferred %}preferred-option{% endif %}">
+                  <h4>
+                    {{ option.name }}
+                    {% if option.is_preferred %}
+                      <span class="preferred-badge">⭐ Preferred</span>
+                    {% endif %}
+                  </h4>
+
+                  {% if option.city and option.state %}
+                    <p class="option-location">📍 {{ option.city }}, {{ option.state }}</p>
+                  {% endif %}
+
+                  {% if option.rating %}
+                    <div class="option-rating">
+                      <span class="rating-label">Rating:</span>
+                      <span class="rating-value">{{ option.rating }}/10</span>
+                    </div>
+                  {% endif %}
+
+                  {% if option.pros %}
+                    <div class="option-detail">
+                      <strong>Pros:</strong>
+                      <p class="pros-text">{{ option.pros|truncatewords:15 }}</p>
+                    </div>
+                  {% endif %}
+
+                  {% if option.cons %}
+                    <div class="option-detail">
+                      <strong>Cons:</strong>
+                      <p class="cons-text">{{ option.cons|truncatewords:15 }}</p>
+                    </div>
+                  {% endif %}
+
+                  <a href="{% url 'trips:resort_options_list' trip.pk %}" class="btn-link">View Full Comparison →</a>
+                </div>
+              {% endfor %}
+            </div>
+
+            {% if resort_options|length > 3 %}
+              <p class="text-center" style="margin-top: var(--spacing-md);">
+                <a href="{% url 'trips:resort_options_list' trip.pk %}" class="btn btn-outline">
+                  View All {{ resort_options|length }} Options
+                </a>
+              </p>
+            {% endif %}
+
+            <!-- Convert to Planning CTA -->
+            {% if resort_options %}
+              <div class="convert-cta" style="margin-top: var(--spacing-xl); padding: var(--spacing-lg); background: linear-gradient(135deg, rgba(46, 134, 171, 0.05) 0%, rgba(6, 167, 125, 0.05) 100%); border-radius: var(--border-radius); border-left: 4px solid var(--primary-color);">
+                <h4 style="margin-top: 0;">Ready to commit?</h4>
+                <p style="color: var(--text-secondary); margin-bottom: var(--spacing-md);">
+                  Once you've compared your options and chosen dates, you can convert this dream trip to a planning trip.
+                </p>
+                <a href="{% url 'trips:convert_dream_trip' trip.pk %}" class="btn btn-primary">
+                  Convert to Planning Trip
+                </a>
+              </div>
+            {% endif %}
+          {% else %}
+            <p class="text-muted">
+              No resort options added yet. Start researching potential resorts for your dream trip!
+            </p>
+            {% if can_edit %}
+              <a href="{% url 'trips:resort_option_create' trip.pk %}" class="btn btn-primary" style="margin-top: var(--spacing-md);">
+                + Add Your First Resort Option
+              </a>
+            {% endif %}
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Activities Section -->
+      <div class="section" id="activities-section" data-section="activities">
+        <div class="section-header">
+          <h2 onclick="toggleSection('activities')" style="cursor: pointer; user-select: none;">
+            <span class="collapse-icon">▼</span> 🎯 Activities{% if activity_count %} ({{ activity_count }}){% endif %}
+          </h2>
+          <div class="header-actions">
+            {% if can_edit %}
+              <button type="button" class="btn btn-sm btn-primary" onclick="openActivityModal()">
+                ➕ Add Activity
+              </button>
+            {% endif %}
+            {% if activity_count > 0 %}
+              <a href="{% url 'activities:activity_list' trip.pk %}" class="btn btn-sm btn-outline">
+                View All ({{ activity_count }})
+              </a>
+            {% endif %}
+          </div>
+        </div>
+        <div class="section-content">
+
+          {% if recent_activities %}
+            <div class="activities-list">
+              {% for activity in recent_activities %}
+                <div class="activity-card">
+                  <div class="activity-header">
+                    <h4 class="activity-title">
+                      {% if activity.is_favorite %}⭐ {% endif %}{{ activity.name }}
+                    </h4>
+                    {% if activity.pre_trip_priority > 0 %}
+                      <span class="priority-badge">
+                        Priority #{{ activity.pre_trip_priority }}
+                      </span>
+                    {% endif %}
+                  </div>
+
+                  {% if activity.description %}
+                    <p class="activity-description">{{ activity.description|truncatewords:20 }}</p>
+                  {% endif %}
+
+                  <div class="activity-info">
+                    {% if activity.city %}
+                      <span class="info-item">📍 {{ activity.city }}{% if activity.state %}, {{ activity.state }}{% endif %}</span>
+                    {% endif %}
+                    {% if activity.distance_from_resort %}
+                      <span class="info-item">🚗 {{ activity.distance_from_resort }} mi{% if activity.travel_time_from_resort %} ({{ activity.get_travel_time_display }}){% endif %}</span>
+                    {% endif %}
+                    {% if activity.estimated_cost %}
+                      <span class="info-item">💰 ${{ activity.estimated_cost|floatformat:2 }}</span>
+                    {% endif %}
+                    {% if activity.estimated_duration %}
+                      <span class="info-item">⏱️ {{ activity.get_duration_display }}</span>
+                    {% endif %}
+                    {% if activity.post_trip_rating %}
+                      <span class="info-item">⭐ {{ activity.post_trip_rating }}/5</span>
+                    {% endif %}
+                  </div>
+
+                  <div class="activity-meta">
+                    <small class="text-muted">
+                      Added by {{ activity.created_by.get_full_name|default:activity.created_by.email }} • {{ activity.created_at|date:"M d, Y" }}
+                    </small>
+                    <a href="#" onclick="openViewActivityModal('{{ activity.pk }}'); return false;" class="btn-link">View →</a>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="text-muted">No activities yet. Add your first activity to start planning your trip!</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Notes Section -->
+      <div class="section" id="notes-section" data-section="notes">
+        <div class="section-header">
+          <h2 onclick="toggleSection('notes')" style="cursor: pointer; user-select: none;">
+            <span class="collapse-icon">▼</span> 📝 Trip Notes{% if note_count %} ({{ note_count }}){% endif %}
+          </h2>
+          <div class="header-actions">
+            {% if can_create_note %}
+              <button type="button" class="btn btn-sm btn-primary" onclick="openNoteModal()">
+                ➕ Add Note
+              </button>
+            {% endif %}
+            {% if note_count > 0 %}
+              <a href="{% url 'notes:note_list' trip.pk %}" class="btn btn-sm btn-outline">
+                View All ({{ note_count }})
+              </a>
+            {% endif %}
+          </div>
+        </div>
+        <div class="section-content">
+
+          {% if recent_notes %}
+            <div class="notes-list">
+              {% for note in recent_notes %}
+                <div class="note-card">
+                  <div class="note-header">
+                    <h4 class="note-title">
+                      {% if note.is_pinned %}📌 {% endif %}{{ note.title }}
+                    </h4>
+                    {% if note.category %}
+                      <span class="category-badge" style="background-color: {{ note.category.color_code }}20; color: {{ note.category.color_code }};">
+                        {{ note.category.name }}
+                      </span>
+                    {% endif %}
+                  </div>
+                  <p class="note-content">{{ note.content|truncatewords:30 }}</p>
+                  <div class="note-meta">
+                    <small class="text-muted">
+                      By {{ note.created_by.get_full_name }} • {{ note.updated_at|date:"M d, Y" }}
+                    </small>
+                    <a href="#" onclick="openViewNoteModal('{{ note.pk }}'); return false;" class="btn-link">View →</a>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="text-muted">No notes yet. Add your first note to keep track of important trip information!</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Note Modal -->
+  {% if can_create_note %}
+    <div id="noteModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Add Note to {{ trip.name }}</h3>
+          <button type="button" class="modal-close" onclick="closeNoteModal()">&times;</button>
+        </div>
+        <form method="post" action="{% url 'notes:note_create' trip.pk %}?next={% url 'trips:trip_detail' trip.pk %}" class="modal-body">
+          {% csrf_token %}
+
+          <div class="form-group">
+            <label for="{{ note_form.category.id_for_label }}" class="form-label">
+              {{ note_form.category.label }}
+            </label>
+            {{ note_form.category }}
+            {% if note_form.category.help_text %}
+              <small class="form-help">{{ note_form.category.help_text }}</small>
+            {% endif %}
+          </div>
+
+          <div class="form-group">
+            <label for="{{ note_form.title.id_for_label }}" class="form-label">
+              {{ note_form.title.label }} <span class="required">*</span>
+            </label>
+            {{ note_form.title }}
+            {% if note_form.title.help_text %}
+              <small class="form-help">{{ note_form.title.help_text }}</small>
+            {% endif %}
+          </div>
+
+          <div class="form-group">
+            <label for="{{ note_form.content.id_for_label }}" class="form-label">
+              {{ note_form.content.label }} <span class="required">*</span>
+            </label>
+            {{ note_form.content }}
+            {% if note_form.content.help_text %}
+              <small class="form-help">{{ note_form.content.help_text }}</small>
+            {% endif %}
+          </div>
+
+          <div class="form-group">
+            <label class="form-check-label">
+              {{ note_form.is_pinned }}
+              {{ note_form.is_pinned.label }}
+            </label>
+            {% if note_form.is_pinned.help_text %}
+              <small class="form-help">{{ note_form.is_pinned.help_text }}</small>
+            {% endif %}
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" onclick="closeNoteModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary">Save Note</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- View/Edit Note Modal -->
+  <div id="viewNoteModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="viewNoteTitle"></h3>
+        <button type="button" class="modal-close" onclick="closeViewNoteModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <!-- View Mode -->
+        <div id="viewNoteContent">
+          <div id="viewNoteCategory" class="form-group" style="display: none;">
+            <span class="category-badge-large"></span>
+          </div>
+          <div id="viewNotePinned" style="display: none; margin-bottom: 1rem;">
+            <span class="pinned-badge">📌 Pinned</span>
+          </div>
+          <div class="note-content-full" id="viewNoteText"></div>
+          <div class="note-meta" style="margin-top: 1rem;">
+            <small class="text-muted" id="viewNoteMetaText"></small>
+          </div>
+        </div>
+
+        <!-- Edit Mode (hidden by default) -->
+        <form id="editNoteForm" method="post" style="display: none;">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{% url 'trips:trip_detail' trip.pk %}">
+
+          <div class="form-group">
+            <label for="editNoteCategory" class="form-label">Category</label>
+            <select id="editNoteCategory" name="category" class="form-control">
+              <option value="">-- No Category --</option>
+              {% for category in categories %}
+                <option value="{{ category.pk }}">{{ category.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="editNoteTitle" class="form-label">Title <span class="required">*</span></label>
+            <input type="text" id="editNoteTitle" name="title" class="form-control" required>
+          </div>
+
+          <div class="form-group">
+            <label for="editNoteContentText" class="form-label">Content <span class="required">*</span></label>
+            <textarea id="editNoteContentText" name="content" class="form-control" rows="6" required></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-check-label">
+              <input type="checkbox" id="editNotePinned" name="is_pinned" class="form-check-input">
+              Pin this note
+            </label>
+          </div>
+        </form>
+
+        <div class="modal-footer">
+          <div id="viewModeButtons">
+            <button type="button" class="btn btn-outline" onclick="closeViewNoteModal()">Close</button>
+            <button type="button" class="btn btn-primary" onclick="toggleEditMode()" id="editButton">Edit</button>
+            <button type="button" class="btn btn-danger" onclick="deleteNote()" id="deleteButton">Delete</button>
+          </div>
+          <div id="editModeButtons" style="display: none;">
+            <button type="button" class="btn btn-outline" onclick="cancelEdit()">Cancel</button>
+            <button type="button" class="btn btn-primary" onclick="saveNote()">Save Changes</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Store note data for JavaScript -->
+  <script>
+    const notesData = {
+      {% for note in recent_notes %}
+        '{{ note.pk }}': {
+          title: '{{ note.title|escapejs }}',
+          content: '{{ note.content|escapejs }}',
+          category: '{{ note.category.pk|default:"" }}',
+          categoryName: '{{ note.category.name|default:""|escapejs }}',
+          categoryColor: '{{ note.category.color_code|default:"" }}',
+          isPinned: {{ note.is_pinned|yesno:"true,false" }},
+          createdBy: '{{ note.created_by.get_full_name|escapejs }}',
+          updatedAt: '{{ note.updated_at|date:"M d, Y" }}',
+          updateUrl: '{% url "notes:note_edit" note.pk %}',
+          deleteUrl: '{% url "notes:note_delete" note.pk %}',
+          canEdit: {% if can_edit or note.created_by == user %}true{% else %}false{% endif %}
+        }{% if not forloop.last %},{% endif %}
+      {% endfor %}
+    };
+  </script>
+
+  <!-- Add Activity Modal -->
+  {% if can_edit %}
+    <div id="activityModal" class="modal">
+      <div class="modal-content modal-large">
+        <div class="modal-header">
+          <h3 id="activityModalTitle">Add Activity to {{ trip.name }}</h3>
+          <button type="button" class="modal-close" onclick="closeActivityModal()">&times;</button>
+        </div>
+        <form method="post" id="activityForm" action="{% url 'activities:activity_create' trip.pk %}?next={% url 'trips:trip_detail' trip.pk %}" class="modal-body">
+          {% csrf_token %}
+
+          <div class="form-section-compact">
+            <h4>Basic Information</h4>
+            <div class="form-group">
+              <label for="{{ activity_form.name.id_for_label }}">{{ activity_form.name.label }} <span class="required">*</span></label>
+              {{ activity_form.name }}
+            </div>
+
+            <div class="form-group">
+              <label for="{{ activity_form.description.id_for_label }}">{{ activity_form.description.label }}</label>
+              {{ activity_form.description }}
+            </div>
+
+            <div class="form-group">
+              <label for="{{ activity_form.website_url.id_for_label }}">{{ activity_form.website_url.label }}</label>
+              {{ activity_form.website_url }}
+            </div>
+          </div>
+
+          <div class="form-section-compact">
+            <h4>Location</h4>
+
+            {% if mapbox_token %}
+              <div class="form-group">
+                <label for="activity-address-search">Search for Address</label>
+                <input
+                  type="text"
+                  id="activity-address-search"
+                  class="form-control"
+                  placeholder="Start typing an address..."
+                  autocomplete="off"
+                >
+                <div id="activity-address-results" class="address-autocomplete-results"></div>
+                <small class="form-help">Search to auto-fill address fields and calculate distance</small>
+              </div>
+            {% endif %}
+
+            <div class="form-row-compact">
+              <div class="form-group">
+                <label for="{{ activity_form.city.id_for_label }}">City</label>
+                {{ activity_form.city }}
+              </div>
+              <div class="form-group">
+                <label for="{{ activity_form.state.id_for_label }}">State</label>
+                {{ activity_form.state }}
+              </div>
+            </div>
+
+            <div class="form-row-compact">
+              <div class="form-group">
+                <label for="{{ activity_form.distance_from_resort.id_for_label }}">Distance (miles)</label>
+                {{ activity_form.distance_from_resort }}
+              </div>
+              <div class="form-group">
+                <label for="{{ activity_form.travel_time_from_resort.id_for_label }}">Travel Time (min)</label>
+                {{ activity_form.travel_time_from_resort }}
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section-compact">
+            <h4>Planning Details</h4>
+            <div class="form-row-compact">
+              <div class="form-group">
+                <label for="{{ activity_form.estimated_cost.id_for_label }}">Cost per person</label>
+                {{ activity_form.estimated_cost }}
+              </div>
+              <div class="form-group">
+                <label for="{{ activity_form.estimated_duration.id_for_label }}">Duration (minutes)</label>
+                {{ activity_form.estimated_duration }}
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="{{ activity_form.pre_trip_priority.id_for_label }}">Priority</label>
+              {{ activity_form.pre_trip_priority }}
+              <small class="form-help">0 = unranked, lower numbers = higher priority</small>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" onclick="closeActivityModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary">Save Activity</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- View/Edit Activity Modal -->
+  <div id="viewActivityModal" class="modal">
+    <div class="modal-content modal-large">
+      <div class="modal-header">
+        <h3 id="viewActivityTitle"></h3>
+        <button type="button" class="modal-close" onclick="closeViewActivityModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="viewActivityContent">
+          <div id="viewActivityDescription" class="form-group"></div>
+
+          <div class="activity-details-grid">
+            <div id="viewActivityLocation" class="detail-group"></div>
+            <div id="viewActivityDistance" class="detail-group"></div>
+            <div id="viewActivityCost" class="detail-group"></div>
+            <div id="viewActivityDuration" class="detail-group"></div>
+            <div id="viewActivityPriority" class="detail-group"></div>
+            <div id="viewActivityRating" class="detail-group"></div>
+          </div>
+
+          <div class="note-meta" style="margin-top: 1rem;">
+            <small class="text-muted" id="viewActivityMeta"></small>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeViewActivityModal()">Close</button>
+          <a href="" id="viewActivityFullLink" class="btn btn-primary">View Full Details</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Store activity data for JavaScript -->
+  <script>
+    const activitiesData = {
+      {% for activity in recent_activities %}
+        '{{ activity.pk }}': {
+          name: '{{ activity.name|escapejs }}',
+          description: '{{ activity.description|escapejs }}',
+          website_url: '{{ activity.website_url }}',
+          city: '{{ activity.city }}',
+          state: '{{ activity.state }}',
+          distance_from_resort: '{{ activity.distance_from_resort|default:"" }}',
+          travel_time_from_resort: '{{ activity.travel_time_from_resort|default:"" }}',
+          estimated_cost: '{{ activity.estimated_cost|default:"" }}',
+          estimated_duration: '{{ activity.estimated_duration|default:"" }}',
+          estimated_duration_display: '{{ activity.get_duration_display }}',
+          travel_time_display: '{{ activity.get_travel_time_display }}',
+          pre_trip_priority: '{{ activity.pre_trip_priority }}',
+          post_trip_rating: '{{ activity.post_trip_rating|default:"" }}',
+          is_favorite: {{ activity.is_favorite|yesno:"true,false" }},
+          createdBy: '{{ activity.created_by.get_full_name|escapejs }}',
+          createdAt: '{{ activity.created_at|date:"M d, Y" }}',
+          detailUrl: '{% url "activities:activity_detail" activity.pk %}',
+          canEdit: true
+        }{% if not forloop.last %},{% endif %}
+      {% endfor %}
+    };
+  </script>
+
+  <!-- Change Status Modal -->
+  <div id="statusModal" class="modal">
+    <div class="modal-content" style="max-width: 500px;">
+      <div class="modal-header">
+        <h3>Change Trip Status</h3>
+        <button type="button" class="modal-close" onclick="closeStatusModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="statusForm" method="post" action="{% url 'trips:trip_edit' trip.pk %}">
+          {% csrf_token %}
+          <div class="form-group">
+            <label for="status_select">New Status</label>
+            <select id="status_select" name="status" class="form-control" required>
+              <option value="dream" {% if trip.status == 'dream' %}selected{% endif %}>Dream Trip</option>
+              <option value="planning" {% if trip.status == 'planning' %}selected{% endif %}>Planning</option>
+              <option value="active" {% if trip.status == 'active' %}selected{% endif %}>Active</option>
+              <option value="completed" {% if trip.status == 'completed' %}selected{% endif %}>Completed</option>
+            </select>
+            <small class="form-help">
+              <strong>Dream:</strong> Wishlist trip without dates<br>
+              <strong>Planning:</strong> Trip with dates being planned<br>
+              <strong>Active:</strong> Currently happening<br>
+              <strong>Completed:</strong> Trip has finished
+            </small>
+          </div>
+
+          <!-- Date fields (shown when not dream status) -->
+          <div id="date_fields" style="display: none;">
+            <div class="form-group">
+              <label for="start_date">Start Date <span class="required">*</span></label>
+              <input type="date" id="start_date" name="start_date" class="form-control" value="{{ trip.start_date|date:'Y-m-d'|default:'' }}">
+            </div>
+            <div class="form-group">
+              <label for="end_date">End Date <span class="required">*</span></label>
+              <input type="date" id="end_date" name="end_date" class="form-control" value="{{ trip.end_date|date:'Y-m-d'|default:'' }}">
+            </div>
+          </div>
+
+          <div style="display: flex; gap: var(--spacing-md); margin-top: var(--spacing-lg);">
+            <button type="button" onclick="closeStatusModal()" class="btn btn-outline" style="flex: 1;">Cancel</button>
+            <button type="submit" class="btn btn-primary" style="flex: 1;">Update Status</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'haleway_collapsed_sections';
+    let currentNoteId = null;
+    let isEditMode = false;
+
+    // Section toggle functions
+    function toggleSection(sectionName) {
+      const section = document.querySelector(`[data-section="${sectionName}"]`);
+      if (!section) return;
+
+      section.classList.toggle('collapsed');
+
+      // Save state to localStorage
+      const collapsedSections = getCollapsedSections();
+      if (section.classList.contains('collapsed')) {
+        collapsedSections.add(sectionName);
+      } else {
+        collapsedSections.delete(sectionName);
+      }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify([...collapsedSections]));
+    }
+
+    function getCollapsedSections() {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        return new Set(stored ? JSON.parse(stored) : []);
+      } catch (e) {
+        return new Set();
+      }
+    }
+
+    function restoreCollapsedState() {
+      const collapsedSections = getCollapsedSections();
+      collapsedSections.forEach(sectionName => {
+        const section = document.querySelector(`[data-section="${sectionName}"]`);
+        if (section) {
+          section.classList.add('collapsed');
+        }
+      });
+    }
+
+    // Restore collapsed state on page load
+    document.addEventListener('DOMContentLoaded', restoreCollapsedState);
+
+    // Toggle all sections
+    function toggleAllSections() {
+      const sections = document.querySelectorAll('.section[data-section]');
+      const btn = document.getElementById('toggleAllBtn');
+
+      // Check if any section is expanded
+      const anyExpanded = Array.from(sections).some(section => !section.classList.contains('collapsed'));
+
+      const collapsedSections = getCollapsedSections();
+
+      sections.forEach(section => {
+        const sectionName = section.dataset.section;
+        if (anyExpanded) {
+          // Collapse all
+          section.classList.add('collapsed');
+          collapsedSections.add(sectionName);
+        } else {
+          // Expand all
+          section.classList.remove('collapsed');
+          collapsedSections.delete(sectionName);
+        }
+      });
+
+      // Update button text
+      btn.textContent = anyExpanded ? 'Expand All' : 'Collapse All';
+
+      // Save state
+      localStorage.setItem(STORAGE_KEY, JSON.stringify([...collapsedSections]));
+    }
+
+    // Update toggle button text on load
+    document.addEventListener('DOMContentLoaded', function() {
+      const sections = document.querySelectorAll('.section[data-section]');
+      const btn = document.getElementById('toggleAllBtn');
+      const anyExpanded = Array.from(sections).some(section => !section.classList.contains('collapsed'));
+      btn.textContent = anyExpanded ? 'Collapse All' : 'Expand All';
+    });
+
+    // Add Note Modal
+    function openNoteModal() {
+      document.getElementById('noteModal').classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeNoteModal() {
+      document.getElementById('noteModal').classList.remove('show');
+      document.body.style.overflow = '';
+    }
+
+    // View/Edit Note Modal
+    function openViewNoteModal(noteId) {
+      currentNoteId = noteId;
+      const note = notesData[noteId];
+
+      if (!note) {
+        console.error('Note not found:', noteId);
+        return;
+      }
+
+      // Populate view mode
+      document.getElementById('viewNoteTitle').textContent = note.title;
+      document.getElementById('viewNoteText').textContent = note.content;
+      document.getElementById('viewNoteMetaText').textContent = `By ${note.createdBy} • ${note.updatedAt}`;
+
+      // Show/hide category
+      if (note.categoryName) {
+        const categoryBadge = document.querySelector('#viewNoteCategory .category-badge-large');
+        categoryBadge.textContent = note.categoryName;
+        categoryBadge.style.backgroundColor = note.categoryColor + '20';
+        categoryBadge.style.color = note.categoryColor;
+        document.getElementById('viewNoteCategory').style.display = 'block';
+      } else {
+        document.getElementById('viewNoteCategory').style.display = 'none';
+      }
+
+      // Show/hide pinned badge
+      if (note.isPinned) {
+        document.getElementById('viewNotePinned').style.display = 'block';
+      } else {
+        document.getElementById('viewNotePinned').style.display = 'none';
+      }
+
+      // Show/hide edit and delete buttons based on permissions
+      if (note.canEdit) {
+        document.getElementById('editButton').style.display = 'inline-block';
+        document.getElementById('deleteButton').style.display = 'inline-block';
+      } else {
+        document.getElementById('editButton').style.display = 'none';
+        document.getElementById('deleteButton').style.display = 'none';
+      }
+
+      // Reset to view mode
+      isEditMode = false;
+      document.getElementById('viewNoteContent').style.display = 'block';
+      document.getElementById('editNoteForm').style.display = 'none';
+      document.getElementById('viewModeButtons').style.display = 'flex';
+      document.getElementById('editModeButtons').style.display = 'none';
+
+      // Show modal
+      document.getElementById('viewNoteModal').classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeViewNoteModal() {
+      document.getElementById('viewNoteModal').classList.remove('show');
+      document.body.style.overflow = '';
+      currentNoteId = null;
+      isEditMode = false;
+    }
+
+    function toggleEditMode() {
+      if (!currentNoteId) return;
+
+      const note = notesData[currentNoteId];
+      isEditMode = true;
+
+      // Populate edit form
+      document.getElementById('editNoteCategory').value = note.category;
+      document.getElementById('editNoteTitle').value = note.title;
+      document.getElementById('editNoteContentText').value = note.content;
+      document.getElementById('editNotePinned').checked = note.isPinned;
+
+      // Update form action
+      const tripDetailUrl = '{% url "trips:trip_detail" trip.pk %}';
+      document.getElementById('editNoteForm').action = note.updateUrl + '?next=' + encodeURIComponent(tripDetailUrl);
+
+      // Toggle views
+      document.getElementById('viewNoteContent').style.display = 'none';
+      document.getElementById('editNoteForm').style.display = 'block';
+      document.getElementById('viewModeButtons').style.display = 'none';
+      document.getElementById('editModeButtons').style.display = 'flex';
+    }
+
+    function cancelEdit() {
+      isEditMode = false;
+      document.getElementById('viewNoteContent').style.display = 'block';
+      document.getElementById('editNoteForm').style.display = 'none';
+      document.getElementById('viewModeButtons').style.display = 'flex';
+      document.getElementById('editModeButtons').style.display = 'none';
+    }
+
+    function saveNote() {
+      // Submit the edit form
+      document.getElementById('editNoteForm').submit();
+    }
+
+    function deleteNote() {
+      if (!currentNoteId) return;
+
+      const note = notesData[currentNoteId];
+
+      if (confirm(`Are you sure you want to delete the note "${note.title}"?`)) {
+        // Create a form to submit the delete request
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = note.deleteUrl;
+
+        // Add CSRF token
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrfmiddlewaretoken';
+        csrfInput.value = csrfToken;
+        form.appendChild(csrfInput);
+
+        document.body.appendChild(form);
+        form.submit();
+      }
+    }
+
+    // Close modals when clicking outside
+    document.addEventListener('click', function(event) {
+      const noteModal = document.getElementById('noteModal');
+      const viewNoteModal = document.getElementById('viewNoteModal');
+
+      if (event.target === noteModal) {
+        closeNoteModal();
+      }
+      if (event.target === viewNoteModal) {
+        closeViewNoteModal();
+      }
+    });
+
+    // Close modals with Escape key
+    document.addEventListener('keydown', function(event) {
+      if (event.key === 'Escape') {
+        if (document.getElementById('noteModal').classList.contains('show')) {
+          closeNoteModal();
+        }
+        if (document.getElementById('viewNoteModal').classList.contains('show')) {
+          if (isEditMode) {
+            cancelEdit();
+          } else {
+            closeViewNoteModal();
+          }
+        }
+      }
+    });
+
+    // Activity modal functions
+    function openActivityModal() {
+      document.getElementById('activityModal').classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeActivityModal() {
+      document.getElementById('activityModal').classList.remove('show');
+      document.body.style.overflow = '';
+      document.getElementById('activityForm').reset();
+    }
+
+    function openViewActivityModal(activityId) {
+      const activity = activitiesData[activityId];
+      if (!activity) return;
+
+      // Set title
+      document.getElementById('viewActivityTitle').textContent = activity.name;
+
+      // Set description
+      const descDiv = document.getElementById('viewActivityDescription');
+      if (activity.description) {
+        descDiv.innerHTML = '<p>' + activity.description + '</p>';
+        descDiv.style.display = 'block';
+      } else {
+        descDiv.style.display = 'none';
+      }
+
+      // Set location
+      const locationDiv = document.getElementById('viewActivityLocation');
+      if (activity.city || activity.state) {
+        locationDiv.innerHTML = '<strong>📍 Location:</strong> ' +
+        (activity.city ? activity.city : '') +
+        (activity.state ? ', ' + activity.state : '');
+        locationDiv.style.display = 'block';
+      } else {
+        locationDiv.style.display = 'none';
+      }
+
+      // Set distance
+      const distanceDiv = document.getElementById('viewActivityDistance');
+      if (activity.distance_from_resort) {
+        distanceDiv.innerHTML = '<strong>🚗 Distance:</strong> ' + activity.distance_from_resort + ' miles' +
+        (activity.travel_time_from_resort ? ' (' + activity.travel_time_display + ')' : '');
+        distanceDiv.style.display = 'block';
+      } else {
+        distanceDiv.style.display = 'none';
+      }
+
+      // Set cost
+      const costDiv = document.getElementById('viewActivityCost');
+      if (activity.estimated_cost) {
+        costDiv.innerHTML = '<strong>💰 Cost:</strong> $' + parseFloat(activity.estimated_cost).toFixed(2) + ' per person';
+        costDiv.style.display = 'block';
+      } else {
+        costDiv.style.display = 'none';
+      }
+
+      // Set duration
+      const durationDiv = document.getElementById('viewActivityDuration');
+      if (activity.estimated_duration) {
+        durationDiv.innerHTML = '<strong>⏱️ Duration:</strong> ' + activity.estimated_duration_display;
+        durationDiv.style.display = 'block';
+      } else {
+        durationDiv.style.display = 'none';
+      }
+
+      // Set priority
+      const priorityDiv = document.getElementById('viewActivityPriority');
+      if (activity.pre_trip_priority > 0) {
+        priorityDiv.innerHTML = '<strong>Priority:</strong> #' + activity.pre_trip_priority;
+        priorityDiv.style.display = 'block';
+      } else {
+        priorityDiv.style.display = 'none';
+      }
+
+      // Set rating
+      const ratingDiv = document.getElementById('viewActivityRating');
+      if (activity.post_trip_rating) {
+        ratingDiv.innerHTML = '<strong>⭐ Rating:</strong> ' + activity.post_trip_rating + '/5 stars' +
+        (activity.is_favorite ? ' • Favorite' : '');
+        ratingDiv.style.display = 'block';
+      } else {
+        ratingDiv.style.display = 'none';
+      }
+
+      // Set meta
+      document.getElementById('viewActivityMeta').textContent =
+        'Added by ' + activity.createdBy + ' on ' + activity.createdAt;
+
+      // Set full details link
+      document.getElementById('viewActivityFullLink').href = activity.detailUrl;
+
+      // Show modal
+      document.getElementById('viewActivityModal').classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeViewActivityModal() {
+      document.getElementById('viewActivityModal').classList.remove('show');
+      document.body.style.overflow = '';
+    }
+
+    // Status Modal Functions
+    function openStatusModal() {
+      document.getElementById('statusModal').classList.add('show');
+      document.body.style.overflow = 'hidden';
+      checkStatusDates();
+    }
+
+    function closeStatusModal() {
+      document.getElementById('statusModal').classList.remove('show');
+      document.body.style.overflow = '';
+    }
+
+    // Check if trip has dates and show warning
+    function checkStatusDates() {
+      const statusSelect = document.getElementById('status_select');
+      const datesWarning = document.getElementById('dates_warning');
+      const hasStartDate = {% if trip.start_date %}true{% else %}false{% endif %};
+      const hasEndDate = {% if trip.end_date %}true{% else %}false{% endif %};
+      const hasDates = hasStartDate && hasEndDate;
+
+      statusSelect.addEventListener('change', function() {
+        const selectedStatus = this.value;
+        if (!hasDates && selectedStatus !== 'dream') {
+          datesWarning.style.display = 'block';
+        } else {
+          datesWarning.style.display = 'none';
+        }
+      });
+    }
+
+    // Close status modal when clicking outside
+    document.getElementById('statusModal')?.addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeStatusModal();
+      }
+    });
+
+    // Close status modal on Escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        const statusModal = document.getElementById('statusModal');
+        if (statusModal && statusModal.classList.contains('show')) {
+          closeStatusModal();
+        }
+      }
+    });
+  </script>
+
+  <style>
+    /* Quick Navigation */
+    .quick-nav {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      padding: var(--spacing-md);
+      margin-bottom: var(--spacing-lg);
+    }
+
+    .quick-nav-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--spacing-sm);
+      gap: var(--spacing-sm);
+    }
+
+    .quick-nav-title {
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .quick-nav-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--spacing-xs);
+    }
+
+    .quick-nav-link {
+      padding: 0.25rem 0.75rem;
+      background: var(--white);
+      border: 1px solid var(--border-color);
+      border-radius: 1rem;
+      color: var(--primary-color);
+      text-decoration: none;
+      font-size: 0.875rem;
+      transition: all 0.2s;
+    }
+
+    .quick-nav-link:hover {
+      background: var(--primary-color);
+      color: var(--white);
+      border-color: var(--primary-color);
+    }
+
+    /* Collapsible Sections */
+    .section-header h2 {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-xs);
+    }
+
+    .collapse-icon {
+      display: inline-block;
+      transition: transform 0.3s ease;
+      font-size: 0.75em;
+    }
+
+    .section.collapsed .collapse-icon {
+      transform: rotate(-90deg);
+    }
+
+    .section-content {
+      max-height: 5000px;
+      overflow: hidden;
+      transition: max-height 0.3s ease, opacity 0.3s ease;
+      opacity: 1;
+    }
+
+    .section.collapsed .section-content {
+      max-height: 0;
+      opacity: 0;
+    }
+
+    .page-header {
+      margin-bottom: var(--spacing-xl);
+    }
+
+    .destination {
+      font-size: 1.25rem;
+      margin: var(--spacing-sm) 0;
+    }
+
+    .dates {
+      color: var(--text-secondary);
+    }
+
+    .trip-actions {
+      display: flex;
+      gap: var(--spacing-sm);
+    }
+
+    .trip-content {
+      max-width: 800px;
+    }
+
+    .section {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      padding: var(--spacing-lg);
+      margin-bottom: var(--spacing-lg);
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--spacing-md);
+      padding-bottom: var(--spacing-sm);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    /* Resort Options Section (Dream Trips) */
+    .resort-options-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: var(--spacing-lg);
+      margin-bottom: var(--spacing-lg);
+    }
+
+    .resort-option-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      padding: var(--spacing-lg);
+      transition: all var(--transition-base);
+    }
+
+    .resort-option-card.preferred-option {
+      border-color: var(--accent-color);
+      border-width: 2px;
+      box-shadow: 0 2px 8px rgba(6, 167, 125, 0.15);
+    }
+
+    .resort-option-card:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      transform: translateY(-2px);
+    }
+
+    .resort-option-card h4 {
+      margin: 0 0 var(--spacing-sm) 0;
+      color: var(--text-primary);
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+    }
+
+    .preferred-badge {
+      font-size: 0.75rem;
+      padding: 0.25rem 0.5rem;
+      background: linear-gradient(135deg, rgba(6, 167, 125, 0.1) 0%, rgba(46, 134, 171, 0.1) 100%);
+      color: var(--accent-color);
+      border-radius: var(--border-radius);
+      font-weight: 600;
+    }
+
+    .option-location {
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .option-rating {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+      margin-bottom: var(--spacing-md);
+      padding: var(--spacing-sm);
+      background: var(--white);
+      border-radius: var(--border-radius);
+    }
+
+    .rating-label {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+    }
+
+    .rating-value {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--primary-color);
+    }
+
+    .option-detail {
+      margin-bottom: var(--spacing-md);
+    }
+
+    .option-detail strong {
+      display: block;
+      margin-bottom: 0.25rem;
+      font-size: 0.875rem;
+      color: var(--text-primary);
+    }
+
+    .pros-text {
+      color: var(--accent-color);
+      margin: 0;
+      font-size: 0.875rem;
+      line-height: 1.5;
+    }
+
+    .cons-text {
+      color: #E74C3C;
+      margin: 0;
+      font-size: 0.875rem;
+      line-height: 1.5;
+    }
+
+    /* Activities Section */
+    .activities-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-md);
+    }
+
+    .activity-card {
+      padding: var(--spacing-md);
+      background: var(--bg-secondary);
+      border-radius: var(--border-radius);
+      border-left: 3px solid var(--primary-color);
+    }
+
+    .activity-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: var(--spacing-sm);
+      gap: var(--spacing-sm);
+    }
+
+    .activity-title {
+      margin: 0;
+      font-size: 1.1rem;
+      color: var(--text-primary);
+    }
+
+    .priority-badge {
+      padding: 0.25rem 0.5rem;
+      background: var(--primary-color);
+      color: var(--white);
+      border-radius: var(--border-radius);
+      font-size: 0.75rem;
+      white-space: nowrap;
+    }
+
+    .activity-description {
+      color: var(--text-secondary);
+      margin-bottom: var(--spacing-sm);
+      line-height: 1.5;
+    }
+
+    .activity-info {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--spacing-sm);
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .info-item {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      padding: 0.25rem 0.5rem;
+      background: var(--white);
+      border-radius: var(--border-radius);
+    }
+
+    .activity-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: var(--spacing-sm);
+      border-top: 1px solid var(--border-color);
+    }
+
+    .activity-details-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: var(--spacing-md);
+      margin: var(--spacing-md) 0;
+    }
+
+    .detail-group {
+      padding: var(--spacing-sm);
+      background: var(--bg-secondary);
+      border-radius: var(--border-radius);
+    }
+
+    /* Notes Section */
+    .notes-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-md);
+    }
+
+    .note-card {
+      padding: var(--spacing-md);
+      background: var(--bg-secondary);
+      border-radius: var(--border-radius);
+      border-left: 3px solid var(--accent-color);
+    }
+
+    .note-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: var(--spacing-sm);
+      gap: var(--spacing-sm);
+    }
+
+    .note-title {
+      margin: 0;
+      font-size: 1.1rem;
+      color: var(--text-primary);
+    }
+
+    .category-badge {
+      padding: 0.25rem 0.5rem;
+      border-radius: var(--border-radius);
+      font-size: 0.75rem;
+      white-space: nowrap;
+    }
+
+    .category-badge-large {
+      padding: 0.5rem 1rem;
+      border-radius: var(--border-radius);
+      font-size: 0.875rem;
+      font-weight: 600;
+      display: inline-block;
+    }
+
+    .pinned-badge {
+      padding: 0.5rem 1rem;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      font-size: 0.875rem;
+      display: inline-block;
+    }
+
+    .note-content {
+      color: var(--text-secondary);
+      margin-bottom: var(--spacing-sm);
+      line-height: 1.5;
+    }
+
+    .note-content-full {
+      white-space: pre-wrap;
+      line-height: 1.6;
+      color: var(--text-primary);
+    }
+
+    .note-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: var(--spacing-sm);
+      border-top: 1px solid var(--border-color);
+    }
+  </style>
+{% endblock %}

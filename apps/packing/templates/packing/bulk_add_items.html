@@ -2,24 +2,378 @@
 
 {% block title %}Quick Add Items - {{ packing_list.name }} - HaleWay{% endblock %}
 
+{% block extra_css %}
+<!-- Select2 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+  <style>
+  /* Page Layout */
+    .add-item-container {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: var(--spacing-xl) var(--spacing-md);
+    }
+
+  /* Header Styling */
+    .page-header {
+      text-align: center;
+      margin-bottom: var(--spacing-xxl);
+    }
+
+    .page-icon {
+      font-size: 3rem;
+      margin-bottom: var(--spacing-md);
+      display: block;
+    }
+
+    .page-header h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .page-subtitle {
+      color: var(--text-secondary);
+      font-size: 1rem;
+      margin-bottom: var(--spacing-md);
+    }
+
+  /* Breadcrumb Styling */
+    .breadcrumb {
+      justify-content: center;
+      margin-bottom: var(--spacing-lg);
+    }
+
+  /* Form Card */
+    .modern-form-card {
+      background: var(--white);
+      border-radius: var(--border-radius-lg);
+      padding: var(--spacing-xxl);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 10px 15px rgba(0, 0, 0, 0.1);
+      border: 1px solid rgba(46, 134, 171, 0.1);
+    }
+
+  /* Form Groups */
+    .form-group {
+      margin-bottom: var(--spacing-xl);
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: var(--text-primary);
+      margin-bottom: var(--spacing-sm);
+      letter-spacing: 0.01em;
+    }
+
+    .form-group label .required {
+      color: #e74c3c;
+      margin-left: 2px;
+    }
+
+  /* Input Fields */
+    .form-control {
+      display: block;
+      width: 100%;
+      padding: 1rem 1.25rem;
+      font-size: 1rem;
+      font-weight: 400;
+      line-height: 1.5;
+      color: var(--text-primary);
+      background-color: var(--bg-secondary);
+      border: 2px solid transparent;
+      border-radius: var(--border-radius-lg);
+      transition: all var(--transition-base);
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+
+    .form-control:hover {
+      background-color: var(--white);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    }
+
+    .form-control:focus {
+      background-color: var(--white);
+      border-color: var(--primary-color);
+      outline: 0;
+      box-shadow: 0 0 0 4px rgba(46, 134, 171, 0.15), 0 4px 12px rgba(0, 0, 0, 0.1);
+      transform: translateY(-1px);
+    }
+
+  /* Textarea */
+    textarea.form-control {
+      min-height: 150px;
+      resize: vertical;
+      line-height: 1.6;
+      font-family: inherit;
+    }
+
+  /* Help Text */
+    .form-help {
+      display: block;
+      margin-top: var(--spacing-sm);
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    .form-help-icon {
+      display: inline-block;
+      margin-right: 4px;
+    }
+
+  /* Custom Select2 Styling */
+    .select2-container--default .select2-selection--single {
+      height: 54px !important;
+      padding: 1rem 1.25rem !important;
+      background-color: var(--bg-secondary);
+      border: 2px solid transparent !important;
+      border-radius: var(--border-radius-lg) !important;
+      transition: all var(--transition-base);
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+
+    .select2-container--default .select2-selection--single:hover {
+      background-color: var(--white);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    }
+
+    .select2-container--default.select2-container--focus .select2-selection--single,
+    .select2-container--default.select2-container--open .select2-selection--single {
+      background-color: var(--white) !important;
+      border-color: var(--primary-color) !important;
+      box-shadow: 0 0 0 4px rgba(46, 134, 171, 0.15), 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+      line-height: 32px !important;
+      padding-left: 0 !important;
+      padding-right: 0 !important;
+      color: var(--text-primary);
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__placeholder {
+      color: var(--text-muted);
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+      height: 54px !important;
+      right: 12px !important;
+    }
+
+    .select2-dropdown {
+      border: 2px solid var(--primary-color) !important;
+      border-radius: var(--border-radius-lg) !important;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15) !important;
+      margin-top: 4px;
+    }
+
+    .select2-container--default .select2-results__option {
+      padding: 12px 16px;
+    }
+
+    .select2-container--default .select2-results__option--highlighted[aria-selected] {
+      background-color: var(--primary-color) !important;
+    }
+
+    .select2-container--default .select2-search--dropdown .select2-search__field {
+      border: 2px solid var(--gray-300);
+      border-radius: var(--border-radius);
+      padding: 12px;
+      font-size: 1rem;
+    }
+
+    .select2-container--default .select2-search--dropdown .select2-search__field:focus {
+      border-color: var(--primary-color);
+      outline: none;
+    }
+
+  /* Form Actions */
+    .form-actions {
+      display: flex;
+      gap: var(--spacing-md);
+      margin-top: var(--spacing-xxl);
+      padding-top: var(--spacing-xl);
+      border-top: 1px solid var(--gray-200);
+    }
+
+    .form-actions .btn {
+      flex: 1;
+      padding: 1rem 2rem;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: var(--border-radius-lg);
+      transition: all var(--transition-base);
+    }
+
+    .form-actions .btn-primary {
+      background: linear-gradient(135deg, var(--primary-color) 0%, #236b8a 100%);
+      border: none;
+      box-shadow: 0 4px 12px rgba(46, 134, 171, 0.3);
+    }
+
+    .form-actions .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(46, 134, 171, 0.4);
+    }
+
+    .form-actions .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    .form-actions .btn-outline {
+      background: transparent;
+      border: 2px solid var(--gray-300);
+      color: var(--text-secondary);
+    }
+
+    .form-actions .btn-outline:hover {
+      border-color: var(--gray-400);
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+    }
+
+  /* Quick Tips Box */
+    .quick-tips {
+      background: linear-gradient(135deg, rgba(46, 134, 171, 0.05) 0%, rgba(6, 167, 125, 0.05) 100%);
+      border-left: 4px solid var(--primary-color);
+      border-radius: var(--border-radius);
+      padding: var(--spacing-lg);
+      margin-bottom: var(--spacing-xl);
+    }
+
+    .quick-tips h3 {
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: var(--primary-color);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin: 0 0 var(--spacing-sm) 0;
+    }
+
+    .quick-tips ul {
+      margin: 0;
+      padding-left: var(--spacing-lg);
+      list-style: none;
+    }
+
+    .quick-tips li {
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+      line-height: 1.6;
+      margin-bottom: var(--spacing-xs);
+      position: relative;
+    }
+
+    .quick-tips li:before {
+      content: "→";
+      position: absolute;
+      left: -20px;
+      color: var(--accent-color);
+      font-weight: bold;
+    }
+
+    .quick-tips code {
+      background: rgba(46, 134, 171, 0.1);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'Monaco', 'Courier New', monospace;
+      font-size: 0.875em;
+      color: var(--primary-color);
+      font-weight: 600;
+    }
+
+  /* Example Section */
+    .example-section {
+      margin-top: var(--spacing-xl);
+      padding: var(--spacing-lg);
+      background: linear-gradient(135deg, rgba(6, 167, 125, 0.05) 0%, rgba(46, 134, 171, 0.05) 100%);
+      border-radius: var(--border-radius);
+      border: 1px solid rgba(6, 167, 125, 0.2);
+    }
+
+    .example-section h3 {
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: var(--accent-color);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin: 0 0 var(--spacing-md) 0;
+    }
+
+    .example-box {
+      background: var(--white);
+      padding: var(--spacing-md);
+      border-radius: var(--border-radius);
+      font-family: 'Monaco', 'Courier New', monospace;
+      font-size: 0.875rem;
+      border: 1px solid var(--gray-200);
+    }
+
+    .example-box div {
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .example-box div:last-child {
+      margin-bottom: 0;
+    }
+
+    .example-box strong {
+      color: var(--text-primary);
+    }
+
+    .example-note {
+      margin-top: var(--spacing-sm);
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+      font-style: italic;
+    }
+
+  /* Responsive */
+    @media (max-width: 768px) {
+      .add-item-container {
+        padding: var(--spacing-lg) var(--spacing-md);
+      }
+
+      .modern-form-card {
+        padding: var(--spacing-lg);
+      }
+
+      .page-header h1 {
+        font-size: 1.5rem;
+      }
+
+      .form-actions {
+        flex-direction: column-reverse;
+      }
+
+      .form-actions .btn {
+        width: 100%;
+      }
+    }
+  </style>
+{% endblock %}
+
 {% block content %}
-  <div class="container">
+  <div class="add-item-container">
     <div class="page-header">
       <nav class="breadcrumb">
         <a href="{% url 'trips:trip_detail' packing_list.trip.pk %}">{{ packing_list.trip.name }}</a>
         <span>/</span>
-        <a href="{% url 'packing:list_detail' packing_list.pk %}">Packing List</a>
+        <a href="{% url 'packing:list_detail' packing_list.pk %}">{{ packing_list.name }}</a>
         <span>/</span>
         <span>Quick Add</span>
       </nav>
+      <span class="page-icon">🎒</span>
       <h1>Quick Add Items</h1>
-      <p class="subtitle">Add multiple items at once to your packing list</p>
+      <p class="page-subtitle">Add multiple items at once to your packing list</p>
     </div>
 
-    <div class="form-card">
-      <div class="info-box" style="margin-bottom: var(--spacing-lg); padding: var(--spacing-md); background: var(--bg-secondary); border-left: 4px solid var(--primary-color); border-radius: var(--border-radius);">
-        <h3 style="margin-top: 0; color: var(--text-primary);">💡 Quick Tips</h3>
-        <ul style="margin: 0; padding-left: var(--spacing-lg); color: var(--text-secondary);">
+    <div class="modern-form-card">
+      <div class="quick-tips">
+        <h3>💡 Quick Tips</h3>
+        <ul>
           <li>Separate items with commas: <code>Sunscreen, Hat, Sunglasses</code></li>
           <li>Add quantity with a dash: <code>Socks-5, T-shirts-3</code></li>
           <li>Create a new category or use an existing one</li>
@@ -31,70 +385,102 @@
         {% csrf_token %}
 
         <div class="form-group">
-          {{ form.category.label_tag }}
-          {{ form.category }}
-          {% if form.category.help_text %}
-            <p class="help-text">{{ form.category.help_text }}</p>
-          {% endif %}
+          <label for="{{ form.category.id_for_label }}">
+            Category <span class="required">*</span>
+          </label>
+          <select name="{{ form.category.name }}"
+                  id="{{ form.category.id_for_label }}"
+                  class="form-control category-select"
+                  required>
+            <option value=""></option>
+            {% for category in existing_categories %}
+              <option value="{{ category }}" {% if category == form.category.value %}selected{% endif %}>{{ category }}</option>
+            {% endfor %}
+          </select>
+          <small class="form-help">
+            <span class="form-help-icon">ℹ️</span>
+            {{ form.category.help_text|default:"Select an existing category or type to create a new one" }}
+          </small>
           {% if form.category.errors %}
             <div class="error-message">{{ form.category.errors }}</div>
           {% endif %}
-
-                <!-- Category suggestions datalist -->
-          <datalist id="category-suggestions">
-            {% for category in existing_categories %}
-              <option value="{{ category }}">
-            {% endfor %}
-          </datalist>
         </div>
 
         <div class="form-group">
-          {{ form.items.label_tag }}
+          <label for="{{ form.items.id_for_label }}">
+            Items <span class="required">*</span>
+          </label>
           {{ form.items }}
-          {% if form.items.help_text %}
-            <p class="help-text">{{ form.items.help_text }}</p>
-          {% endif %}
+          <small class="form-help">
+            <span class="form-help-icon">ℹ️</span>
+            {{ form.items.help_text|default:"Enter items separated by commas. Use item-3 to set quantity to 3." }}
+          </small>
           {% if form.items.errors %}
             <div class="error-message">{{ form.items.errors }}</div>
           {% endif %}
         </div>
 
         <div class="form-actions">
-          <a href="{% url 'packing:list_detail' packing_list.pk %}" class="btn btn-outline">Cancel</a>
-          <button type="submit" class="btn btn-primary">Add All Items</button>
+          <a href="{% url 'packing:list_detail' packing_list.pk %}" class="btn btn-outline">
+            Cancel
+          </a>
+          <button type="submit" class="btn btn-primary">
+            ✓ Add All Items
+          </button>
         </div>
       </form>
 
-        <!-- Example section -->
-      <div class="example-section" style="margin-top: var(--spacing-xl); padding-top: var(--spacing-lg); border-top: 1px solid var(--border-color);">
-        <h3 style="color: var(--text-secondary); font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: var(--spacing-md);">Example</h3>
-        <div style="background: var(--bg-tertiary); padding: var(--spacing-md); border-radius: var(--border-radius); font-family: 'Monaco', 'Courier New', monospace; font-size: 0.875rem;">
-          <div style="margin-bottom: var(--spacing-sm);"><strong>Category:</strong> Beach Gear</div>
+    <!-- Example section -->
+      <div class="example-section">
+        <h3>📋 Example</h3>
+        <div class="example-box">
+          <div><strong>Category:</strong> Beach Gear</div>
           <div><strong>Items:</strong> Sunscreen-2, Beach umbrella, Cooler, Beach towels-4, Snorkel mask-2, Flip flops, Water shoes-3</div>
         </div>
-        <p style="margin-top: var(--spacing-sm); color: var(--text-secondary); font-size: 0.875rem;">
+        <p class="example-note">
           This will create 7 items in the "Beach Gear" category with the specified quantities.
         </p>
       </div>
     </div>
   </div>
+{% endblock %}
 
-  <style>
-    .info-box code {
-      background: var(--bg-primary);
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-family: 'Monaco', 'Courier New', monospace;
-      font-size: 0.875em;
-      color: var(--primary-color);
-    }
+{% block extra_js %}
+<!-- jQuery (required for Select2) -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<!-- Select2 JS -->
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+  <script>
+    $(document).ready(function() {
+    // Initialize Select2 on category dropdown
+      $('.category-select').select2({
+        tags: true,
+        placeholder: 'Select or type a category...',
+        allowClear: false,
+        width: '100%',
+        createTag: function (params) {
+          var term = $.trim(params.term);
+          if (term === '') {
+            return null;
+          }
+          return {
+            id: term,
+            text: term + ' (create new)',
+            newTag: true
+          }
+        },
+        templateResult: function(data) {
+          if (data.newTag) {
+            return $('<span style="color: var(--accent-color); font-weight: 600;">+ ' + data.text + '</span>');
+          }
+          return data.text;
+        }
+      });
 
-    .info-box ul li {
-      margin-bottom: var(--spacing-xs);
-    }
-
-    .example-section {
-      color: var(--text-secondary);
-    }
-  </style>
+    // Auto-focus on category field
+      setTimeout(function() {
+        $('.category-select').select2('open');
+      }, 300);
+    });
+  </script>
 {% endblock %}

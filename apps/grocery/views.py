@@ -483,39 +483,55 @@ def bulk_add_items(request, list_pk):
 
 @login_required
 def edit_item(request, pk):
-    """Edit grocery item"""
+    """Edit grocery item (supports both AJAX and traditional form submission)"""
     item = get_object_or_404(TripGroceryItem, pk=pk)
 
     # Check permissions
     user_families = request.user.family_memberships.values_list("family_id", flat=True)
     if item.grocery_list.trip.family_id not in user_families:
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return JsonResponse({"success": False, "error": "Permission denied"}, status=403)
         messages.error(request, "You don't have permission to edit this item.")
         return redirect("trips:trip_list")
 
     if request.method == "POST":
-        form = TripGroceryItemForm(request.POST, instance=item, grocery_list=item.grocery_list)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Item updated!")
-            return redirect("grocery:list_detail", pk=item.grocery_list.pk)
-    else:
-        form = TripGroceryItemForm(instance=item, grocery_list=item.grocery_list)
+        # Update item directly from POST data (simpler for AJAX)
+        item.item_name = request.POST.get("item_name", item.item_name)
+        item.category = request.POST.get("category", item.category)
+        item.quantity = request.POST.get("quantity", "")
+        item.notes = request.POST.get("notes", "")
+        item.save()
 
-    context = {
-        "form": form,
-        "item": item,
-    }
-    return render(request, "grocery/item_form.html", context)
+        logger.info(
+            "grocery_item_updated",
+            item_id=str(item.id),
+            item_name=item.item_name,
+            user_id=str(request.user.id),
+        )
+
+        # Return success response (works for both AJAX and traditional)
+        messages.success(request, "Item updated!")
+        return redirect("grocery:list_detail", pk=item.grocery_list.pk)
+    else:
+        # GET request - show form (for backward compatibility)
+        form = TripGroceryItemForm(instance=item, grocery_list=item.grocery_list)
+        context = {
+            "form": form,
+            "item": item,
+        }
+        return render(request, "grocery/item_form.html", context)
 
 
 @login_required
 def delete_item(request, pk):
-    """Delete grocery item"""
+    """Delete grocery item (supports both AJAX and traditional form submission)"""
     item = get_object_or_404(TripGroceryItem, pk=pk)
 
     # Check permissions
     user_families = request.user.family_memberships.values_list("family_id", flat=True)
     if item.grocery_list.trip.family_id not in user_families:
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return JsonResponse({"success": False, "error": "Permission denied"}, status=403)
         messages.error(request, "You don't have permission to delete this item.")
         return redirect("trips:trip_list")
 
@@ -523,9 +539,18 @@ def delete_item(request, pk):
         grocery_list = item.grocery_list
         item_name = item.item_name
         item.delete()
+
+        logger.info(
+            "grocery_item_deleted",
+            item_name=item_name,
+            list_id=str(grocery_list.id),
+            user_id=str(request.user.id),
+        )
+
         messages.success(request, f'Item "{item_name}" deleted!')
         return redirect("grocery:list_detail", pk=grocery_list.pk)
 
+    # GET request - show confirmation page (for backward compatibility)
     context = {"item": item}
     return render(request, "grocery/item_confirm_delete.html", context)
 

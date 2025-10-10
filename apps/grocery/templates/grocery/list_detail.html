@@ -162,8 +162,14 @@
                 </label>
                 {% if can_edit %}
                   <div class="item-actions">
-                    <a href="{% url 'grocery:edit_item' item.pk %}" class="btn-icon" title="Edit">✏️</a>
-                    <a href="{% url 'grocery:delete_item' item.pk %}" class="btn-icon" title="Delete">🗑️</a>
+                    <button type="button"
+                            onclick="openEditItemModal('{{ item.id }}', '{{ item.item_name|escapejs }}', '{{ item.category|escapejs }}', '{{ item.quantity|escapejs }}', '{{ item.notes|escapejs }}')"
+                            class="btn-icon"
+                            title="Edit">✏️</button>
+                    <button type="button"
+                            onclick="deleteItem('{{ item.id }}', '{{ item.item_name|escapejs }}')"
+                            class="btn-icon"
+                            title="Delete">🗑️</button>
                   </div>
                 {% endif %}
               </div>
@@ -221,7 +227,7 @@
               <div class="advanced-options-content">
                 <div class="form-group" id="category_form_group">
                   <label for="modal_category">Category</label>
-                  <select id="modal_category" class="form-control category-select-modal" required>
+                  <select id="modal_category" class="form-control category-select-modal">
                     <option value=""></option>
                   </select>
                 </div>
@@ -239,6 +245,52 @@
             <div style="display: flex; gap: var(--spacing-md); margin-top: var(--spacing-lg);">
               <button type="button" onclick="closeAddItemModal()" class="btn btn-outline" style="flex: 1;">Cancel</button>
               <button type="submit" class="btn btn-primary" style="flex: 1;">Add Item</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Item Modal -->
+    <div id="editItemModal" class="modal">
+      <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header">
+          <h3>Edit Grocery Item</h3>
+          <button type="button" class="modal-close" onclick="closeEditItemModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <form id="editItemForm" method="post">
+            {% csrf_token %}
+            <input type="hidden" id="edit_item_id" name="item_id">
+
+            <div class="form-group">
+              <label for="edit_item_name">Item Name <span style="color: #e74c3c;">*</span></label>
+              <input type="text" id="edit_item_name" name="item_name" class="form-control" placeholder="e.g., Bananas, Milk, Chips" maxlength="200" required>
+            </div>
+
+            <details class="advanced-options-modal" id="edit_advanced_options" open>
+              <summary>Advanced Options</summary>
+              <div class="advanced-options-content">
+                <div class="form-group">
+                  <label for="edit_category">Category</label>
+                  <select id="edit_category" name="category" class="form-control category-select-modal-edit">
+                    <option value=""></option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="edit_quantity">Quantity <span style="color: var(--text-muted); font-weight: 400;">(optional)</span></label>
+                  <input type="text" id="edit_quantity" name="quantity" class="form-control" placeholder="e.g., 2 lbs, 1 gallon, 6 pack">
+                </div>
+                <div class="form-group">
+                  <label for="edit_notes">Notes <span style="color: var(--text-muted); font-weight: 400;">(optional)</span></label>
+                  <textarea id="edit_notes" name="notes" class="form-control" rows="2" placeholder="Optional notes about this item"></textarea>
+                </div>
+              </div>
+            </details>
+
+            <div style="display: flex; gap: var(--spacing-md); margin-top: var(--spacing-lg);">
+              <button type="button" onclick="closeEditItemModal()" class="btn btn-outline" style="flex: 1;">Cancel</button>
+              <button type="submit" class="btn btn-primary" style="flex: 1;">Save Changes</button>
             </div>
           </form>
         </div>
@@ -569,7 +621,7 @@
 
 // Initialize Select2 on page load
     $(document).ready(function() {
-    // Populate category dropdown
+    // Populate category dropdown for ADD modal
       const $categorySelect = $('.category-select-modal');
       uniqueCategories.forEach(cat => {
         if (cat) {
@@ -577,13 +629,47 @@
         }
       });
 
-    // Initialize Select2
+    // Initialize Select2 for ADD modal
       $categorySelect.select2({
         tags: true,
         placeholder: 'Select or type a category...',
         allowClear: false,
         width: '100%',
         dropdownParent: $('#addItemModal'),
+        createTag: function (params) {
+          var term = $.trim(params.term);
+          if (term === '') {
+            return null;
+          }
+          return {
+            id: term,
+            text: term + ' (create new)',
+            newTag: true
+          }
+        },
+        templateResult: function(data) {
+          if (data.newTag) {
+            return $('<span style="color: var(--accent-color); font-weight: 600;">+ ' + data.text + '</span>');
+          }
+          return data.text;
+        }
+      });
+
+    // Populate category dropdown for EDIT modal
+      const $categorySelectEdit = $('.category-select-modal-edit');
+      uniqueCategories.forEach(cat => {
+        if (cat) {
+          $categorySelectEdit.append(new Option(cat, cat));
+        }
+      });
+
+    // Initialize Select2 for EDIT modal
+      $categorySelectEdit.select2({
+        tags: true,
+        placeholder: 'Select or type a category...',
+        allowClear: false,
+        width: '100%',
+        dropdownParent: $('#editItemModal'),
         createTag: function (params) {
           var term = $.trim(params.term);
           if (term === '') {
@@ -635,7 +721,7 @@
         advancedOptions.removeAttribute('open');
         categoryFormGroup.style.display = 'block';
         categoryHidden.value = '';
-        categorySelect.setAttribute('required', 'required');
+        categorySelect.removeAttribute('required'); // Not required when hidden
         $('.category-select-modal').val(null).trigger('change');
 
         // Focus on item name field
@@ -648,6 +734,37 @@
 // Close modal
     function closeAddItemModal() {
       const modal = document.getElementById('addItemModal');
+      modal.classList.remove('show');
+      document.body.style.overflow = '';
+    }
+
+// Open EDIT modal
+    function openEditItemModal(itemId, itemName, category, quantity, notes) {
+      const modal = document.getElementById('editItemModal');
+      modal.classList.add('show');
+      document.body.style.overflow = 'hidden';
+
+      // Populate form fields
+      document.getElementById('edit_item_id').value = itemId;
+      document.getElementById('edit_item_name').value = itemName;
+      document.getElementById('edit_quantity').value = quantity || '';
+      document.getElementById('edit_notes').value = notes || '';
+
+      // Set category in Select2
+      $('.category-select-modal-edit').val(category).trigger('change');
+
+      // Advanced Options is open by default for editing
+      document.getElementById('edit_advanced_options').setAttribute('open', true);
+
+      // Focus on item name field
+      setTimeout(() => {
+        document.getElementById('edit_item_name').focus();
+      }, 100);
+    }
+
+// Close EDIT modal
+    function closeEditItemModal() {
+      const modal = document.getElementById('editItemModal');
       modal.classList.remove('show');
       document.body.style.overflow = '';
     }
@@ -695,9 +812,13 @@
 // Close modal on escape key
     document.addEventListener('keydown', function(e) {
       if (e.key === 'Escape') {
-        const modal = document.getElementById('addItemModal');
-        if (modal && modal.classList.contains('show')) {
+        const addModal = document.getElementById('addItemModal');
+        const editModal = document.getElementById('editItemModal');
+        if (addModal && addModal.classList.contains('show')) {
           closeAddItemModal();
+        }
+        if (editModal && editModal.classList.contains('show')) {
+          closeEditItemModal();
         }
       }
     });
@@ -708,6 +829,65 @@
         closeAddItemModal();
       }
     });
+
+    document.getElementById('editItemModal')?.addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeEditItemModal();
+      }
+    });
+
+// Handle EDIT form submission
+    document.getElementById('editItemForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const itemId = document.getElementById('edit_item_id').value;
+      const formData = new FormData(this);
+
+      fetch(`/grocery/item/${itemId}/edit/`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'X-CSRFToken': '{{ csrf_token }}'
+        }
+      })
+        .then(response => {
+          if (response.ok) {
+            // Reload page to show updated item
+            window.location.reload();
+          } else {
+            alert('Error updating item. Please try again.');
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Error updating item. Please try again.');
+        });
+    });
+
+// Delete item with confirmation (no separate page)
+    function deleteItem(itemId, itemName) {
+      if (confirm(`Are you sure you want to delete "${itemName}"?`)) {
+        fetch(`/grocery/item/${itemId}/delete/`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+          }
+        })
+          .then(response => {
+            if (response.ok) {
+              // Reload page to remove deleted item
+              window.location.reload();
+            } else {
+              alert('Error deleting item. Please try again.');
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+            alert('Error deleting item. Please try again.');
+          });
+      }
+    }
 
 // Toggle purchased status via AJAX
     document.querySelectorAll('.item-checkbox').forEach(checkbox => {
